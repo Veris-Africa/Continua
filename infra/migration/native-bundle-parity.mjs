@@ -19,6 +19,8 @@ const {newsRepository}=await import('../../backend/src/storage/repositories/news
 const {indicatorsService}=await import('../../backend/src/services/technical/indicatorsService.js');
 const {engineRepository}=await import('../../backend/src/storage/repositories/engineRepository.js');
 const {collectedResearchRepository}=await import('../../backend/src/services/research/collectedResearch.js');
+const {publicationPolicy}=await import('../../backend/src/services/research/publicationPolicy.js');
+publicationPolicy.revision=async()=> 'a'.repeat(32);
 const {getEngineBundle}=await import('../../backend/src/services/research/engineBundle.js');
 const baseline={baseline:true,changes:[],fingerprint:'',comparedAsOf:null};
 const annual=year=>({fiscalYear:year,periodEnd:`${year}-12-31`,reportedAt:`${year+1}-03-01`,revenue:100+(year-2024)*20,netIncome:20,eps:6,sourceUrls:['https://issuer.example/a.pdf']});

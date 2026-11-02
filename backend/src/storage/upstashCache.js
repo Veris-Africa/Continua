@@ -4,7 +4,7 @@ export class UpstashCache {
     namespace;
     fallback;
     pending = new Map();
-    metrics = { hits: 0, misses: 0, failures: 0, sharedReads: 0, producers: 0 };
+    metrics = { hits: 0, misses: 0, failures: 0, sharedReads: 0, producers: 0, oversized: 0 };
     constructor(url, token, namespace, fallback) {
         this.url = url;
         this.token = token;
@@ -29,12 +29,12 @@ export class UpstashCache {
     }
     async get(key) {
         try {
-            const raw = await this.command(['GET', `${this.namespace}:${key}`]);
+            const raw = await this.command(['GET', `${this.namespace}:cache:v2:${key}`]);
             if (raw == null) {
                 this.metrics.misses++;
                 return null;
             }
-            if (typeof raw !== 'string')
+            if (typeof raw !== 'string' || Buffer.byteLength(raw) > 1024 * 1024)
                 throw new Error('Invalid cache value');
             const result = JSON.parse(raw);
             this.metrics.hits++;
@@ -46,16 +46,25 @@ export class UpstashCache {
         }
     }
     async set(key, value, ttlMs = 60000) {
+        const encoded = JSON.stringify(value);
+        if (encoded === undefined || Buffer.byteLength(encoded) > 1024 * 1024) {
+            this.metrics.oversized++;
+            // Remove an older value rather than leave it authoritative after ingestion.
+            await this.del(key);
+            return;
+        }
+        if (!Number.isFinite(ttlMs) || ttlMs <= 0) throw new Error('Invalid cache TTL');
+        ttlMs = Math.min(ttlMs, 24 * 60 * 60_000);
         await this.fallback.set(key, value, ttlMs);
         try {
-            await this.command(['SET', `${this.namespace}:${key}`, JSON.stringify(value), 'PX', Math.max(1, Math.floor(ttlMs))]);
+            await this.command(['SET', `${this.namespace}:cache:v2:${key}`, encoded, 'PX', Math.max(1, Math.floor(ttlMs))]);
         }
         catch {
             this.metrics.failures++;
         }
     }
     async del(key) { await this.fallback.del(key); try {
-        await this.command(['DEL', `${this.namespace}:${key}`]);
+        await this.command(['DEL', `${this.namespace}:cache:v2:${key}`]);
     }
     catch {
         this.metrics.failures++;

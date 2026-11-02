@@ -1,3 +1,4 @@
+vi.mock('../src/services/research/publicationPolicy.js',()=>({publicationPolicy:{revision:async()=> 'a'.repeat(32)}}));
 import {it,expect,vi,afterEach} from "vitest";
 import {getEngineBundle} from "../src/services/research/engineBundle.js";
 import {securitiesRepository} from "../src/storage/repositories/securitiesRepository.js";

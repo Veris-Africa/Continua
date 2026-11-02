@@ -21,24 +21,32 @@ import { computeAfriScore } from './afriScore.js';
 import { yoyGrowth } from './ratiosEngine.js';
 import { engineCacheKeys } from './engineCacheKeys.js';
 import { collectedResearchRepository } from './collectedResearch.js';
+import {publicationPolicy} from './publicationPolicy.js';
 const pendingBundles = new Map();
 export async function getEngineBundle(symbol, exchange) {
-    const key = `${exchange}:${symbol}`;
+    const policyRevision = await publicationPolicy.revision();
+    const key = `${exchange}:${symbol}:${policyRevision}`;
     const staleKey = engineCacheKeys.lastGood(exchange, symbol);
-    const cached = await cache.get(staleKey);
+    const stored = await cache.get(staleKey);
+    const cached = stored?.policyRevision === policyRevision ? stored.bundle : null;
     const age = cached ? Date.now() - Date.parse(cached.generatedAt) : Infinity;
     if (cached && age >= 0 && age < 60_000)
         return cached;
     let job = pendingBundles.get(key);
     if (!job) {
-        job = loadEngineBundle(symbol, exchange).then(async (bundle) => {
+        job = (async () => {
+            // A publisher deleting lastGood must also discard its policy-keyed
+            // assembly, so corrected filings cannot survive explicit invalidation.
+            if (!cached) await cache.del(`${engineCacheKeys.bundle(exchange, symbol)}:policy:${policyRevision}`);
+            return loadEngineBundle(symbol, exchange, policyRevision);
+        })().then(async (bundle) => {
             const retainedAge = cached ? Date.now() - Date.parse(cached.generatedAt) : Infinity;
             if (cached && retainedAge >= 0 && retainedAge < 24 * 60 * 60_000 && bundle.unavailable.some(section => ['Quote', 'Financial statements'].includes(section))) {
                 const retained = { ...cached, refresh: { state: 'retained', failedSections: bundle.unavailable, attemptedAt: bundle.generatedAt } };
-                await cache.set(staleKey, retained, Math.max(1, 24 * 60 * 60_000 - retainedAge));
+                await cache.set(staleKey, {policyRevision, bundle: retained}, Math.max(1, 24 * 60 * 60_000 - retainedAge));
                 return retained;
             }
-            await cache.set(staleKey, bundle, 24 * 60 * 60_000);
+            await cache.set(staleKey, {policyRevision, bundle}, 24 * 60 * 60_000);
             return bundle;
         }).finally(() => pendingBundles.delete(key));
         pendingBundles.set(key, job);
@@ -51,8 +59,8 @@ export async function getEngineBundle(symbol, exchange) {
     }
     return job;
 }
-async function loadEngineBundle(symbol, exchange) {
-    return cache.getOrSet(engineCacheKeys.bundle(exchange, symbol), 60_000, async () => {
+async function loadEngineBundle(symbol, exchange, policyRevision) {
+    return cache.getOrSet(`${engineCacheKeys.bundle(exchange, symbol)}:policy:${policyRevision}`, 60_000, async () => {
         const profile = await securitiesRepository.getCompanyProfile(exchange, symbol);
         if (!profile)
             throw new ApiError(404, "This stock is not covered yet");

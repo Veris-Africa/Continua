@@ -9,17 +9,25 @@ import { Redis } from "ioredis";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import { UpstashCache } from './upstashCache.js';
-class InMemoryCache {
+export class InMemoryCache {
     pending = new Map();
     // Stored as `any` deliberately — this cache holds heterogeneous value
     // types (Quote, Quote[], Candle[], ratios, ...) keyed by string, and the
     // public ICache methods are what provide type safety to callers via T.
-    store = new LRUCache({ max: 5000, ttl: 60_000 });
+    metrics = {hits: 0, misses: 0, producers: 0, sharedReads: 0, oversized: 0};
+    store = new LRUCache({max: 5000, maxSize: 64 * 1024 * 1024, ttl: 60_000});
     async get(key) {
-        return this.store.get(key) ?? null;
+        const value = this.store.get(key) ?? null;
+        this.metrics[value === null ? 'misses' : 'hits']++;
+        return value;
     }
     async set(key, value, ttlMs = 60_000) {
-        this.store.set(key, value, { ttl: ttlMs });
+        const encoded = JSON.stringify(value);
+        if (encoded === undefined || Buffer.byteLength(encoded) > 1024 * 1024) {
+            this.metrics.oversized++; this.store.delete(key); return;
+        }
+        if (!Number.isFinite(ttlMs) || ttlMs <= 0) throw new Error('Invalid cache TTL');
+        this.store.set(key, value, {size: Math.max(1, Buffer.byteLength(encoded)), ttl: Math.min(ttlMs, 24 * 60 * 60_000)});
     }
     async del(key) {
         this.store.delete(key);
@@ -29,8 +37,11 @@ class InMemoryCache {
         if (cached !== null)
             return cached;
         const existing = this.pending.get(key);
-        if (existing)
+        if (existing) {
+            if (this.metrics) this.metrics.sharedReads++;
             return existing;
+        }
+        this.metrics.producers++;
         const job = Promise.resolve().then(fn).then(async (value) => {
             await this.set(key, value, ttlMs);
             return value;

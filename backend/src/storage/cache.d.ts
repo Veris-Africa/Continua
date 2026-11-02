@@ -6,6 +6,13 @@ export interface ICache {
     del(key: string): Promise<void>;
     getOrSet<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T>;
 }
+export declare class InMemoryCache implements ICache {
+    readonly metrics: Record<string, number>;
+    get<T>(key: string): Promise<T | null>;
+    set<T>(key: string, value: T, ttlMs?: number): Promise<void>;
+    del(key: string): Promise<void>;
+    getOrSet<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T>;
+}
 export declare const cache: ICache;
 /** Cache key conventions — keep these consistent so invalidation stays sane. */
 export declare const CacheKeys: {
