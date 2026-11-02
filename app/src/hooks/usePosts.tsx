@@ -1,3 +1,4 @@
+import {createPostSubmission} from '../lib/postSubmission.js';
 import { readFeedSnapshot, saveFeedSnapshot, clearFeedSnapshot } from '@/lib/feedSnapshot';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { usePageRefresh } from './usePageRefresh';
@@ -308,31 +309,17 @@ export function usePosts() {
   useEffect(() => { __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey]);
   useEffect(()=>{const refresh=()=>{clearFeedSnapshot(cacheKey);__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
 
-  const createPost = async (content: string, imageInput?: string | string[], quotedPostId?: string, poll?: import("@/components/social/PostAttachments").PostPoll) => {
-    if (!user) return { error: { message: 'Must be logged in' } };
-    const images = Array.isArray(imageInput) ? imageInput : imageInput ? [imageInput] : [];
-    if (images.length > 5) return { error: { message: 'Maximum five images' } };
-    const uploaded: string[] = [];
-    try {
-      const urls: string[] = [];
-      for (const image of images) {
-        if (!image.startsWith('data:')) { urls.push(image); continue; }
-        const blob = await (await fetch(image)).blob();
-        const publicUrl = await uploadCloudImage('post-images', blob);
-        uploaded.push(publicUrl);
-        urls.push(publicUrl);
-      }
-      const stockMentions = [...new Set(content.match(/\$[A-Z]+/g)?.map(s => s.slice(1)) || [])];
-      const { data, error } = await supabase.from('posts')
-        .insert({ user_id: user.id, content, image_url: urls[0] || null, ...(urls.length ? { image_urls: urls } : {}), ...(poll ? { poll } : {}),
-          stock_mentions: stockMentions.length ? stockMentions : null, quoted_post_id: quotedPostId || null } as any).select().single();
-      if (error) throw error;
-      void fetchPosts();
-      return { data, error: null };
-    } catch (error) {
-      if (uploaded.length) await removeCloudImages(uploaded).catch(() => {});
-      return { error };
-    }
+  const postSubmission=useRef(createPostSubmission({
+    insert:async payload=>supabase.from('posts').insert(payload).select().single(),
+    upload:async image=>{const blob=await(await fetch(image)).blob();return uploadCloudImage('post-images',blob);},
+    remove:urls=>removeCloudImages(urls),
+  }));
+  const createPost = async (content:string,imageInput?:string|string[],quotedPostId?:string,poll?:import('@/components/social/PostAttachments').PostPoll)=>{
+    if(!user)return {error:{message:'Must be logged in'}};
+    const images=Array.isArray(imageInput)?imageInput:imageInput?[imageInput]:[];
+    const result=await postSubmission.current({userId:user.id,content,images,quotedPostId,poll});
+    if(!result.error)void fetchPosts();
+    return result;
   };
 
   const deletePost = async (postId: string) => {

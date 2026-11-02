@@ -1,3 +1,6 @@
+import {useRef} from 'react';
+import {createMutationIntent} from '../lib/mutationIntent.js';
+import {holdingInputError} from '../../../backend/src/data/holdingContract.js';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
@@ -30,6 +33,7 @@ function persist(userId: string, value: PortfolioItem[]) {
 /** One user-scoped cache for Home, portfolio, stock details and pull-to-refresh. */
 export function usePortfolio() {
   const { user } = useAuth();
+  const addIntent=useRef(createMutationIntent());
   const client = useQueryClient();
   const key = ['continua', 'portfolio', user?.id];
   const query = useQuery({
@@ -72,14 +76,16 @@ export function usePortfolio() {
 
   const addToPortfolio = async (symbol: string, name: string, shares: number, avgCost: number, sector?: string) => {
     if (!user) return { error: 'User not authenticated' };
-    if (!symbol.trim() || !Number.isFinite(shares) || shares <= 0 || !Number.isFinite(avgCost) || avgCost < 0)
-      return { error: 'Enter a valid symbol, positive share count and non-negative cost' };
+    const inputError=holdingInputError({shares,avg_cost:avgCost});
+    if(!symbol.trim()||inputError)return {error:inputError??'Enter a valid symbol'};
+    const intent=addIntent.current.prepare({ user_id:user.id,symbol:symbol.trim().toUpperCase(),name,shares,avg_cost:avgCost,sector });
     try {
       const { data, error } = await supabase.from('portfolios')
-        .insert({ user_id: user.id, symbol: symbol.trim().toUpperCase(), name, shares, avg_cost: avgCost, sector })
+        .insert(intent)
         .select().single();
       if (error) return { error };
-      await publish((items) => [data, ...items]);
+      addIntent.current.confirm(data.id);
+      await publish((items) => items.some(item=>item.id===data.id)?items:[data, ...items]);
       return { data };
     } catch (error) { return { error }; }
   };
@@ -94,14 +100,15 @@ export function usePortfolio() {
   };
   const updatePortfolioItem = async (id: string, updates: Partial<PortfolioItem>) => {
     if (!user) return { error: 'User not authenticated' };
-    if ((updates.shares != null && (!Number.isFinite(updates.shares) || updates.shares <= 0)) ||
-        (updates.avg_cost != null && (!Number.isFinite(updates.avg_cost) || updates.avg_cost < 0)))
-      return { error: 'Enter a positive share count and non-negative cost' };
+    const inputError=holdingInputError(updates,true);
+    if(inputError)return {error:inputError};
     // Ownership/audit fields cannot be reassigned through this API.
     const { shares, avg_cost, symbol, name, sector } = updates;
+    const previous=query.data?.find(item=>item.id===id);
+    if(!previous?.updated_at)return {error:'Refresh this holding before editing it'};
     try {
       const { data, error } = await supabase.from('portfolios').update({ shares, avg_cost, symbol, name, sector })
-        .eq('id', id).eq('user_id', user.id).select().single();
+        .eq('id', id).eq('user_id', user.id).eq('updated_at',previous.updated_at).select().single();
       if (error) return { error };
       await publish((items) => items.map((item) => item.id === id ? data : item));
       return { data };

@@ -1,3 +1,5 @@
+import {createMutationIntent} from '../lib/mutationIntent.js';
+import {useRef} from 'react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { readPrivateSnapshot, writePrivateSnapshot } from '@/lib/privateSnapshot';
@@ -35,6 +37,7 @@ const PREMIUM_FOLDER_LIMIT = 20;
 
 export function useWatchlist() {
   const { user, loading: authLoading } = useAuth();
+  const folderIntent=useRef(createMutationIntent());
   const { profile } = useProfile();
   const [folders, setFolders] = useState<WatchlistFolder[]>([]);
   const queryClient = useQueryClient();
@@ -81,11 +84,7 @@ export function useWatchlist() {
       // Lazily create the default folder for brand-new users so there's
       // always at least one place to add a stock.
       if (list.length === 0) {
-        const { data: created, error: createErr } = await supabase
-          .from('watchlist_folders')
-          .insert({ user_id: user.id, name: 'My Watchlist', is_default: true, sort_order: 0 })
-          .select()
-          .single();
+        const { data: created, error: createErr } = await supabase.rpc('continua_ensure_default_watchlist', {});
         if (!createErr && created) list = [created];
       }
 
@@ -120,13 +119,11 @@ export function useWatchlist() {
 
   const createFolder = async (name: string) => {
     if (!user) return { error: { message: 'Not signed in' } };
-    if (!canCreateFolder) {
-      return { error: { message: isPremium ? `You've reached the ${folderLimit}-watchlist limit` : 'Free plan is limited to 1 watchlist -- upgrade to Premium to create more' } };
-    }
+    const intent=folderIntent.current.prepare({user_id:user.id,name:name.trim(),is_default:false,sort_order:folders.length},{user_id:user.id,name:name.trim()});
     try {
       const { data, error } = await supabase
         .from('watchlist_folders')
-        .insert({ user_id: user.id, name: name.trim(), is_default: false, sort_order: folders.length })
+        .insert(intent)
         .select()
         .single();
 
@@ -135,7 +132,8 @@ export function useWatchlist() {
         return { error };
       }
 
-      setFolders(prev => [...prev, data]);
+      folderIntent.current.confirm(data.id);
+      setFolders(prev => prev.some(folder=>folder.id===data.id)?prev:[...prev, data]);
       return { data };
     } catch (error) {
       console.error('Error creating watchlist folder:', error);

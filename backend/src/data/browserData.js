@@ -1,3 +1,6 @@
+import {replayOwnedCreate} from './mutationIntegrity.js';
+import {holdingInputError} from './holdingContract.js';
+import {guardWatchlistMutation} from './watchlistIntegrity.js';
 import {readFileSync} from 'node:fs';
 import {handleError,normalizeUserHandle} from './handlePolicy.js';
 const contract=JSON.parse(readFileSync(new URL('./browserTables.json',import.meta.url),'utf8'));
@@ -8,6 +11,9 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
  const columns=Object.hasOwn(contract,table)?contract[table]:null;if(!columns)throw new DataRequestError('Unknown data resource',404);
  if(table==='profiles_public'&&!['GET','HEAD'].includes(method))throw new DataRequestError('Public profile resource is read-only',405);
  if(!['GET','HEAD','POST','PATCH','DELETE'].includes(method))throw new DataRequestError('Method unavailable',405);
+ if(table==='portfolios'&&method==='PATCH'&&(!search.get('id')?.startsWith('eq.')||!search.get('updated_at')?.startsWith('eq.')))throw new DataRequestError('Explicit holding id and updated_at filters are required. Refresh before editing.',409);
+ if(method==='PATCH'&&['posts','portfolios','watchlists','watchlist_folders','profiles'].includes(table)&&Object.keys(body??{}).some(k=>['id','user_id','created_at'].includes(k)))throw new DataRequestError('Ownership and creation fields cannot be edited',403);
+ if(table==='portfolios'&&['POST','PATCH'].includes(method))for(const row of Array.isArray(body)?body:[body]){const error=holdingInputError(row,method==='PATCH');if(error)throw new DataRequestError(error,422);}
  if(table==='profiles'&&['POST','PATCH'].includes(method))for(const row of Array.isArray(body)?body:[body]){
   if(row&&Object.hasOwn(row,'handle')){const normalized=normalizeUserHandle(row.handle),error=handleError(normalized);if(error)throw new DataRequestError(error);row.handle=normalized;}
  }
@@ -41,7 +47,7 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
   else sql=`DELETE FROM ${relation}${where}`;
   sql+=' RETURNING '+returning;
  }
- return {sql:`WITH result AS (${sql}), serialized AS MATERIALIZED (
+ return {resource:table,method,changes:body,selectionSQL:selected,expectedVersion:['PATCH','DELETE'].includes(method)&&search.get('updated_at')?.startsWith('eq.'),sql:`WITH result AS (${sql}), serialized AS MATERIALIZED (
  SELECT row_to_json(result)::text payload FROM result
 ), budget AS (
  SELECT coalesce(sum(octet_length(payload)),0) + greatest(count(*)-1,0) + 2 > 4194304 AS oversized FROM serialized
@@ -56,8 +62,9 @@ export async function executeDataRequest(pool,compiled,verifiedClaims){
  // Send constant transaction setup together, avoiding two cross-region trips.
  // Claims remain parameter-bound, and the live guard still precedes every read.
  const client=await pool.connect();try{await client.query(verifiedClaims?"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE authenticated":"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE anon");await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify(verifiedClaims??{})]);if(verifiedClaims)await client.query('SELECT public.continua_session_guard()');
+ await guardWatchlistMutation(client,compiled,verifiedClaims);
  const count=compiled.countSql?(await client.query(compiled.countSql,compiled.countParams)).rows[0].count:undefined;
  // HEAD needs headers only; do not fetch and serialize rows after its count.
- const result=compiled.head?{rows:[]}:await client.query(compiled.sql,compiled.params);if(result.rows.some(row=>row.oversized))throw new DataRequestError('Result too large; paginate this request',413);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
+ const replay=await replayOwnedCreate(client,compiled,verifiedClaims);const result=compiled.head?{rows:[]}:replay??await client.query(compiled.sql,compiled.params);if(compiled.expectedVersion&&!result.rows.length)throw new DataRequestError('This record changed or is no longer available. Refresh before editing.',409);if(result.rows.some(row=>row.oversized))throw new DataRequestError('Result too large; paginate this request',413);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }

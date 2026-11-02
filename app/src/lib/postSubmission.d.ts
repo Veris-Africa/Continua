@@ -1,0 +1,1 @@
+export declare function createPostSubmission(options:{insert:(payload:any)=>Promise<any>;upload:(image:string)=>Promise<string>;remove:(urls:string[])=>Promise<unknown>;newId?:()=>string}):(input:{userId:string;content:string;images:string[];quotedPostId?:string;poll?:unknown})=>Promise<any>;

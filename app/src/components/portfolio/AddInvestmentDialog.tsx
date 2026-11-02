@@ -1,3 +1,4 @@
+import {holdingInputError,combinedAverageCost} from '../../../../backend/src/data/holdingContract.js';
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
 import {useKeyboardPanel} from '@/hooks/useKeyboardPanel';
@@ -73,8 +74,9 @@ export function AddInvestmentDialog({
     const sharesNum = parseFloat(shares);
     const costNum = parseFloat(avgCost);
 
-    if (!symbol || !name || !Number.isFinite(sharesNum) || sharesNum <= 0 || !Number.isFinite(costNum) || costNum < 0) {
-      toast({ title: "Missing info", description: "Fill all required fields", variant: "destructive" });
+    const inputError=holdingInputError({shares:sharesNum,avg_cost:costNum});
+    if (!symbol || !name || inputError) {
+      toast({ title: "Missing info", description: inputError??"Fill all required fields", variant: "destructive" });
       return;
     }
 
@@ -84,15 +86,17 @@ export function AddInvestmentDialog({
       if (mode === "add") {
         const totalShares = existing.shares + sharesNum;
         newShares = totalShares;
-        newAvg = ((existing.shares * existing.avg_cost) + (sharesNum * costNum)) / totalShares;
+        const average=combinedAverageCost(existing.shares,existing.avg_cost,sharesNum,costNum);
+        if(average===null){toast({title:'Invalid holding',description:'The combined holding exceeds its supported numeric range',variant:'destructive'});return;}
+        newAvg=average;
       }
       const result = await updatePortfolioItem(existing.id, {
         shares: newShares,
-        avg_cost: parseFloat(newAvg.toFixed(4)),
+        avg_cost: newAvg,
         sector: sector || existing.sector,
       });
       if (result.error) {
-        toast({ title: "Error", description: "Failed to update holding", variant: "destructive" });
+        toast({ title: "Error", description: typeof result.error==='string'?result.error:result.error.message??'Refresh this holding and retry', variant: "destructive" });
         return;
       }
       toast({
@@ -102,7 +106,7 @@ export function AddInvestmentDialog({
     } else {
       const result = await addToPortfolio(symbol.toUpperCase(), name, sharesNum, costNum, sector || undefined);
       if (result.error) {
-        toast({ title: "Error", description: "Failed to add investment", variant: "destructive" });
+        toast({ title: "Error", description: typeof result.error==='string'?result.error:result.error.message??'Failed to add investment', variant: "destructive" });
         return;
       }
       toast({ title: "Investment added", description: `${sharesNum} shares of ${symbol.toUpperCase()}` });
