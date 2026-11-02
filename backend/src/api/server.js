@@ -58,6 +58,7 @@ export function createServer() {
     // Render terminates TLS at its reverse proxy. Trust only the configured
     // number of hops so per-client rate limits use the actual visitor address.
     app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
+    app.use(requestLogger);
     app.use(helmet());
     app.use(migrationFreeze(env.MIGRATION_WRITE_FREEZE));
     app.use(cors(corsOptions));
@@ -70,14 +71,13 @@ export function createServer() {
     const identity=getIdentityRuntime();
     if(identity){
         app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database}));
-        // Recovery and OAuth callback paths contain credentials. Mount before
-        // requestLogger, and expose only the owned bridge, never raw auth.handler.
+        // The early logger records fixed route categories, never callback URLs.
+        // Expose only the owned bridge, never raw auth.handler.
         app.use('/api/v1/identity',apiKeyAuth(),(identity.provider==='neon-managed'?createManagedIdentityRouter:createIdentityRouter)({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));
         app.use('/api/v1/data',apiKeyAuth(),express.json({limit:'64kb'}),createBrowserDataRouter(identity));
         app.use('/api/v1/functions',apiKeyAuth(),express.json({limit:'64kb'}),createOwnedFunctionRouter(identity));
     }
     app.use(express.json({ limit: '512kb' }));
-    app.use(requestLogger);
     // Health stays open and unmetered — infra probes shouldn't need a key or
     // count against anyone's rate limit.
     app.use("/api/v1", healthRoutes);

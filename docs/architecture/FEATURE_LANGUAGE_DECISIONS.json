@@ -5277,6 +5277,19 @@
         "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",
         "https://tanstack.com/query/latest/docs/framework/react/guides/window-focus-refetching"
       ]
+    },
+    {
+      "file": "backend/src/monitoring/poolMetrics.js",
+      "category": "Phase 1 database efficiency and release observability",
+      "language": "Existing JavaScript Node compatibility API, PostgreSQL SQL, existing Python ingestion",
+      "runtime": "Existing services only; no Go cutover or new runtime",
+      "reason": "Instrument pg callback and promise clients and batch complete dividend histories in the current API. Retain SQL RLS, decimal source values and Python numerical workers; deployment limits and compatibility make a rewrite inappropriate for this bounded change. Security role DDL is separately gated.",
+      "references": [
+        "https://nodejs.org/api/perf_hooks.html",
+        "https://node-postgres.com/apis/pool",
+        "https://www.postgresql.org/docs/current/sql-revoke.html",
+        "https://upstash.com/docs/redis/overall/pricing"
+      ]
     }
   ],
   "nativeRewrite": {

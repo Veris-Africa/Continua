@@ -1,4 +1,5 @@
 import pg from 'pg';
+import {observePool} from '../monitoring/poolMetrics.js';
 import {env} from '../config/index.js';
 import {logger} from '../monitoring/logger.js';
 import {createContinuaAuth} from './continuaAuth.js';
@@ -19,6 +20,7 @@ export function getIdentityRuntime(){
  // TLS object. Remove them only after requiring TLS, then enforce certificates.
  for(const key of ['sslmode','sslrootcert','sslcert','sslkey'])url.searchParams.delete(key);
  const database=new pg.Pool({connectionString:url.href,ssl:{rejectUnauthorized:true},max:3,idleTimeoutMillis:30000,connectionTimeoutMillis:10000,statement_timeout:10000,options:'-c search_path=app_identity,public',types:{getTypeParser:(oid,format)=>[20,1700].includes(oid)&&format!=='binary'?value=>value:pg.types.getTypeParser(oid,format)}});
+ observePool(database,'identity');
  observePoolErrors(database,{component:'identity-database',report:(fields,message)=>logger.error(fields,message)});
  if(env.AUTH_PROVIDER==='neon-managed'){runtime=createManagedRuntime({database,config:env});return runtime;}
  const mail=createBrevoAuthMail({enabled:env.AUTH_EMAIL_ENABLED,smtpUser:env.AUTH_SMTP_USER,smtpKey:env.AUTH_SMTP_KEY,sender:env.AUTH_EMAIL_SENDER,authOrigin:env.AUTH_PUBLIC_ORIGIN,database});

@@ -6,9 +6,10 @@ import { asyncHandler } from "../middleware/errorHandler.js";
 import {queryVolume} from '../../monitoring/queryVolume.js';
 import {cache} from '../../storage/cache.js';
 import {env} from '../../config/index.js';
+import {poolSnapshot} from '../../monitoring/poolMetrics.js';
 export const adminFinancialsRoutes = Router();
 adminFinancialsRoutes.get('/diagnostics/query-volume',(_req,res)=>{
- res.setHeader('Cache-Control','no-store');res.json({data:{...queryVolume.snapshot(),cache:{driver:env.CACHE_DRIVER,metrics:cache.metrics??null}}});
+ res.setHeader('Cache-Control','no-store');res.json({data:{...queryVolume.snapshot(),pools:poolSnapshot(),cache:{driver:env.CACHE_DRIVER,metrics:cache.metrics??null}}});
 });
 adminFinancialsRoutes.get("/financials/candidates", asyncHandler(adminFinancialsController.listPending));
 adminFinancialsRoutes.get("/financials/candidates/:id", asyncHandler(adminFinancialsController.getOne));

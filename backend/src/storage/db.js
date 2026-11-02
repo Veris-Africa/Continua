@@ -10,6 +10,7 @@ import { registerDateTypes } from "./dateTypes.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import {observePoolErrors} from './poolErrors.js';
+import {observePool} from '../monitoring/poolMetrics.js';
 import {queryVolume} from '../monitoring/queryVolume.js';
 // node-postgres returns NUMERIC and BIGINT columns as STRINGS by default —
 // a well-known pg gotcha, because a numeric/bigint value can exceed what a
@@ -35,6 +36,7 @@ export const pool = new pg.Pool({
     connectionTimeoutMillis: 5_000,
     statement_timeout: 12_000,
 });
+observePool(pool,'application');
 observePoolErrors(pool,{component:'application-database',report:(fields,message)=>logger.error(fields,message)});
 let reportedCalls=0,reportedBytes=0;
 const volumeReporter=setInterval(()=>{
@@ -51,15 +53,7 @@ const volumeReporter=setInterval(()=>{
 },300000);
 volumeReporter.unref();
 export async function query(text, params) {
-    const start = Date.now();
-    try {
-        const res = await pool.query(text, params);
-        queryVolume.record(text,res,Date.now()-start);
-        return res;
-    } catch(error) {
-        queryVolume.record(text,null,Date.now()-start,true);
-        throw error;
-    }
+    return pool.query(text, params);
 }
 export async function withTransaction(fn) {
     const client = await pool.connect();

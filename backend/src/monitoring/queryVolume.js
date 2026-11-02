@@ -39,7 +39,7 @@ export function createQueryVolume() {
             entries.set(key,metric);
         } catch { /* Observability cannot fail a query or replay a write. */ }
     }
-    return {record,snapshot:()=>({startedAt,coverage:'shared query helper only; excludes transactions, separate identity pools and direct pool callers',
+    return {record,snapshot:()=>({startedAt,coverage:'instrumented application and identity pool clients, including transactions; excludes streaming Query objects, external processes and provider traffic',
         unit:'sampled decoded result-value byte estimate; not Neon billed/network transfer',
         queries:[...entries.values()].map(metric=>({...metric})).sort((a,b)=>b.estimatedResultValueBytes-a.estimatedResultValueBytes)})};
 }
