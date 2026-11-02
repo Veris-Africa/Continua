@@ -42,7 +42,9 @@ try{
   corporateActionsRepository.getBySecurity=async()=>input.actions;
   valuationService.compute=async()=>input.valuation;
   newsRepository.listBySecurity=async()=>input.news;newsRepository.getById=async id=>input.articles[id]??null;
-  indicatorsService.compute=async()=>null;
+  // The production bundle now requests one job-scoped batch. Keep the oracle
+  // isolated from SQL and preserve the original empty technical fixture.
+  indicatorsService.computeMany=async requests=>requests.map(()=>null);
   let expectedState;
   engineRepository.observe=async(_id,state)=>{expectedState=state;return baseline;};
   const expected=JSON.parse(JSON.stringify(await getEngineBundle(symbol,'NSE')));
