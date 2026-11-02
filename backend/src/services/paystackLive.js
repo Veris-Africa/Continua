@@ -1,3 +1,4 @@
+import {hostedIntentReference,hostedRequestHash,checkoutPending} from './hostedCheckoutIntent.js';
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { env } from "../config/index.js";
@@ -54,7 +55,7 @@ export function validateLiveTransaction(raw, order) {
         throw new ApiError(409, "This payment does not match your live checkout.");
     return t;
 }
-export async function initializeLiveCheckout(userId, email, input, policyVersion, paymentMethod) {
+export async function initializeLiveCheckout(userId, email, input, policyVersion, paymentMethod, intentId) {
     if (policyVersion !== CHECKOUT_POLICY_VERSION)
         throw new ApiError(400, 'Acknowledge the current checkout terms before proceeding.');
     requireEnabled();
@@ -65,17 +66,34 @@ export async function initializeLiveCheckout(userId, email, input, policyVersion
         throw new ApiError(409, "Create your membership profile before checkout.");
     if (profile.rows[0].plan === 'premium_plus' && input.plan === 'premium')
         throw new ApiError(409, "Premium is already included in your active Premium Plus membership. Renew Plus or wait until it expires to switch.");
-    const reference = `continua-live-${randomUUID()}`;
     const amount = prices[input.plan][input.cycle];
+    const useIntent=env.PAYSTACK_CHECKOUT_INTENTS_ENABLED===true;
+    const reference = useIntent?hostedIntentReference(userId,intentId):`continua-live-${randomUUID()}`;
+    const requestHash=useIntent?hostedRequestHash(userId,email,input,policyVersion,paymentMethod,amount):null;
+    if(useIntent){
+        const inserted=await query(`INSERT INTO public.paystack_live_orders(reference,user_id,email,plan,cycle,amount_minor,terms_version,terms_accepted_at,initialization_request_hash,initialization_state)
+        VALUES($1,$2,$3,$4,$5,$6,$7,now(),$8,'initializing') ON CONFLICT(reference) DO NOTHING RETURNING reference`,[reference,userId,email,input.plan,input.cycle,amount,policyVersion,requestHash]);
+        if(!inserted.rows.length){
+            const previous=(await query('SELECT initialization_request_hash,initialization_state,authorization_url,checkout_access_code,status FROM public.paystack_live_orders WHERE reference=$1 AND user_id=$2',[reference,userId])).rows[0];
+            if(!previous||previous.initialization_request_hash!==requestHash)throw new ApiError(409,'This checkout intent belongs to a different request.');
+            if(previous.status==='paid')throw new ApiError(409,'This checkout is already paid. Verify its receipt instead.');
+            if(previous.initialization_state!=='initialized'||!validCheckoutUrl(previous.authorization_url))throw checkoutPending(reference);
+            return {url:previous.authorization_url,accessCode:previous.checkout_access_code??null,reference,mode:'live',amount:amount/100,currency:'KES'};
+        }
+    }else
     await query(`INSERT INTO public.paystack_live_orders (reference,user_id,email,plan,cycle,amount_minor,terms_version,terms_accepted_at) VALUES ($1,$2,$3,$4,$5,$6,$7,now())`, [reference, userId, email, input.plan, input.cycle, amount, policyVersion]);
-    const data = z.object({ authorization_url: z.string(), reference: z.literal(reference), access_code: z.string().min(1).max(200).optional() }).safeParse(await provider("/transaction/initialize", {
+    let data;try{data = z.object({ authorization_url: z.string(), reference: z.literal(reference), access_code: z.string().min(1).max(200).optional() }).safeParse(await provider("/transaction/initialize", {
         email, amount, currency: "KES", reference, callback_url: env.PAYSTACK_CALLBACK_URL,
         metadata: JSON.stringify({ continua_reference: reference, continua_user: userId, mode: "live", terms_version: policyVersion }),
         ...(paymentMethod ? { channels: [paymentMethod] } : {}),
         // One-time checkout supports M-PESA. Never save reusable card authorizations or auto-charge.
     }));
-    if (!data.success || !validCheckoutUrl(data.data.authorization_url))
+    }catch(error){if(useIntent)await query("UPDATE public.paystack_live_orders SET initialization_state='unknown' WHERE reference=$1 AND initialization_state='initializing'",[reference]).catch(()=>{});if(useIntent)throw checkoutPending(reference);throw error;}
+    if (!data.success || !validCheckoutUrl(data.data.authorization_url)) {
+        if(useIntent){await query("UPDATE public.paystack_live_orders SET initialization_state='unknown' WHERE reference=$1 AND initialization_state='initializing'",[reference]).catch(()=>{});throw checkoutPending(reference);}
         throw new ApiError(502, "Payment provider returned an invalid checkout link.");
+    }
+    if(useIntent){let saved;try{saved=await query("UPDATE public.paystack_live_orders SET initialization_state='initialized',authorization_url=$2,checkout_access_code=$3 WHERE reference=$1 AND initialization_request_hash=$4 AND initialization_state='initializing'",[reference,data.data.authorization_url,data.data.access_code??null,requestHash]);}catch{throw checkoutPending(reference);}if(saved.rowCount!==1)throw checkoutPending(reference);}
     return { url: data.data.authorization_url, accessCode: data.data.access_code ?? null, reference, mode: "live", amount: amount / 100, currency: 'KES' };
 }
 export async function verifyLiveCheckout(reference, userId) {

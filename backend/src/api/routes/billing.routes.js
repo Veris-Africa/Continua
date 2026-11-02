@@ -10,8 +10,8 @@ import { liveCheckoutEnabled, initializeLiveCheckout, verifyLiveCheckout, liveRe
 import { nativeCheckoutForUser, nativeCheckoutInput, initializeNativeCheckout, verifyNativeCheckout, nativeSecret, nativeReferencePattern, cardRenewalEnabled } from '../../services/paystackNative.js';
 import { query } from '../../storage/db.js';
 export const billingRoutes = Router();
-const billingAdmission = rateLimit({windowMs:60000,limit:20,store:protectionStore('billing-admission'),passOnStoreError:false,standardHeaders:true,legacyHeaders:false,keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))});
-billingRoutes.get("/billing/status", (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ data: { enabled: liveCheckoutEnabled(), nativeCheckout: nativeCheckoutForUser(res.locals.engineUserId), inlineCheckout: true, nativeMode: env.PAYSTACK_NATIVE_MODE, mode: "live", automaticRenewal: cardRenewalEnabled() } }); });
+const billingAdmission = rateLimit({windowMs:60000,limit:20,store:protectionStore('billing-admission'),passOnStoreError:false,standardHeaders:true,legacyHeaders:false,keyGenerator:(req,res)=>res.locals.engineIdentityVerified===true&&res.locals.engineUserId?'owner:'+res.locals.engineUserId:'ip:'+ipKeyGenerator(rateLimitClientIP(req,res))});
+billingRoutes.get("/billing/status", (_req, res) => { res.setHeader('Cache-Control', 'no-store'); res.json({ data: { enabled: liveCheckoutEnabled(),hostedCheckoutIntents:env.PAYSTACK_CHECKOUT_INTENTS_ENABLED===true,nativeCheckout: nativeCheckoutForUser(res.locals.engineUserId), inlineCheckout: true, nativeMode: env.PAYSTACK_NATIVE_MODE, mode: "live", automaticRenewal: cardRenewalEnabled() } }); });
 billingRoutes.get('/billing/renewal', billingAdmission, requireEngineUser, asyncHandler(async (_req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json({ data: (await query('SELECT enabled,plan,next_charge_at AS "nextChargeAt",active_reference IS NOT NULL AS processing FROM public.paystack_card_renewals WHERE user_id=$1 AND mode=$2', [res.locals.engineUserId, env.PAYSTACK_NATIVE_MODE])).rows[0] ?? null });
@@ -47,7 +47,7 @@ billingRoutes.post("/billing/checkout", billingAdmission, requireEngineUser, asy
     if (!input.success)
         throw new ApiError(400, "Choose a valid plan and billing cycle, then acknowledge the current billing terms. Refresh checkout if needed.");
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, { plan: input.data.plan, cycle: input.data.cycle }, CHECKOUT_POLICY_VERSION, input.data.paymentMethod) });
+    res.json({ data: await initializeLiveCheckout(res.locals.engineUserId, res.locals.engineUserEmail, { plan: input.data.plan, cycle: input.data.cycle }, CHECKOUT_POLICY_VERSION, input.data.paymentMethod,input.data.intentId) });
 }));
 billingRoutes.get("/billing/verify/:reference", billingAdmission, requireEngineUser, asyncHandler(async (req, res) => {
     const reference = String(req.params.reference);

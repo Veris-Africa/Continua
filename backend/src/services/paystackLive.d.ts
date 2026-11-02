@@ -34,7 +34,7 @@ export declare function validateLiveTransaction(raw: unknown, order: LiveOrder):
     } | undefined;
     paid_at?: string | null | undefined;
 };
-export declare function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>, policyVersion: string, paymentMethod?: 'card' | 'mobile_money'): Promise<{
+export declare function initializeLiveCheckout(userId: string, email: string, input: z.infer<typeof checkoutInput>, policyVersion: string, paymentMethod?: 'card' | 'mobile_money',intentId?:string): Promise<{
     url: string;
     accessCode: string | null;
     reference: string;

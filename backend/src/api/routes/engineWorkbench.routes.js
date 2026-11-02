@@ -211,7 +211,7 @@ engineWorkbenchRoutes.post("/engine/assistant", requirePremiumPlus, handle(async
     const evidence = [];
     if (body.scope === "portfolio") {
         const portfolio = await getPortfolioResearch(user(res), body.exchange);
-        evidence.push({ id: "portfolio", title: "Your portfolio research", asOf: new Date().toISOString(), url: null, facts: { positions: portfolio.positions, sectors: portfolio.sectors, warnings: portfolio.warnings, performance: portfolio.performance, correlations: portfolio.correlations, risk: portfolio.risk, dividends: portfolio.dividends, researchBriefing: portfolio.researchBriefing, coverage: portfolio.coverage, methodology: portfolio.methodology } });
+        evidence.push({ id: "portfolio", ownerId:user(res), title: "Your portfolio research", asOf: new Date().toISOString(), url: null, facts: { positions: portfolio.positions, sectors: portfolio.sectors, warnings: portfolio.warnings, performance: portfolio.performance, correlations: portfolio.correlations, risk: portfolio.risk, dividends: portfolio.dividends, researchBriefing: portfolio.researchBriefing, coverage: portfolio.coverage, methodology: portfolio.methodology } });
     }
     else
         for (const symbol of [...new Set(body.symbols)]) {

@@ -16,12 +16,14 @@ export declare const checkoutAgreementInput: z.ZodObject<{
 } & {
     policyVersion: z.ZodLiteral<"2026-10-12">;
     accepted: z.ZodLiteral<true>;
+    intentId: z.ZodOptional<z.ZodString>;
     paymentMethod: z.ZodOptional<z.ZodEnum<["card", "mobile_money"]>>;
 }, "strict", z.ZodTypeAny, {
     plan: "premium" | "premium_plus";
     cycle: "annual" | "monthly";
     policyVersion: "2026-10-12";
     accepted: true;
+    intentId?:string;
     paymentMethod?: "card" | "mobile_money" | undefined;
 }, {
     plan: "premium" | "premium_plus";

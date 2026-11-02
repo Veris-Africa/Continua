@@ -1,3 +1,4 @@
+import {applyPaidAiApproval} from './paidAi.js';
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -24,6 +25,7 @@ const EnvSchema = z.object({
     ENGINE_PYTHON_BIN: z.string().min(1).default('python3'),
     PAYSTACK_SECRET_KEY: z.string().optional(),
     PAYSTACK_LIVE_CHECKOUT_ENABLED: booleanEnv(false),
+    PAYSTACK_CHECKOUT_INTENTS_ENABLED: booleanEnv(false),
     PAYSTACK_CALLBACK_URL: z.string().url().optional(),
     PAYSTACK_TEST_SECRET_KEY: z.string().optional(),
     PAYSTACK_NATIVE_MODE: z.enum(['test', 'live']).default('test'),
@@ -32,6 +34,7 @@ const EnvSchema = z.object({
     PAYSTACK_CARD_RENEWAL_ENABLED: booleanEnv(false),
     PAYSTACK_RENEWAL_ENCRYPTION_KEY: z.string().regex(/^[a-f0-9]{64}$/).optional(),
     OPENAI_API_KEY: z.string().optional(),
+    ENGINE_PAID_AI_ENABLED: booleanEnv(false),
     ENGINE_AI_MONTHLY_BUDGET_USD: z.coerce.number().min(0).max(1000).default(5),
     ENGINE_AI_USER_DAILY_LIMIT: z.coerce.number().int().min(0).max(100).default(20),
     ENGINE_MONITOR_ENABLED: booleanEnv(true),
@@ -145,6 +148,6 @@ function loadEnv() {
         console.error("Invalid environment configuration:", parsed.error.flatten().fieldErrors);
         process.exit(1);
     }
-    return parsed.data;
+    return applyPaidAiApproval(parsed.data);
 }
 export const env = loadEnv();

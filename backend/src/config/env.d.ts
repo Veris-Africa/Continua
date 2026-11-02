@@ -15,6 +15,7 @@ declare const EnvSchema: z.ZodObject<{
     ENGINE_CALCULATION_RUNTIME: z.ZodDefault<z.ZodEnum<["node", "python"]>>;
     ENGINE_PYTHON_BIN: z.ZodDefault<z.ZodString>;
     PAYSTACK_SECRET_KEY: z.ZodOptional<z.ZodString>;
+    PAYSTACK_CHECKOUT_INTENTS_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     PAYSTACK_LIVE_CHECKOUT_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     PAYSTACK_CALLBACK_URL: z.ZodOptional<z.ZodString>;
     PAYSTACK_TEST_SECRET_KEY: z.ZodOptional<z.ZodString>;
@@ -23,6 +24,7 @@ declare const EnvSchema: z.ZodObject<{
     PAYSTACK_TEST_USER_IDS: z.ZodDefault<z.ZodString>;
     PAYSTACK_CARD_RENEWAL_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     PAYSTACK_RENEWAL_ENCRYPTION_KEY: z.ZodOptional<z.ZodString>;
+    ENGINE_PAID_AI_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     OPENAI_API_KEY: z.ZodOptional<z.ZodString>;
     ENGINE_AI_MONTHLY_BUDGET_USD: z.ZodDefault<z.ZodNumber>;
     ENGINE_AI_USER_DAILY_LIMIT: z.ZodDefault<z.ZodNumber>;

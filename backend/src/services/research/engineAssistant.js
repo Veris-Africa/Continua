@@ -8,6 +8,12 @@ const AnswerSchema = z.object({ answer: z.string().min(1).max(12000), citations:
 const outputSchema = { type: "object", additionalProperties: false, properties: { answer: { type: "string" }, citations: { type: "array", items: { type: "string" } }, limitations: { type: "array", items: { type: "string" } } }, required: ["answer", "citations", "limitations"] };
 export function validateAssistantAnswer(value, evidence) {
     const answer = AnswerSchema.parse(value), ids = new Set(evidence.map(e => e.id));
+    if(ids.size!==evidence.length||evidence.length>20)throw new Error('Invalid evidence set');
+    for(const item of evidence){
+        if(typeof item.id!=='string'||!/^[a-zA-Z0-9:._-]{1,160}$/.test(item.id))throw new Error('Invalid evidence identifier');
+        if(item.url){const url=new URL(item.url);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw new Error('Unsafe evidence address');}
+    }
+    if(/<[a-z!/][^>]*>|!?\[[^\]]*\]\([^)]*\)|javascript:|data:text\/html/i.test([answer.answer,...answer.limitations].join('\n')))throw new Error('Assistant answers must use plain text and source IDs');
     if (answer.citations.some(id => !ids.has(id)))
         throw new Error("Assistant cited an unknown source");
     return { ...answer, sources: answer.citations.map(id => evidence.find(e => e.id === id)) };
@@ -15,6 +21,7 @@ export function validateAssistantAnswer(value, evidence) {
 const answers = new Map();
 const pending = new Map();
 export async function askEngine(userId, question, evidence, preferences) {
+    if(evidence.some(item=>item.ownerId!==undefined&&item.ownerId!==userId))throw new ApiError(403,'Research context belongs to a different account.');
     if (!evidence.length)
         throw new ApiError(422, "No verified evidence is available to answer this question.");
     if (!env.OPENAI_API_KEY)

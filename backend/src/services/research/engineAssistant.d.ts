@@ -1,4 +1,5 @@
 export interface Evidence {
+    ownerId?: string;
     id: string;
     title: string;
     asOf: string | null;
