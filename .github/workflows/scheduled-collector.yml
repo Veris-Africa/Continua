@@ -1,4 +1,6 @@
 name: Bounded financial collection outside Render
+# Shared Python startup fails fast on unavailable/quota-limited Neon. Decoded
+# SQL result estimates appear in the bounded job logs, separately from R2 bytes.
 on:
   schedule:
     - cron: '17 */8 * * *'

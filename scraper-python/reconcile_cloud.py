@@ -33,13 +33,13 @@ def reconciliation_limits(environment,migrate_raw):
     return ceiling,daily,seconds
 
 
-async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=False):
+async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=False,prepare_schema=False):
     if (cleanup_verified or cleanup_only) and not migrate_raw:raise ValueError('Legacy cleanup requires the migration allowance')
     validate_environment(os.environ)
     if os.environ.get('R2_DUAL_WRITE','false').lower() not in ('false','0','no',''):
         raise ValueError('Cloud reconciliation requires R2-only writes')
     ceiling,daily,seconds=reconciliation_limits(os.environ,migrate_raw)
-    database=await Database.open(os.environ['DATABASE_URL'])
+    database=await Database.open(os.environ['DATABASE_URL'],probe=True)
     storage=None;archive=None;cleanup=None
     budget=transfer_budget.TransferBudget(ceiling)
     receipt={'status':'running','mode':'automatic-full-registry','processed':0,
@@ -47,13 +47,18 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
     run_id=('cloud-migration-' if migrate_raw else 'cloud-processed-')+os.environ.get('GITHUB_RUN_ID',uuid.uuid4().hex)+'-'+os.environ.get('GITHUB_RUN_ATTEMPT','1')
     started=time.monotonic()
     try:
-        # Additive checkpoint schema only. No SQL body is accepted from a job input.
+        # Routine jobs validate existing checkpoints; schema work is explicit
+        # maintenance, never replayed on every scheduled run.
         migration=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261018120000 processed cloud archive.sql'
-        async with database.pool.connection() as connection:
-            await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
-            if cleanup_verified or cleanup_only:
-                orphan_migration=migration.parent/'20261019100000 uncatalogued raw archive.sql'
-                await connection.execute(orphan_migration.read_text(encoding='utf-8'),prepare=False)
+        if prepare_schema:
+            async with database.pool.connection() as connection:
+                await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
+                if cleanup_verified or cleanup_only:
+                    orphan_migration=migration.parent/'20261019100000 uncatalogued raw archive.sql'
+                    await connection.execute(orphan_migration.read_text(encoding='utf-8'),prepare=False)
+        else:
+            schemas=await database.query("SELECT to_regclass('scraping.processed_cloud_archive') IS NOT NULL AS ready")
+            if not schemas or not schemas[0]['ready']:raise RuntimeError('Checkpoint schema missing; approved maintenance required')
         async with scheduled_slot(database,run_id,'drain',ceiling,daily,migration=migrate_raw) as skipped:
             if skipped:return dict(receipt,status=skipped)
             transfer_budget.active=budget
@@ -92,7 +97,9 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
                         if result.get('budgetPaused'):raise transfer_budget.TransferLimitReached()
                         cleanup_pending=result['deleted']>0 or orphan_result['deleted']>0
                     if processing:
-                        result=await processor.run(25)
+                        # Archive-only progress must not reread every issuer's
+                        # financial payload after each five-object batch.
+                        result=await processor.run(25,refresh_contexts=False)
                         receipt['processed']+=result['processed'];receipt['failures']+=result['failed']
                         processing=result['processed']>0 or result['failed']>0
                     if exporting:
@@ -107,6 +114,15 @@ async def reconcile(*,migrate_raw=False,cleanup_verified=False,cleanup_only=Fals
                         processing=processing or result['copied']>0
                         if cleanup and result['copied']>0:cleanup_pending=True
                     if processing:exporting=True
+                if not cleanup_only:
+                    receipt['companyContexts']=await processor.refresh_company_contexts()
+                    receipt['companyContextsPending']=processor.contexts_pending
+                    receipt['companyContextRefreshes']=1
+                    # Context updates are durable before publishing immutable
+                    # objects. Any remaining objects resume on the next run.
+                    result=await exporter.run(25)
+                    receipt['processedObjects']+=result['copied'];receipt['failures']+=result['failed']
+                    exporting=exporting or result['copied']>0 or result['superseded']>0 or processor.contexts_pending>0
                 receipt['status']='completed' if not(processing or exporting or raw_pending or cleanup_pending) else 'checkpointed'
             except transfer_budget.TransferLimitReached:receipt['status']='budget-paused'
             finally:
@@ -132,11 +148,12 @@ def main():
     parser.add_argument('--migrate-raw',action='store_true')
     parser.add_argument('--cleanup-verified-originals',action='store_true')
     parser.add_argument('--cleanup-only',action='store_true')
+    parser.add_argument('--prepare-schema',action='store_true',help='Explicit approved additive schema maintenance only')
     args=parser.parse_args()
     if not args.apply:
         print(json.dumps({'submitted':False,'mode':'offline-plan','scope':'live NSE registry','migrateRaw':args.migrate_raw,'cleanupVerifiedOriginals':args.cleanup_verified_originals,'cleanupOnly':args.cleanup_only}));return 0
     try:
-        result=asyncio.run(reconcile(migrate_raw=args.migrate_raw,cleanup_verified=args.cleanup_verified_originals,cleanup_only=args.cleanup_only),loop_factory=database_event_loop)
+        result=asyncio.run(reconcile(migrate_raw=args.migrate_raw,cleanup_verified=args.cleanup_verified_originals,cleanup_only=args.cleanup_only,prepare_schema=args.prepare_schema),loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
         return 1 if result.get('failures',0) else 0
     except Exception as error:

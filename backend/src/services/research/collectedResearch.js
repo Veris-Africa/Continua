@@ -17,7 +17,11 @@ export async function collectedResearch(symbol, limit = 20, offset = 0, destinat
     const cloudMode=process.env.PROCESSED_STORAGE_READS??'database';
     if(!['database','prefer-r2','r2'].includes(cloudMode))throw new Error('Invalid processed storage mode');
     const cloud=cloudMode!=='database';
-    const result = await query(`SELECT payload ${cloud?',extraction_id,processor_version,security_id,destination,status,object_uri,sha256,size_bytes':''} FROM (
+    // A verified current R2 object is authoritative. Do not transfer the same
+    // potentially multi-MB JSON through Neon just to discard it below. Keep
+    // the original payload only for the existing no-pointer fallback.
+    const selection=cloud?'CASE WHEN object_uri IS NOT NULL THEN NULL ELSE payload END AS payload':'payload';
+    const result = await query(`SELECT ${selection} ${cloud?',extraction_id,processor_version,security_id,destination,status,object_uri,sha256,size_bytes':''} FROM (
       SELECT DISTINCT ON (p.destination,p.payload->>'tab',coalesce(p.payload->>'category',''),
         CASE WHEN p.destination='documents' THEN a.document_url ELSE '' END)
         p.payload,e.extracted_at,e.id ${cloud?',p.extraction_id,p.processor_version,p.security_id,p.destination,p.status,c.object_uri,c.sha256,c.size_bytes':''}

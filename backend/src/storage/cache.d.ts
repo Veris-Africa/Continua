@@ -1,4 +1,5 @@
 export interface ICache {
+    readonly metrics?: Record<string, number>;
     rateLimitCommand?(parts: Array<string | number>): Promise<unknown>;
     get<T>(key: string): Promise<T | null>;
     set<T>(key: string, value: T, ttlMs?: number): Promise<void>;

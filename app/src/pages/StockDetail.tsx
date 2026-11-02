@@ -134,7 +134,6 @@ export default function StockDetail() {
   const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
   // Warm public Fundamentals before scrolling. Display/quota gates stay intact.
   usePublisherResearch(upperSymbol || undefined);
-  useStockFinancials(upperSymbol || undefined,{periodType:'annual',limit:10});
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
   const [infoSheet, setInfoSheet] = useState<{ title: string; body: React.ReactNode } | null>(null);
   // Indicator choices are a chart preference, not a per-stock one — they're loaded

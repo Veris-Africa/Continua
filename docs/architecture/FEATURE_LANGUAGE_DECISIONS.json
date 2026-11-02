@@ -5,6 +5,14 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "scraper-python/reconcile_cloud.py",
+      "category": "Neon bandwidth incident remediation and result-volume observability",
+      "language": "Existing Python collector, JavaScript compatibility API, React TypeScript frontend and PostgreSQL JSON projections",
+      "runtime": "Existing GitHub Actions, Render, Cloudflare and optional existing Upstash; no new production runtime or paid service",
+      "reason": "The measured problem is repeated result transfer, not numerical execution speed. Project only assembly inputs, refresh contexts once per bounded archive run, share identical indicator history within one job, and coalesce existing cache lookups. Preserve decimal calculations, complete histories, source rights, live session revocation and entitlements. Python and JavaScript telemetry retains only bounded aggregate byte estimates and statement hashes. This does not complete or cut over the separately gated Go rewrite.",
+      "references": ["https://www.postgresql.org/docs/current/functions-json.html", "https://www.psycopg.org/psycopg3/docs/advanced/pool.html", "https://node-postgres.com/features/queries", "https://tanstack.com/query/latest/docs/framework/react/guides/query-keys"]
+    },
+    {
       "file": "backend/src/data/communityFeed.js",
       "category": "TradersHub first-write correctness and single-transaction feed",
       "language": "Existing JavaScript compatibility API/browser adapter and PostgreSQL",

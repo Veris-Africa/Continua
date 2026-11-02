@@ -83,7 +83,7 @@ async function loadEngineBundle(symbol, exchange) {
             optional("Ownership", corporateActionsRepository.getOwnership(profile.id), []),
             optional("Valuation", valuationService.compute(exchange, symbol), null),
             optional("News", newsRepository.listBySecurity(profile.id, 12), []),
-            optional("Technicals", Promise.all(["SMA", "RSI", "MACD"].map((type) => indicatorsService.compute({
+            optional("Technicals", indicatorsService.computeMany(["SMA", "RSI", "MACD"].map((type) => ({
                 exchange,
                 symbol,
                 type,

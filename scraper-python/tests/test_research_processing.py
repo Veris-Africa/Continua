@@ -35,6 +35,16 @@ def row(**changes):
 
 
 class ProcessingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_archive_batches_can_defer_assembly_without_skipping_evidence_processing(self):
+        processor=ResearchProcessor(DB([row()]))
+        processor.refresh_company_contexts=AsyncMock(return_value=7)
+        summary=await processor.run(1,refresh_contexts=False)
+        self.assertEqual(summary['processed'],1)
+        self.assertEqual(summary['companyContexts'],0)
+        processor.refresh_company_contexts.assert_not_awaited()
+        await processor.run(1)
+        processor.refresh_company_contexts.assert_awaited_once()
+
     async def test_parser_failure_is_retried_without_blocking_the_next_issuer(self):
         from unittest.mock import patch
         db=DB([row(id=1),row(id=2,entity={'ticker':'CGEN'},security_id='NSE:CGEN')])
@@ -64,6 +74,8 @@ class ProcessingTests(unittest.IsolatedAsyncioTestCase):
         db=AssemblyDB()
         self.assertEqual(await ResearchProcessor(db).refresh_company_contexts(),1)
         self.assertIn('s.redistribution_allowed=true',db.calls[0][0])
+        self.assertIn('jsonb_build_object',db.calls[0][0])
+        self.assertNotIn('p.security_id,p.payload,e.extracted_at',db.calls[0][0])
         self.assertIn("'{companyResearch}'",db.calls[1][0])
         self.assertEqual(json.loads(db.calls[1][1][0])['latest']['ratios']['netMargin'],.2)
 

@@ -137,7 +137,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
     ceiling,daily,seconds,source_limit=limits(os.environ)
     ceiling=source_reservation(source_id,ceiling)
     macro_only=source_id=='worldbank-kenya-macro'
-    database=await Database.open(os.environ['DATABASE_URL'])
+    database=await Database.open(os.environ['DATABASE_URL'],probe=True)
     runtime=None
     budget=transfer_budget.TransferBudget(ceiling)
     receipt={'kind':kind,'sources':[],'status':'running','scope':'logical source/browser transfers; R2 upload retry reservations; excludes DB/TLS/SDK headers, not a billing cap'}
@@ -146,20 +146,17 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
     try:
         process_research=os.environ.get('COLLECTOR_PROCESS_RESEARCH')=='true'
         if process_research:
-            # Explicit Actions deployment path, not a public API/Render boot
-            # migration. The additive, RLS-protected receipt table is reviewed
-            # in source control and contains no raw document bodies.
-            migration=pathlib.Path(__file__).resolve().parents[1]/'scraper/migrations/20261016170000 processed research.sql'
-            async with database.pool.connection() as connection:
-                await connection.execute(migration.read_text(encoding='utf-8'),prepare=False)
-                cloud_migration=migration.with_name('20261018120000 processed cloud archive.sql')
-                await connection.execute(cloud_migration.read_text(encoding='utf-8'),prepare=False)
+            # Schema setup belongs to the existing explicit maintenance path.
+            # Recurring collectors must not replay migrations before their lock.
+            ready=await database.query("SELECT to_regclass('scraping.processed_research') IS NOT NULL AND to_regclass('scraping.processed_cloud_archive') IS NOT NULL AS ready")
+            if not ready or not ready[0]['ready']:raise RuntimeError('Research checkpoints missing; approved maintenance required')
             from continua_scraper.research_processing import ResearchProcessor
-            async with asyncio.timeout(60):
-                receipt['processingBefore']=await ResearchProcessor(database).run(25)
-                receipt['availableFinancialsBefore']=await ResearchProcessor(database).available_financials()
         async with scheduled_slot(database,run_id,kind,ceiling,daily) as skipped:
             if skipped:return dict(receipt,status=skipped,pauseReason='daily-reservation-limit' if skipped=='budget-paused' else skipped,reservationBytes=ceiling,durationSeconds=round(time.monotonic()-started,3))
+            if process_research:
+                async with asyncio.timeout(60):
+                    receipt['processingBefore']=await ResearchProcessor(database).run(25,refresh_contexts=False)
+                    receipt['availableFinancialsBefore']=await ResearchProcessor(database).available_financials()
             try:
                 transfer_budget.active=budget
                 storage=RawStorage.from_environment()
@@ -267,7 +264,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
 async def maintenance(operation):
     """Explicit bounded deployment checks; no issuer fetches or historical crawl."""
     validate_environment(os.environ)
-    database=await Database.open(os.environ['DATABASE_URL'])
+    database=await Database.open(os.environ['DATABASE_URL'],probe=True)
     storage=None
     try:
         if operation=='prepare-institutional':

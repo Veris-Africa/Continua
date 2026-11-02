@@ -12,6 +12,7 @@ it('hydrates prepared objects only after the current source rights query and nev
     const reader=vi.spyOn(processedObjectRepository,'read').mockResolvedValue({revenue:123.45});
     expect(await collectedResearch('KCB')).toEqual([{revenue:123.45}]);
     expect(query.mock.calls.at(-1)[0]).toContain('c.processed_at=p.processed_at');
+    expect(query.mock.calls.at(-1)[0]).toContain('CASE WHEN object_uri IS NOT NULL THEN NULL ELSE payload END AS payload');
     expect(query.mock.calls.at(-1)[0]).toContain('s.redistribution_allowed=true');
     reader.mockRejectedValue(new Error('integrity mismatch'));
     await expect(collectedResearch('KCB')).rejects.toThrow('integrity');

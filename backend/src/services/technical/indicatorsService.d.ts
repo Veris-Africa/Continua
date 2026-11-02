@@ -26,4 +26,5 @@ export interface IndicatorResult {
 }
 export declare const indicatorsService: {
     compute(req: IndicatorRequest): Promise<IndicatorResult | null>;
+    computeMany(requests: IndicatorRequest[]): Promise<(IndicatorResult | null)[]>;
 };

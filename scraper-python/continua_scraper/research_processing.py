@@ -77,7 +77,7 @@ class ResearchProcessor:
           ) p ON p.security_id=sec.id
           WHERE sec.exchange='NSE' AND sec.status<>'delisted' GROUP BY sec.symbol ORDER BY sec.symbol""")
 
-    async def run(self,limit=25):
+    async def run(self,limit=25,*,refresh_contexts=True):
         from continua_engine.collected import process_evidence,VERSION
         if type(limit) is not int or not 1<=limit<=100:raise ValueError('Invalid processing batch')
         summary={'processed':0,'observations':0,'review':0,'empty':0,'blocked':0,'failed':0,'version':VERSION,
@@ -176,14 +176,18 @@ class ResearchProcessor:
                 summary['documentsIndexed']+=len(payload.get('documents') or [])
                 for issue in payload.get('issues') or []:
                     code=issue['code'];summary['issueCounts'][code]=summary['issueCounts'].get(code,0)+issue.get('count',1)
-        summary['companyContexts']=await self.refresh_company_contexts()
+        summary['companyContexts']=await self.refresh_company_contexts() if refresh_contexts else 0
         summary['companyContextsPending']=self.contexts_pending
         return summary
 
     async def refresh_company_contexts(self):
         from continua_engine.company_context import company_context
         rows=await self.database.query("""SELECT DISTINCT ON(p.security_id,p.destination,p.payload->>'category')
-          p.extraction_id,p.security_id,p.payload,e.extracted_at FROM scraping.processed_research p
+          p.extraction_id,p.security_id,jsonb_build_object(
+            'status',p.payload->'status','destination',p.payload->'destination',
+            'category',p.payload->'category','financialFields',p.payload->'financialFields',
+            'cloudPayload',p.payload->'cloudPayload','companyResearch',p.payload->'companyResearch'
+          ) AS payload,e.extracted_at FROM scraping.processed_research p
           JOIN scraping.extractions e ON e.id=p.extraction_id JOIN scraping.raw_artifacts a ON a.id=e.artifact_id
           JOIN scraping.sources s ON s.id=a.source_id
           WHERE a.source_id='kenyanstocks' AND p.processor_version='collected-research-v1'

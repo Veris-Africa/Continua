@@ -1,13 +1,13 @@
 import { candlesRepository } from "../../storage/repositories/candlesRepository.js";
 import { sma, ema, rsi, macd } from "./indicators.js";
 export const indicatorsService = {
-    async compute(req) {
+    async compute(req, observations) {
         const securityId = `${req.exchange}:${req.symbol}`;
         // Candles are daily-only for every adapter today (see
         // adapters/mansa/mansaAdapter.ts's getCandles comment) — hardcoding
         // "1d" here rather than accepting an interval param the rest of the
         // system can't actually serve yet.
-        const candles = await candlesRepository.getCandles(securityId, "1d", req.from, req.to);
+        const candles = observations ?? await candlesRepository.getCandles(securityId, "1d", req.from, req.to);
         if (candles.length === 0)
             return null;
         const timestamps = candles.map((c) => c.timestamp);
@@ -33,6 +33,16 @@ export const indicatorsService = {
                 };
             }
         }
+    },
+    async computeMany(requests) {
+        // Job-scoped reuse only: no persistent rights/freshness cache and no
+        // shortened history. Each calculation receives the same observations.
+        const pending=new Map();
+        return Promise.all(requests.map(async req=>{
+            const key=JSON.stringify([req.exchange,req.symbol,req.from,req.to]);
+            if(!pending.has(key))pending.set(key,candlesRepository.getCandles(`${req.exchange}:${req.symbol}`,'1d',req.from,req.to));
+            return indicatorsService.compute(req,await pending.get(key));
+        }));
     },
 };
 function lastNonNull(series) {

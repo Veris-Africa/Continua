@@ -10,6 +10,7 @@ import { registerDateTypes } from "./dateTypes.js";
 import { env } from "../config/index.js";
 import { logger } from "../monitoring/logger.js";
 import {observePoolErrors} from './poolErrors.js';
+import {queryVolume} from '../monitoring/queryVolume.js';
 // node-postgres returns NUMERIC and BIGINT columns as STRINGS by default —
 // a well-known pg gotcha, because a numeric/bigint value can exceed what a
 // JS number can represent exactly. Every price, ratio, market cap, and
@@ -35,13 +36,30 @@ export const pool = new pg.Pool({
     statement_timeout: 12_000,
 });
 observePoolErrors(pool,{component:'application-database',report:(fields,message)=>logger.error(fields,message)});
+let reportedCalls=0,reportedBytes=0;
+const volumeReporter=setInterval(()=>{
+    const snapshot=queryVolume.snapshot();
+    const calls=snapshot.queries.reduce((sum,entry)=>sum+entry.calls,0);
+    if(calls===reportedCalls)return;
+    const bytes=snapshot.queries.reduce((sum,entry)=>sum+entry.estimatedResultValueBytes,0);
+    const delta=bytes-reportedBytes;
+    const fields={component:'database-result-volume',unit:snapshot.unit,
+        calls:calls-reportedCalls,estimatedResultValueBytes:delta,top:snapshot.queries.slice(0,10)};
+    if(delta>8*1024*1024)logger.warn(fields,'Large estimated database result volume; investigate repeated reads');
+    else logger.info(fields,'Database result-volume sample');
+    reportedCalls=calls;reportedBytes=bytes;
+},300000);
+volumeReporter.unref();
 export async function query(text, params) {
     const start = Date.now();
-    const res = await pool.query(text, params);
-    const ms = Date.now() - start;
-    if (ms > 500)
-        logger.warn({ text, ms }, "Slow query");
-    return res;
+    try {
+        const res = await pool.query(text, params);
+        queryVolume.record(text,res,Date.now()-start);
+        return res;
+    } catch(error) {
+        queryVolume.record(text,null,Date.now()-start,true);
+        throw error;
+    }
 }
 export async function withTransaction(fn) {
     const client = await pool.connect();

@@ -4,7 +4,7 @@ export class UpstashCache {
     namespace;
     fallback;
     pending = new Map();
-    metrics = { hits: 0, misses: 0, failures: 0 };
+    metrics = { hits: 0, misses: 0, failures: 0, sharedReads: 0, producers: 0 };
     constructor(url, token, namespace, fallback) {
         this.url = url;
         this.token = token;
@@ -61,13 +61,21 @@ export class UpstashCache {
         this.metrics.failures++;
     } }
     async getOrSet(key, ttlMs, fn) {
-        const cached = await this.get(key);
-        if (cached !== null)
-            return cached;
         const existing = this.pending.get(key);
-        if (existing)
+        if (existing) {
+            this.metrics.sharedReads++;
             return existing;
-        const job = Promise.resolve().then(fn).then(async (value) => { await this.set(key, value, ttlMs); return value; });
+        }
+        // Share the cache lookup as well as the producer: simultaneous misses
+        // must not fan out into repeated Redis HTTP requests during startup.
+        const job = Promise.resolve().then(async () => {
+            const cached = await this.get(key);
+            if (cached !== null) return cached;
+            this.metrics.producers++;
+            const value = await fn();
+            await this.set(key, value, ttlMs);
+            return value;
+        });
         this.pending.set(key, job);
         try {
             return await job;

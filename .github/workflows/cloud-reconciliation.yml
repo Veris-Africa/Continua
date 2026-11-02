@@ -40,8 +40,6 @@ jobs:
           COLLECTOR_RUN_TRANSFER_BYTES: '16777216'
           COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
           COLLECTOR_RUN_SECONDS: '600'
-          # Four finite runs per UTC day fit the approved 1 GiB/day ceiling.
-          # Each stays below the approved 384 MiB maximum per run.
-          CLOUD_MIGRATION_RUN_TRANSFER_BYTES: '268435456'
-          CLOUD_MIGRATION_DAILY_TRANSFER_BYTES: '1073741824'
+          # These are source/R2 logical-byte limits, not Neon egress limits.
+          # Normal reconciliation never enables the separate raw migration.
         run: python scraper-python/reconcile_cloud.py --apply

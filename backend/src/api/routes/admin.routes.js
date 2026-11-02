@@ -3,7 +3,13 @@ import {ApiError} from '../middleware/errorHandler.js';
 import { Router } from "express";
 import { adminFinancialsController } from "../controllers/adminFinancials.controller.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
+import {queryVolume} from '../../monitoring/queryVolume.js';
+import {cache} from '../../storage/cache.js';
+import {env} from '../../config/index.js';
 export const adminFinancialsRoutes = Router();
+adminFinancialsRoutes.get('/diagnostics/query-volume',(_req,res)=>{
+ res.setHeader('Cache-Control','no-store');res.json({data:{...queryVolume.snapshot(),cache:{driver:env.CACHE_DRIVER,metrics:cache.metrics??null}}});
+});
 adminFinancialsRoutes.get("/financials/candidates", asyncHandler(adminFinancialsController.listPending));
 adminFinancialsRoutes.get("/financials/candidates/:id", asyncHandler(adminFinancialsController.getOne));
 adminFinancialsRoutes.post("/financials/candidates/:id/confirm", asyncHandler(adminFinancialsController.confirm));
