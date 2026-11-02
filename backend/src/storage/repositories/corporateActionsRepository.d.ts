@@ -3,6 +3,7 @@ export declare const corporateActionsRepository: {
     upsertCorporateAction(a: CorporateAction): Promise<void>;
     getBySecurity(securityId: string): Promise<CorporateAction[]>;
     getDividendsBySecurity(securityId: string): Promise<CorporateAction[]>;
+    getDividendsBySecurities(securityIds: string[]): Promise<Map<string, CorporateAction[]>>;
     /** Market-wide upcoming dividends for the Markets page calendar — real,
      *  forward-looking data: an ex-date is a fact stated in the company's
      *  own dividend announcement, not a prediction, so this is safe to show
