@@ -12,6 +12,8 @@ on:
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
+      - 'infra/migration/phase1-query-parity.mjs'
+      - 'infra/neon/**'
       - 'infra/migration/investment-evidence-fixture.mjs'
       - 'infra/migration/institutional-fixture.mjs'
       - 'infra/cloudflare/**'
@@ -29,6 +31,8 @@ on:
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
+      - 'infra/migration/phase1-query-parity.mjs'
+      - 'infra/neon/**'
       - 'infra/migration/investment-evidence-fixture.mjs'
       - 'infra/migration/institutional-fixture.mjs'
       - 'infra/cloudflare/**'
@@ -109,6 +113,8 @@ jobs:
       - run: node infra/migration/investment-evidence-fixture.mjs
       - run: node infra/migration/institutional-fixture.mjs
       - run: node infra/security/session-assurance-fixture.mjs
+      - run: node infra/migration/phase1-query-parity.mjs
+      - run: node infra/security/e01-profile-privileges-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs
       - run: node infra/migration/native-statistics-parity.mjs

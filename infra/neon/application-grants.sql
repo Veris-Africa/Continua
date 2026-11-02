@@ -208,8 +208,9 @@ GRANT ALL ON TABLE public.posts TO service_role;
 GRANT ALL ON TABLE public.price_alerts TO anon;
 GRANT ALL ON TABLE public.price_alerts TO authenticated;
 GRANT ALL ON TABLE public.price_alerts TO service_role;
-GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE public.profiles TO anon;
-GRANT INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE public.profiles TO authenticated;
+-- E01: browser profile DML only; administrative privileges require a separate owner.
+GRANT INSERT,DELETE,UPDATE ON TABLE public.profiles TO anon;
+GRANT INSERT,DELETE ON TABLE public.profiles TO authenticated;
 GRANT ALL ON TABLE public.profiles TO service_role;
 GRANT SELECT(id) ON TABLE public.profiles TO anon;
 GRANT SELECT(id) ON TABLE public.profiles TO authenticated;
