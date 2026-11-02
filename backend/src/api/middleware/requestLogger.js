@@ -4,7 +4,7 @@ import {performance} from 'node:perf_hooks';
 // Fixed categories before route matching also cover rejected auth/data requests.
 // Never log raw URLs, OAuth paths, query strings, bodies or user identifiers.
 export function requestCategory(path) {
-    const group = /^\/api\/v1\/(identity|data|functions|internal|admin|billing|engine|market|markets|stocks|securities|quotes|news|health)(?:\/|$)/.exec(path)?.[1];
+    const group = /^\/api\/v1\/(identity|data|functions|internal|admin|billing|engine|market|markets|stocks|securities|quotes|news|health|financials|companies|indices|instruments|historical|movers|research|sectors|statistics|price-history|valuation|backtest)(?:\/|$)/.exec(path)?.[1];
     return group ? `/api/v1/${group}/*` : 'other';
 }
 export function requestLogger(req, res, next) {
