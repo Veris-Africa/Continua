@@ -1,3 +1,4 @@
+import {AuthenticationError,sendAuthenticationFailure} from '../../auth/authErrors.js';
 import { logger } from "../../monitoring/logger.js";
 export class ApiError extends Error {
     status;
@@ -16,10 +17,12 @@ export function asyncHandler(fn) {
 }
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err, req, res, _next) {
+    if(err instanceof AuthenticationError)return sendAuthenticationFailure(res,err);
     if (err?.code === 'RATE_LIMIT_STORE_UNAVAILABLE') {
         res.status(503).set('Retry-After','2').json({error:'Request protection is temporarily unavailable. Please retry.',code:'RATE_LIMIT_STORE_UNAVAILABLE'});
         return;
     }
+    if(err instanceof ApiError&&err.code==='CHECKOUT_INITIALIZATION_PENDING'&&/^continua-live-[a-f0-9-]{36}$/.test(err.reference??'')){res.status(409).json({error:err.message,code:err.code,reference:err.reference});return;}
     if (err instanceof ApiError) {
         res.status(err.status).json({ error: err.message });
         return;

@@ -63,3 +63,5 @@ test('an unconfirmed sign-out never clears the local session',async t=>{
  assert.match((await f.auth.signOut()).error.message,/not confirmed/);
  assert.ok((await f.auth.getSession()).data.session);
 });
+
+test('a temporary verification outage does not publish sign-out or destroy a valid session',async t=>{let fail=false;const expected=session();const f=fixture(t,()=>fail?Response.json({error:'Account verification unavailable',code:'AUTH_UNAVAILABLE'},{status:503}):Response.json({session:expected}));const events:string[]=[];f.auth.onAuthStateChange((event:string)=>events.push(event));await f.auth.restoreSession();fail=true;const failed=await f.auth.refreshSession();assert.equal(failed.error.status,503);assert.equal(events.includes('SIGNED_OUT'),false);assert.equal((await f.auth.getSession()).data.session.access_token,expected.access_token);});

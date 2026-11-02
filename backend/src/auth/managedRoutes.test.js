@@ -36,3 +36,7 @@ test('OAuth callbacks require a one-use server intent even if a provider verifie
  expect((await f.call('oauth-complete',{verifier:'provider-verifier',userId:'forged-owner'},headers)).status).toBe(200);
  expect((await f.call('oauth-complete',{verifier:'provider-verifier'},headers)).status).toBe(401);expect(f.broker.envelope).toHaveBeenCalledTimes(1);
 });
+
+test('managed capabilities advertise only implemented controls without claiming MFA assurance',async()=>{
+ const f=await fixture();const response=await f.call('capabilities');expect(response.status).toBe(200);expect(response.data.capabilities).toMatchObject({provider:'neon-managed',mfa:false,emailChange:false,passwordRecovery:true,requireEmailVerification:true,assuranceLevel:'aal1',recentPasswordAuthentication:true,recentOAuthAuthentication:false});expect((await f.call('capabilities',undefined,{Origin:'https://attacker.invalid'})).status).toBe(403);expect(f.provider.call).not.toHaveBeenCalled();
+});

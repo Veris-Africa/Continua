@@ -54,7 +54,7 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
   reauthenticate:()=>result(async()=>{throw Error('Request a fresh password recovery link instead of an email confirmation code');}),
   setSession:()=>result(async()=>{throw Error('Only the owned server can establish an identity session');}),
   mfa:{
-   listFactors:()=>result(async()=>{const data=await call('factors');return {all:data.factors,totp:data.factors.filter(f=>f.factor_type==='totp'),phone:[]};}),
+   listFactors:()=>result(async()=>{const data=await call('factors');return {capabilities:data.capabilities??null,all:data.factors,totp:data.factors.filter(f=>f.factor_type==='totp'),phone:[]};}),
    enroll:options=>result(()=>call('mfa-enable',{password:options.password})),
    unenroll:options=>result(()=>sessionOperation('mfa-disable',{password:options.password})),
    challengeAndVerify:({code})=>result(()=>sessionOperation('mfa-verify',{code})),

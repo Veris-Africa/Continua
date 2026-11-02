@@ -1,3 +1,4 @@
+import {authenticationFailure,unavailableAuth} from '../../auth/authErrors.js';
 import {getIdentityRuntime} from '../../auth/runtime.js';
 import { env } from "../../config/index.js";
 import { query } from "../../storage/db.js";
@@ -12,12 +13,12 @@ export async function requireEngineUser(req, res, next) {
         const token = req.header("x-user-token");
         if(!token)throw new ApiError(401,"Sign in to use Continua Engine");
         let user;
-        const identity=getIdentityRuntime();
+        let identity;try{identity=getIdentityRuntime();}catch{throw unavailableAuth();}
         if(!identity)throw new ApiError(503,"Account verification is temporarily unavailable.");
         try{user=(await identity.verifyAccess(token)).user;}
-        catch{throw new ApiError(401,"Your session expired or requires verification. Sign in again.");}
+        catch(error){throw authenticationFailure(error);}
         if(!user.id||!/^[0-9a-f-]{36}$/i.test(user.id))throw new ApiError(401,"Invalid user session");
-        const profile = await query("SELECT public.effective_subscription_plan($1) AS subscription_plan", [user.id]);
+        let profile;try{profile=await query("SELECT public.effective_subscription_plan($1) AS subscription_plan", [user.id]);}catch{throw unavailableAuth();}
         res.locals ??= {};
         res.locals.engineUserId = user.id;
         res.locals.engineUserEmail = user.email;

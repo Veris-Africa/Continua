@@ -1,3 +1,5 @@
+import {managedCapabilities} from './managedCapabilities.js';
+import {sendAuthenticationFailure} from './authErrors.js';
 import express from 'express';
 import {randomBytes} from 'node:crypto';
 import {rateLimit,ipKeyGenerator} from 'express-rate-limit';
@@ -23,8 +25,9 @@ export function createManagedIdentityRouter({database,verifyAccess,providerFacto
  const provider=(req,res)=>providerFactory({cookie:req.header('cookie')??'',onCookie:value=>res.append('Set-Cookie',value)});
  const failure=(res,error)=>{const status=Number.isInteger(error.status)&&error.status>=400&&error.status<=599?error.status:503;return res.status(status).json({error:status>=500?'Authentication is temporarily unavailable':error.message,code:error.code??'MANAGED_AUTH_REJECTED'});};
  router.get('/session',async(req,res)=>{try{return res.json({session:await broker.envelope(provider(req,res)),mfaRequired:false});}catch(error){return failure(res,error);}});
- router.get('/verify',async(req,res)=>{try{const identity=await verifyAccess(req.header('x-user-token')??req.header('authorization')?.replace(/^Bearer /,''),{recent:req.query.recent==='true'});return res.json({user:{id:identity.user.id,email:identity.user.email},claims:identity.claims});}catch{return res.status(401).json({error:'Session could not be verified'});}});
- router.get('/factors',async(req,res)=>{try{if(!await broker.envelope(provider(req,res)))return res.status(401).json({error:'Sign in first'});return res.json({factors:[],capabilities:{mfa:false,emailChange:false,requireEmailVerification:true}});}catch(error){return failure(res,error);}});
+ router.get('/verify',async(req,res)=>{try{const identity=await verifyAccess(req.header('x-user-token')??req.header('authorization')?.replace(/^Bearer /,''),{recent:req.query.recent==='true'});return res.json({user:{id:identity.user.id,email:identity.user.email},claims:identity.claims});}catch(error){return sendAuthenticationFailure(res,error);}});
+ router.get('/capabilities',(_req,res)=>res.json({capabilities:managedCapabilities}));
+ router.get('/factors',async(req,res)=>{try{if(!await broker.envelope(provider(req,res)))return res.status(401).json({error:'Sign in first'});return res.json({factors:[],capabilities:managedCapabilities});}catch(error){return failure(res,error);}});
  const operations=new Set(['signup','signin','signout','recover','reset-password','recovery-begin','google','oauth-complete','verify-password','email','mfa-enable','mfa-verify','mfa-disable']);
  router.post('/:operation',async(req,res)=>{
   const operation=req.params.operation,body=req.body;if(!operations.has(operation))return res.status(404).json({error:'Identity operation unavailable'});
