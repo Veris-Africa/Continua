@@ -5290,6 +5290,18 @@
         "https://www.postgresql.org/docs/current/sql-revoke.html",
         "https://upstash.com/docs/redis/overall/pricing"
       ]
+    },
+    {
+      "file": "backend/src/auth/authErrors.js",
+      "category": "Phase 2 security and data integrity",
+      "language": "Existing JavaScript compatibility API and bridge, PostgreSQL, existing React TypeScript UI",
+      "runtime": "Existing services and disposable local PostgreSQL only",
+      "reason": "Typed dependency errors, owner-scoped SQL transactions and constraints preserve existing authentication/payment/domain contracts without introducing another runtime or modifying Engine numerical algorithms. Production DDL remains separately gated.",
+      "references": [
+        "https://nodejs.org/api/errors.html",
+        "https://www.postgresql.org/docs/current/explicit-locking.html",
+        "https://www.postgresql.org/docs/current/ddl-constraints.html"
+      ]
     }
   ],
   "nativeRewrite": {
