@@ -2,7 +2,7 @@
 // No raw provider surface, arbitrary upstream, cache, or automatic redirect.
 import {ownedProvider,identityCookieName,managedStaging} from './auth-provider.mjs';
 const operations=new Set(['signin','google','signup','signout','recover','verify-password','mfa-enable','mfa-verify','mfa-disable','email','recovery-begin','reset-password','oauth-complete']);
-const reads=new Set(['session','factors','verify']);
+const reads=new Set(['session','factors','verify','capabilities']);
 const safeCookie=(value,env)=>identityCookieName(value.split('=')[0],env)&&/^[^=]+=[^;\r\n]*;/.test(value)&&!/[\r\n]/.test(value)&&!/;\s*Domain=/i.test(value)&&/;\s*HttpOnly(?:;|$)/i.test(value)&&/;\s*Secure(?:;|$)/i.test(value)&&/;\s*Path=\/(?:;|$)/i.test(value)&&/;\s*SameSite=Lax(?:;|$)/i.test(value);
 function reply(value,status=200){return new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Pragma':'no-cache','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'}});}
 async function bounded(stream,max){if(!stream)return new Uint8Array();const reader=stream.getReader(),parts=[];let bytes=0;try{for(;;){const item=await reader.read();if(item.done)break;bytes+=item.value.length;if(bytes>max)throw Error('size');parts.push(item.value);}}catch(error){await reader.cancel().catch(()=>{});throw error;}finally{reader.releaseLock();}const out=new Uint8Array(bytes);let offset=0;for(const part of parts){out.set(part,offset);offset+=part.length;}return out;}

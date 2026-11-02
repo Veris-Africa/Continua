@@ -116,6 +116,8 @@ jobs:
       - run: node infra/migration/phase1-query-parity.mjs
       - run: node infra/security/e01-profile-privileges-fixture.mjs
       - run: node infra/security/route-security-matrix.mjs --check
+      - name: Phase 2 pre-DDL application compatibility
+        run: node infra/security/phase2-postgres-fixture.mjs --pre-ddl
       - name: Phase 2 real-role concurrency and payment-intent fixture
         run: node infra/security/phase2-postgres-fixture.mjs
       - run: node infra/migration/native-bundle-parity.mjs

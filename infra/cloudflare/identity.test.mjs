@@ -42,3 +42,7 @@ test('Google callback forwards its exact issuer and rejects substitution or dupl
  for(const path of [callback.replace('accounts.google.com','attacker.invalid'),callback+'&iss=https%3A%2F%2Faccounts.google.com','/api/auth/verify-email?token=synthetic&iss=https%3A%2F%2Faccounts.google.com'])assert.equal((await ownedIdentity(request(path),env,fetcher)).status,400);
  assert.equal(calls,1);
 });
+
+test('managed capability reads pass through the same private origin-protected gateway',async()=>{
+ let calls=0;const response=await ownedIdentity(request('/api/v1/identity/capabilities'),env,async url=>{calls++;assert.equal(url.pathname,'/api/v1/identity/capabilities');return json({capabilities:{mfa:false,emailChange:false}});});assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);assert.equal(calls,1);assert.equal((await ownedIdentity(request('/api/v1/identity/capabilities',{Origin:'https://evil.invalid'}),env,async()=>{throw Error('must not fetch');})).status,403);
+});

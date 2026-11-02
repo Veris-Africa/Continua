@@ -6,6 +6,7 @@ import {randomUUID} from 'node:crypto';
 import assert from 'node:assert/strict';
 import pg from '../../backend/node_modules/pg/lib/index.js';
 const docker=args=>execFileSync('docker',args,{encoding:'utf8',windowsHide:true,timeout:30000}).trim();
+const preDdl=process.argv.includes('--pre-ddl');
 let container,pool;let checks=0;
 const originalExit=process.exit;
 process.exit=code=>{throw Error('Fixture module requested early exit: '+code);};
@@ -35,6 +36,8 @@ try{
  await pool.query('CREATE TRIGGER fixture_provision AFTER INSERT OR UPDATE ON app_identity.continua_auth_user FOR EACH ROW EXECUTE FUNCTION app_identity.sync_auth_identity()');
  for(const id of ids)await pool.query(`INSERT INTO app_identity.continua_auth_user VALUES($1,'synthetic@example.test','Synthetic',true,'{}',now(),now())`,[id]);
  await pool.query("UPDATE public.profiles SET subscription_plan='premium_plus' WHERE user_id=$1",[ids[2]]);
+ if(preDdl)await pool.query(await read('infra/security/phase2-installed-contract-fixture.sql'));
+ if(!preDdl){
  // Exercise actual reviewed administrative revokes on all listed relations.
  const privilegeSql=await read('infra/neon/security/phase2-application-privileges.sql');
  const targets=[...privilegeSql.match(/FOREACH target IN ARRAY ARRAY\[([^\]]+)\]/)[1].matchAll(/'([a-z_]+)'/g)].map(m=>m[1]);
@@ -52,6 +55,7 @@ try{
  await pool.query('DELETE FROM public.watchlist_folders'); // disposable fixture rows only
  await pool.query(await read('infra/neon/security/phase2-watchlist-integrity.sql'));
  await pool.query(await read('infra/neon/security/phase2-watchlist-integrity.sql'));
+ }
  process.env.NODE_ENV='test';process.env.DATABASE_URL='postgresql://unused:unused@127.0.0.1:1/unused';process.env.LOG_LEVEL='fatal';process.env.CACHE_DRIVER='memory';
  const {ensureDefaultWatchlist}=await import('../../backend/src/data/watchlistIntegrity.js');
  const {compileDataRequest,executeDataRequest}=await import('../../backend/src/data/browserData.js');
@@ -65,7 +69,7 @@ try{
  check(JSON.parse((await write('watchlist_folders',{id:existingPaid.id,user_id:ids[2],name:existingPaid.name,is_default:false},ids[2])).json)[0].id,existingPaid.id);
  const other=await ensureDefaultWatchlist(pool,claims(ids[1]));
  await assert.rejects(write('watchlists',{user_id:ids[0],folder_id:other.id,symbol:'SCOM',name:'Synthetic'}),/does not belong/);checks++;
- await assert.rejects(pool.query('INSERT INTO public.watchlists(user_id,folder_id,symbol) VALUES($1,$2,\'SCOM\')',[ids[0],other.id]),/watchlist_owned_folder_fk/);checks++;
+ if(!preDdl){await assert.rejects(pool.query('INSERT INTO public.watchlists(user_id,folder_id,symbol) VALUES($1,$2,\'SCOM\')',[ids[0],other.id]),/watchlist_owned_folder_fk/);checks++;}
  const post={id:randomUUID(),user_id:ids[0],content:'Synthetic idempotent post'};
  const replies=await Promise.all(Array.from({length:12},()=>write('posts',post)));
  check(new Set(replies.map(r=>r.json)).size,1);check((await pool.query('SELECT count(*)::int n FROM public.posts')).rows[0].n,1);
@@ -86,6 +90,7 @@ try{
  for(const [a,b,c,d] of [[1,1,1,1.01],[7,12.34,2,10.01],[1,0.01,2,0.02]]){
   const numeric=(await pool.query('SELECT round(($1::numeric*$2::numeric+$3::numeric*$4::numeric)/($1::numeric+$3::numeric),2)::text cost',[a,b,c,d])).rows[0].cost;check(combinedAverageCost(a,b,c,d),Number(numeric));
  }
+ if(!preDdl){
  // Hosted checkout initialization uses mocked HTTP and the same real SQL ledger.
  await pool.query('ALTER TABLE public.paystack_live_orders ADD COLUMN terms_version text,ADD COLUMN terms_accepted_at timestamptz');
  await pool.query(await read('infra/neon/security/phase2-hosted-checkout-intents.sql'));
@@ -107,7 +112,8 @@ try{
   check((await pool.query('SELECT public.effective_subscription_plan($1) plan',[ids[0]])).rows[0].plan,'free');
   const service=await pool.connect();try{await service.query('SET ROLE service_role');const paid=(await service.query('SELECT public.fulfill_paystack_live_order($1,801,now()) receipt',[replay.reference])).rows[0].receipt;check((await service.query('SELECT public.fulfill_paystack_live_order($1,801,now()) receipt',[replay.reference])).rows[0].receipt,paid);}finally{await service.query('RESET ROLE');service.release();}
  }finally{globalThis.fetch=originalFetch;}
- console.log(JSON.stringify({fixtureOnly:true,database:'local PostgreSQL 17.11',checks,concurrentDefaultRequests:16,concurrentQuotaRequests:24,concurrentPostReplays:12,staleEditWinnerCount:1,productionTouched:false,passed:true}));
+ }
+ console.log(JSON.stringify({fixtureOnly:true,database:'local PostgreSQL 17.11',checks,concurrentDefaultRequests:16,concurrentQuotaRequests:24,concurrentPostReplays:12,staleEditWinnerCount:1,productionTouched:false,preDdl,passed:true}));
 }finally{
  process.exit=originalExit;
  await pool?.end();
