@@ -160,12 +160,14 @@ export async function getPortfolioResearch(userId, exchange) {
     const riskHistories = histories.filter(Boolean).map(h=>({...h,sourceUrls:[...new Set(h.bars.map(b=>b.sourceUrl).filter(Boolean))],bars:h.bars.map(b=>({timestamp:b.timestamp,close:b.close}))}));
     const riskIntelligence = await riskSnapshot(userId,exchange,positions,riskHistories).catch(() => null);
     const correlations = {dates:riskIntelligence?.sampleDates??[],pairs:riskIntelligence?.pairs??[],methodology:riskIntelligence?.evidence.returnConvention??'Risk worker unavailable'};
-    const dividends = await Promise.all(positions
-        .filter((p) => p.price != null)
-        .slice(0, 20)
+    const dividendPositions = positions.filter(p => p.price != null).slice(0, 20);
+    const dividendActions = await corporateActionsRepository.getDividendsBySecurities(
+        dividendPositions.map(p => known.get(p.symbol).securityId)).catch(() => new Map());
+    const dividends = await Promise.all(dividendPositions
         .map(async (p) => {
         try {
-            const actions = await corporateActionsRepository.getDividendsBySecurity(known.get(p.symbol).securityId);
+            const actions = dividendActions.get(known.get(p.symbol).securityId);
+            if (!actions) throw new Error('Dividend data unavailable');
             const dps = trailingDividendPerShare(actions);
             return {
                 symbol: p.symbol,

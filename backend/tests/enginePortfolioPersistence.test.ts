@@ -17,7 +17,7 @@ vi.mock("../src/storage/repositories/candlesRepository.js", () => ({
 vi.mock("../src/storage/repositories/corporateActionsRepository.js", () => ({
   corporateActionsRepository: {
     getBySecurity: async () => [],
-    getDividendsBySecurity: async () => [],
+    getDividendsBySecurities: async (ids:string[]) => new Map(ids.map(id=>[id,[]])),
   },
 }));
 vi.mock("../src/services/research/engineBundle.js", () => ({

@@ -41,7 +41,13 @@ export function compileDataRequest({table,method,search=new URLSearchParams(),bo
   else sql=`DELETE FROM ${relation}${where}`;
   sql+=' RETURNING '+returning;
  }
- return {sql:`WITH result AS (${sql}) SELECT row_to_json(result)::text payload FROM result`,params,countSql,countParams,head:method==='HEAD',mutation:!['GET','HEAD'].includes(method),representation:prefer.includes('return=representation')};
+ return {sql:`WITH result AS (${sql}), serialized AS MATERIALIZED (
+ SELECT row_to_json(result)::text payload FROM result
+), budget AS (
+ SELECT coalesce(sum(octet_length(payload)),0) + greatest(count(*)-1,0) + 2 > 4194304 AS oversized FROM serialized
+)
+SELECT payload, false AS oversized FROM serialized WHERE NOT (SELECT oversized FROM budget)
+UNION ALL SELECT NULL::text AS payload, true AS oversized FROM budget WHERE oversized`,params,countSql,countParams,head:method==='HEAD',mutation:!['GET','HEAD'].includes(method),representation:prefer.includes('return=representation')};
 }
 
 // Caller supplies only claims returned by server-side access verification.
@@ -52,6 +58,6 @@ export async function executeDataRequest(pool,compiled,verifiedClaims){
  const client=await pool.connect();try{await client.query(verifiedClaims?"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE authenticated":"BEGIN; SET LOCAL statement_timeout='8000ms'; SET LOCAL ROLE anon");await client.query("SELECT set_config('request.jwt.claims',$1,true)",[JSON.stringify(verifiedClaims??{})]);if(verifiedClaims)await client.query('SELECT public.continua_session_guard()');
  const count=compiled.countSql?(await client.query(compiled.countSql,compiled.countParams)).rows[0].count:undefined;
  // HEAD needs headers only; do not fetch and serialize rows after its count.
- const result=compiled.head?{rows:[]}:await client.query(compiled.sql,compiled.params);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
+ const result=compiled.head?{rows:[]}:await client.query(compiled.sql,compiled.params);if(result.rows.some(row=>row.oversized))throw new DataRequestError('Result too large; paginate this request',413);const payload='['+result.rows.map(row=>row.payload).join(',')+']';if(Buffer.byteLength(payload)>4*1024*1024)throw new DataRequestError('Result too large; paginate this request',413);await client.query('COMMIT');return {json:payload,count,rows:result.rows.length};
  }catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }

@@ -31,6 +31,18 @@ export const corporateActionsRepository = {
        FROM market.corporate_actions WHERE security_id = $1 AND type = 'dividend' ORDER BY ex_date DESC NULLS LAST`, [securityId]);
         return res.rows;
     },
+    async getDividendsBySecurities(securityIds) {
+        const ids = [...new Set(securityIds)];
+        if (!ids.length) return new Map();
+        if (ids.length > 20) throw new Error('Dividend batch exceeds research holding limit');
+        const res = await query(`SELECT id, security_id as "securityId", type, announced_at as "announcedAt", ex_date as "exDate",
+              record_date as "recordDate", pay_date as "payDate", effective_date as "effectiveDate", status, details
+       FROM market.corporate_actions WHERE security_id = ANY($1::text[]) AND type = 'dividend'
+       ORDER BY security_id, ex_date DESC NULLS LAST`, [ids]);
+        const grouped = new Map(ids.map(id => [id, []]));
+        for (const row of res.rows) grouped.get(row.securityId)?.push(row);
+        return grouped;
+    },
     /** Market-wide upcoming dividends for the Markets page calendar — real,
      *  forward-looking data: an ex-date is a fact stated in the company's
      *  own dividend announcement, not a prediction, so this is safe to show
