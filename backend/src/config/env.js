@@ -25,6 +25,7 @@ const EnvSchema = z.object({
     ENGINE_PYTHON_BIN: z.string().min(1).default('python3'),
     PAYSTACK_SECRET_KEY: z.string().optional(),
     PAYSTACK_LIVE_CHECKOUT_ENABLED: booleanEnv(false),
+    PAYMENT_DURABILITY_ENABLED: booleanEnv(false),
     PAYSTACK_CHECKOUT_INTENTS_ENABLED: booleanEnv(false),
     PAYSTACK_CALLBACK_URL: z.string().url().optional(),
     PAYSTACK_TEST_SECRET_KEY: z.string().optional(),

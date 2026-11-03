@@ -15,6 +15,7 @@ declare const EnvSchema: z.ZodObject<{
     ENGINE_CALCULATION_RUNTIME: z.ZodDefault<z.ZodEnum<["node", "python"]>>;
     ENGINE_PYTHON_BIN: z.ZodDefault<z.ZodString>;
     PAYSTACK_SECRET_KEY: z.ZodOptional<z.ZodString>;
+    PAYMENT_DURABILITY_ENABLED: boolean;
     PAYSTACK_CHECKOUT_INTENTS_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     PAYSTACK_LIVE_CHECKOUT_ENABLED: z.ZodEffects<z.ZodOptional<z.ZodString>, boolean, string | undefined>;
     PAYSTACK_CALLBACK_URL: z.ZodOptional<z.ZodString>;

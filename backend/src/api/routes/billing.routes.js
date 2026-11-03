@@ -1,3 +1,4 @@
+import {paymentOperations,kickPaymentOperations} from '../../services/paymentOperationsRuntime.js';
 import {rateLimit, ipKeyGenerator} from 'express-rate-limit';
 import {protectionStore} from '../middleware/sharedRateStore.js';
 import {rateLimitClientIP} from '../middleware/edgeClientIdentity.js';
@@ -70,6 +71,13 @@ export const paystackWebhook = asyncHandler(async (req, res) => {
     }
     catch {
         throw new ApiError(400, "Invalid payment event.");
+    }
+    if(env.PAYMENT_DURABILITY_ENABLED===true){
+        try{await paymentOperations().accept(event,signedMode);}
+        catch(error){throw new ApiError([400,401].includes(error.status)?error.status:503,[400,401].includes(error.status)?error.message:'Payment receipt storage is temporarily unavailable.');}
+        res.sendStatus(200);
+        kickPaymentOperations();
+        return;
     }
     if (event?.event === "charge.success" && typeof event.data?.reference === "string" && nativeReferencePattern.test(event.data.reference)) {
         if (!event.data.reference.startsWith(`continua-${signedMode}-`))
