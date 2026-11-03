@@ -1,3 +1,4 @@
+import {observeDependency} from '../../monitoring/observability.js';
 import {CalculationQueue} from './calculationQueue.js';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -9,7 +10,7 @@ export function pythonCalculation(operation, args) {
     const payload = JSON.stringify({ operation, args });
     if (Buffer.byteLength(payload) > (riskOperation ? 2097152 : 131072))
         return Promise.reject(new ApiError(413, 'Calculation inputs are too large.'));
-    return calculations.run(()=>new Promise((resolve, reject) => {
+    return observeDependency('engine',()=>calculations.run(()=>new Promise((resolve, reject) => {
         let child;
         try { child = spawn(env.ENGINE_PYTHON_BIN, [fileURLToPath(new URL('../../../python/engine_calculations.py', import.meta.url))], {
             windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'],
@@ -25,7 +26,7 @@ export function pythonCalculation(operation, args) {
         else
             resolve(result); };
         const stop = error => {failure ??= error; child.kill('SIGKILL');};
-        const timer = setTimeout(() => stop(new ApiError(503, 'Calculation deadline exceeded.')), 5000);
+        const timer = setTimeout(() => stop(Object.assign(new ApiError(503, 'Calculation deadline exceeded.'),{code:'ETIMEDOUT'})), 5000);
         child.on('error', () => finish(new ApiError(503, 'Calculation worker is unavailable.')));
         child.stdin.on('error', () => stop(new ApiError(503, 'Calculation worker could not accept inputs.')));
         child.stdout.on('data', (chunk) => { size += chunk.length; if (size > (riskOperation ? 4194304 : 1048576)) {
@@ -42,7 +43,7 @@ export function pythonCalculation(operation, args) {
             finish(new ApiError(503, 'Calculation returned an invalid result.'));
         } });
         child.stdin.end(payload);
-    }),{priority:riskOperation});
+    }),{priority:riskOperation}));
 }
 export async function calculateWithRuntime(operation, args, node) {
     return env.ENGINE_CALCULATION_RUNTIME === 'python' ? pythonCalculation(operation, args) : node();

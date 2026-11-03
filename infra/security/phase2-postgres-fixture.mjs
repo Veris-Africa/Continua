@@ -114,6 +114,7 @@ try{
  }finally{globalThis.fetch=originalFetch;}
  }
  if(process.argv.includes('--phase3')){const {phase3PaymentFixture}=await import('./phase3-payment-fixture.mjs');await phase3PaymentFixture({pool,read,ids});}
+ if(process.argv.includes('--phase4')){if(!process.argv.includes('--phase3'))throw Error('Phase 4 restore requires Phase 3 synthetic work');const {phase4RestoreFixture}=await import('./phase4-restore-fixture.mjs');await phase4RestoreFixture({pool,container});}
  console.log(JSON.stringify({fixtureOnly:true,database:'local PostgreSQL 17.11',checks,concurrentDefaultRequests:16,concurrentQuotaRequests:24,concurrentPostReplays:12,staleEditWinnerCount:1,productionTouched:false,preDdl,passed:true}));
 }finally{
  process.exit=originalExit;

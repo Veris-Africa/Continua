@@ -1,3 +1,4 @@
+import {runObservedJob} from '../monitoring/observability.js';
 import {runDurableMaintenance} from './durableMaintenance.js';
 import {env} from '../config/index.js';
 import {paymentOperations,kickPaymentOperations} from '../services/paymentOperationsRuntime.js';
@@ -10,7 +11,8 @@ import {runOwnedAlertSweep,expireOwnedMemberships} from '../data/alertSweep.js';
 import {indicatorsService} from '../services/technical/indicatorsService.js';
 import {logger} from '../monitoring/logger.js';
 
-export async function runOwnedApplicationJobs({sweep=true}={}){
+export function runOwnedApplicationJobs(options={}){return runObservedJob(()=>observedApplicationJobs(options));}
+async function observedApplicationJobs({sweep=true}={}){
  const runtime=getIdentityRuntime();if(!runtime)return {enabled:false};
  if(env.PAYMENT_DURABILITY_ENABLED===true){
   // The existing independent scheduler wakes this service; no new timer/platform.

@@ -15,3 +15,5 @@ test('transient reads back off with jitter and recover within three attempts',as
  const result=await probe('backend','https://fixture.invalid',{request:async()=>++calls<3?new Response('',{status:503}):Response.json({status:'alive'}),wait:async ms=>delays.push(ms),random:()=>0.5});
  assert.equal(result.ok,true);assert.equal(calls,3);assert.deepEqual(delays,[2500,4500]);
 });
+
+test('auth availability validates a nonempty JWKS without a user session',async()=>{assert.equal((await probe('auth','https://fixture.invalid',{request:async()=>Response.json({keys:[{kty:'OKP'}]}),wait:async()=>{}})).ok,true);assert.equal((await probe('auth','https://fixture.invalid',{request:async()=>Response.json({keys:[]}),wait:async()=>{}})).ok,false);});

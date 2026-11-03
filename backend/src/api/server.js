@@ -1,4 +1,6 @@
 import {paymentOperationsStatus} from '../monitoring/paymentOperationsStatus.js';
+import {operationalSnapshot} from '../monitoring/operationalSnapshot.js';
+import {ingestionStatus} from '../monitoring/ingestionStatus.js';
 import {query as operationsQuery} from '../storage/db.js';
 import express from "express";
 import {getIdentityRuntime} from '../auth/runtime.js';
@@ -45,7 +47,7 @@ const allowedOrigins = new Set(env.ALLOWED_ORIGINS);
 // this ships, so recognize the whole family by pattern instead of exact string.
 // Update the slug below if the Vercel project/team is ever renamed.
 const corsOptions = {
-    exposedHeaders: ["Retry-After", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset", "cf-mitigated"],
+    exposedHeaders: ["X-Request-ID", "Server-Timing", "Retry-After", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset", "cf-mitigated"],
     origin(origin, callback) {
         if (isAllowedBrowserOrigin(origin, [...allowedOrigins])) {
             callback(null, true);
@@ -72,7 +74,7 @@ export function createServer() {
     }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
     const identity=getIdentityRuntime();
     if(identity){
-        app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database,paymentStatus:env.PAYMENT_DURABILITY_ENABLED===true?()=>paymentOperationsStatus({query:operationsQuery}):undefined}));
+        app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database,observability:()=>operationalSnapshot({durability:env.PAYMENT_DURABILITY_ENABLED===true}),ingestion:()=>ingestionStatus({query:operationsQuery}),paymentStatus:env.PAYMENT_DURABILITY_ENABLED===true?()=>paymentOperationsStatus({query:operationsQuery}):undefined}));
         // The early logger records fixed route categories, never callback URLs.
         // Expose only the owned bridge, never raw auth.handler.
         app.use('/api/v1/identity',apiKeyAuth(),(identity.provider==='neon-managed'?createManagedIdentityRouter:createIdentityRouter)({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));

@@ -28,7 +28,7 @@ export async function ownedIdentity(request,env,fetcher=fetch){
  try{if(!(await env.AUTH_RATE_LIMIT.limit({key:path==='signout'?ip+':signout':ip})).success){const response=reply({error:'Too many attempts'},429);response.headers.set('Retry-After','60');return response;}}catch{return reply({error:'Identity unavailable'},503);}
  let target;try{target=ownedIdentityTarget(url.origin,env,callback?'provider/'+path:path,url.search);}catch{return reply({error:'Identity unavailable'},503);}
  const headers=new Headers({'Content-Type':'application/json','Origin':url.origin,'X-Continua-Session':'1','X-API-Key':env.BACKEND_API_KEY,'X-Continua-Edge-Secret':env.EDGE_ORIGIN_SECRET,'X-Continua-Client-IP':ip});
- for(const name of ['X-User-Token','User-Agent']){const value=request.headers.get(name);if(value)headers.set(name,value);}
+ for(const name of ['X-User-Token','User-Agent','X-Request-ID']){const value=request.headers.get(name);if(value)headers.set(name,value);}
  const cookies=(request.headers.get('Cookie')??'').split(';').map(s=>s.trim()).filter(s=>identityCookieName(s.split('=')[0],env)&&/^[^=]+=[^\s;,\r\n]*$/.test(s));if(cookies.length>16||cookies.join('; ').length>16384)return reply({error:'Invalid identity cookies'},400);if(cookies.length)headers.set('Cookie',cookies.join('; '));
  // A browser without an opaque managed session cannot be signed in. Resolve
  // this at the edge so opening the website never waits for a sleeping backend.

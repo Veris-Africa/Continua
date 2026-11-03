@@ -121,7 +121,7 @@ jobs:
       - name: Phase 2 pre-DDL application compatibility
         run: node infra/security/phase2-postgres-fixture.mjs --pre-ddl
       - name: Phase 2 and Phase 3 real-role payment and recovery fixtures
-        run: node infra/security/phase2-postgres-fixture.mjs --phase3
+        run: node infra/security/phase2-postgres-fixture.mjs --phase3 --phase4
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs
       - run: node infra/migration/native-statistics-parity.mjs

@@ -1,0 +1,22 @@
+# Phase 4 implementation
+
+Local candidate on codex/phase4-observability-recovery. Do not push or deploy this branch without separate approval. Phase 3 was released at 4e35bf9a3a154c37ef51e16443d8116a6271bb17 with payment durability false. The separately requested security correction is main 66de6e460784be52964c144a29721db70e9a2fb8. It contains no Phase 4 code.
+
+| Previously present | Implemented extension | Source / limits |
+| --- | --- | --- |
+| Early request IDs and category logs | AsyncLocalStorage correlation, dependency summaries, startup/warm separation, bounded rolling histograms, revision, bytes and errors | backend/src/monitoring/observability.js; api/middleware/requestLogger.js; process-local only |
+| Pool wait and SQL result-volume estimates | Promise/callback query and acquisition timings correlated with requests | monitoring/poolMetrics.js; streaming queries explicitly excluded; no SQL text/values logged |
+| Cache counters and existing SDK/provider/calculation calls | Cache hit/miss/timing; managed SDK and Paystack whole-operation timing; Python queue and execution; Engine bundle assembly | storage/cache.js; auth/managedProvider.js; services/paystack*.js; services/research; no financial formula change |
+| Runtime diagnostics every minute | Threshold evaluation and transition-only logs on the same timer | monitoring/alertPolicy.js, runtimeDiagnostics.js; in-memory suppression resets after restart |
+| Phase 3 durable payment/job status | Disabled metrics explicitly unavailable; separate operator ingestion aggregate usable without payment activation | monitoring/operationalSnapshot.js, ingestionStatus.js; data/maintenanceRoutes.js; dedicated key/no Origin/no-store |
+| React page error boundary | Opt-in global error/rejection/network and boundary reports; fixed enums, no message/stack/state, dedup/rate caps and Do Not Track | app/src/lib/errorReports.js; PageErrorBoundary; main; Worker telemetry.mjs; disabled by default |
+| Worker request ID on general API path | One fresh correlation ID before every route, including auth/early errors; safe sampled edge log and version metadata | infra/cloudflare/worker.mjs, identity.mjs, wrangler.jsonc; successful requests sampled 1%, capped logs |
+| Existing public health and GitHub failure issue | Managed JWKS probe, actual frontend/backend revision drift check, unchanged failure suppression and recovery close | infra/security/health-probe.mjs; infra/deployment/verify-release.mjs; existing six-hour workflow; no cadence/enablement change |
+| Existing disposable restore check | Expanded real pg_dump/pg_restore fixture covering owner/policy/ACL/financial/job evidence and post-backup source writes | infra/security/phase4-restore-fixture.mjs; synthetic database only; real R2/provider restore untested |
+| Release/migration documents | Executable read-only release checker, migration inventory/activation gate and dated capacity calculator | infra/deployment; no production SQL runner or automatic rollback |
+
+JavaScript in the existing Node/Worker services, existing React integration and PostgreSQL fixtures were selected after consulting primary Node async-context, PostgreSQL backup, Neon restore, Cloudflare logging and Render rollback docs. No OpenTelemetry exporter is needed for these bounded local measurements. A remote exporter would require its own cost/privacy approval. Language rationale is in FEATURE_LANGUAGE_DECISIONS.json.
+
+Required settings: existing AUTH_MAINTENANCE_SECRET only for private diagnostics. Browser collection additionally requires separately approved VITE_ERROR_REPORTS_ENABLED=true at build and BROWSER_ERROR_REPORTS_ENABLED=true on the Worker. Neither was enabled. Frontend revision is built from git, and Worker version_metadata binds provider metadata; no credentials are added. PAYMENT_DURABILITY_ENABLED remains false; hosted intents, paid AI, native cutover, new infrastructure and paused workflows remain unchanged.
+
+See SECURITY_RESULTS for executed validation, OBSERVABILITY for coverage and SLO limits, DATABASE_RECOVERY and ROLLBACK_PLAN for operational gates, and DEPLOYMENT_PLAN for the reviewable rollout.

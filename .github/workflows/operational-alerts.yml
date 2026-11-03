@@ -32,7 +32,7 @@ jobs:
             const url=`https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${run.id}`;
             if(['failure','timed_out'].includes(run.conclusion)){
               const body=`An automatic run needs attention: [open the run](${url}).\n\nCheck the failed step and retry after correcting the cause. Transfer-budget pauses reported as successful checkpoints are expected and do not trigger this alert. Private provider logs and credentials are deliberately excluded.`;
-              if(existing)await github.rest.issues.update({...context.repo,issue_number:existing.number,body});
+              if(existing)return; // One notification per incident; recovery closes it.
               else await github.rest.issues.create({...context.repo,title,body});
             }else if(run.conclusion==='success'&&existing){
               await github.rest.issues.update({...context.repo,issue_number:existing.number,state:'closed',state_reason:'completed',body:`Recovered successfully: [verified run](${url}).`});

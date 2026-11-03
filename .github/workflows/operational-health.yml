@@ -21,3 +21,6 @@ jobs:
           node-version: '24'
       - run: node --test infra/security/health-probe.test.mjs
       - run: node infra/security/health-probe.mjs
+      - run: node infra/deployment/verify-release.mjs "${{ github.sha }}" --allow-equivalent-backend-tree
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

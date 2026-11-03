@@ -1,3 +1,5 @@
+import {recordDependency} from '../monitoring/observability.js';
+import {performance} from 'node:perf_hooks';
 /**
  * Cache abstraction. CACHE_DRIVER=memory (default) needs zero setup and is
  * fine for a single-instance deploy. Flip to CACHE_DRIVER=redis once you're
@@ -131,7 +133,20 @@ function createCache() {
     logger.info("Using in-memory cache driver");
     return new InMemoryCache();
 }
-export const cache = createCache();
+function observedCache(instance){
+    for(const name of ['get','set','del','rateLimitCommand']){
+        if(typeof instance[name]!=='function')continue;
+        const original=instance[name];
+        instance[name]=function(...args){
+            const start=performance.now();
+            const success=value=>recordDependency('cache',performance.now()-start,null,{outcome:name==='get'?(value===null?'miss':'hit'):undefined});
+            try{const value=original.apply(this,args);if(value?.then)value.then(success,error=>recordDependency('cache',performance.now()-start,error));else success(value);return value;}
+            catch(error){recordDependency('cache',performance.now()-start,error);throw error;}
+        };
+    }
+    return instance;
+}
+export const cache = observedCache(createCache());
 /** Cache key conventions — keep these consistent so invalidation stays sane. */
 export const CacheKeys = {
     quote: (exchange, symbol) => `quote:${exchange}:${symbol}`,

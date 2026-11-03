@@ -1,3 +1,4 @@
+import {observeDependency} from '../monitoring/observability.js';
 import {hostedIntentReference,hostedRequestHash,checkoutPending} from './hostedCheckoutIntent.js';
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -19,7 +20,8 @@ export function liveCheckoutEnabled() {
 }
 function requireEnabled() { if (!liveCheckoutEnabled())
     throw new ApiError(503, "Live checkout is not configured. No payment has been taken."); }
-async function provider(path, body) {
+const provider=(...args)=>observeDependency('paystack',()=>callProvider(...args));
+async function callProvider(path, body) {
     requireEnabled();
     let response;
     try {

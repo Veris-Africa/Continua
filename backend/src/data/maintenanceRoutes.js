@@ -4,7 +4,7 @@ import {BoundedMemoryRateStore} from '../api/middleware/sharedRateStore.js';
 import {rateLimitClientIP} from '../api/middleware/edgeClientIdentity.js';
 import {timingSafeEqual} from 'node:crypto';
 
-export function createMaintenanceRouter({secret,run,database,paymentStatus}){
+export function createMaintenanceRouter({secret,run,database,paymentStatus,observability,ingestion}){
  const router=express.Router();let busy=false;
  router.use(rateLimit({windowMs:60000,limit:120,standardHeaders:false,legacyHeaders:false,store:new BoundedMemoryRateStore(),keyGenerator:(req,res)=>ipKeyGenerator(rateLimitClientIP(req,res))}));
  router.use((req,res,next)=>{
@@ -13,6 +13,14 @@ export function createMaintenanceRouter({secret,run,database,paymentStatus}){
   if(typeof secret!=='string'||secret.length<32||secret.length>512)return res.status(503).json({error:'Maintenance is not configured'});
   if(req.header('origin')||typeof supplied!=='string'||Buffer.byteLength(supplied)!==Buffer.byteLength(secret)||!timingSafeEqual(Buffer.from(supplied),Buffer.from(secret)))return res.status(401).json({error:'Unauthorized'});
   next();
+ });
+ router.get('/observability',async(_req,res)=>{
+  if(!observability)return res.status(404).json({error:'Observability is not configured'});
+  try{return res.json(await observability());}catch{return res.status(503).json({error:'Operational status unavailable'});}
+ });
+ router.get('/ingestion-operations',async(_req,res)=>{
+  if(!ingestion)return res.status(404).json({error:'Ingestion diagnostics are not configured'});
+  try{const status=await ingestion();return res.status(status.available?200:503).json(status);}catch{return res.status(503).json({available:false});}
  });
  router.get('/payment-operations',async(_req,res)=>{
   if(!paymentStatus)return res.status(404).json({error:'Payment operations are not enabled'});

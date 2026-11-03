@@ -1,0 +1,13 @@
+# Phase 4 security results
+
+Local candidate only; final executed counts are recorded in PHASE4_VALIDATION_RECEIPT.md. Phase3 release and the separately requested security-only main patch are documented independently. All CodeQL/Dependabot alerts were confirmed zero after66de6e4; none were dismissed or excluded.
+
+New tests exercise concurrent async context isolation; UUID validation/propagation; category-only request logs excluding private path/query/token; bounded labels and metric windows; sparse quantiles; dependency failure/expected credential denial; private diagnostic key/no-Origin/no-store/outage sanitization; opt-in browser error dedup/caps/privacy; streamed telemetry size/type/origin/field validation; release drift/failure; dated provider receipt/reset-period handling; alert crossing/cooldown/recovery/failing destination; and migration activation refusal without an applied receipt.
+
+The complete backend regressions retain managed session/revocation/logout/registration, Free/Premium/Plus, owner portfolio/watchlist, community, Engine/financial/source rights, Paystack signatures/fulfillment and Phase1 batching/cache/query limits. SQL fixtures retain Phase2 ownership/ACL/constraint and Phase3 duplicate/crash/renewal/cancellation/review checks. The restore fixture compares policies, grants, RLS, relationships, financial orders and durable work; no production customer data is involved.
+
+Raw Error objects, path/key and sensitive identity/credential/payment fields are censored by the logger; new logs are built from fixed fields. This does not attest every provider's access logs. Browser reports use omit credentials and do not include stacks/messages/state; explicit flags and Do Not Track prevent default collection. Untrusted client reports never alter authorization, subscriptions, financial data or alert authority.
+
+No tests were removed/weakened. One initial backend invocation omitted the Windows Python path; a later cache wrapper added a promise turn and failed the existing single-flight assertion. The wrapper was corrected to preserve the original returned promise and reruns passed; no assertion or timeout was loosened. Restore comparison initially differed because information_schema.table_catalog correctly contained different database names; only that identifier was normalized, preserving all grant fields and semantics.
+
+Production E01 excess grants and E04 constraints remain open, as do full current-schema/provider restore proof and representative operational baselines. Free-plan six-hour recovery and coarse outside checks are not enough to close E09. Phase3 payment SQL/activation, hosted-intent SQL, paid AI and native runtime cutover remain gated.

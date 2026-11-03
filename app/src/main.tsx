@@ -1,5 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import {installErrorReports} from './lib/errorReports.js';
+installErrorReports({enabled:import.meta.env.VITE_ERROR_REPORTS_ENABLED==='true',revision:import.meta.env.VITE_BUILD_REVISION});
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
 import '@fontsource/inter/latin-600.css'

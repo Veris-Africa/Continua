@@ -5,6 +5,7 @@
   "main": "worker.mjs",
   "compatibility_date": "2026-10-12",
   "workers_dev": true,
+  "version_metadata": {"binding":"CF_VERSION_METADATA"},
   "triggers": { "crons": ["0 * * * *"] },
   "assets": {
     "directory": "../../app/dist",

@@ -1,11 +1,13 @@
 import { Component, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import {reportAppError} from '../../lib/errorReports.js';
 
 export class PageErrorBoundary extends Component<
   { children: ReactNode; resetKey: string },
   { failed: boolean }
 > {
   state = { failed: false };
+  componentDidCatch(){reportAppError('render');}
   static getDerivedStateFromError() {
     return { failed: true };
   }

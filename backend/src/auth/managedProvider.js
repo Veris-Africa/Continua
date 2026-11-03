@@ -1,4 +1,5 @@
 import {createAuthServer,extractNeonAuthCookies,serializeSetCookie,resolveNeonAuthLogging,processAuthMiddleware} from '@neondatabase/auth/server';
+import {observeDependency} from '../monitoring/observability.js';
 let upstreamInFlight=0;
 const upstreamQueue=[];
 function reserveUpstream(signal){
@@ -14,7 +15,7 @@ function reserveUpstream(signal){
 async function boundedUpstream(work,onTimeout,timeoutMs){
  let timer;const controller=new AbortController();
  const pending=reserveUpstream(controller.signal).then(async release=>{try{return await work();}finally{release();}});
- try{return await Promise.race([pending,new Promise((_,reject)=>{timer=setTimeout(()=>{onTimeout();controller.abort();reject(Object.assign(Error('Managed authentication timed out'),{status:503}));},timeoutMs);timer.unref?.();})]);}finally{clearTimeout(timer);}
+ try{return await Promise.race([pending,new Promise((_,reject)=>{timer=setTimeout(()=>{onTimeout();controller.abort();reject(Object.assign(Error('Managed authentication timed out'),{status:503,code:'AUTH_TIMEOUT'}));},timeoutMs);timer.unref?.();})]);}finally{clearTimeout(timer);}
 }
 
 // Official SDK server toolkit adapter. Each instance owns one request's cookie
@@ -34,7 +35,8 @@ export function createManagedProvider({baseURL,cookieSecret,origin,cookie='',onC
  }
  const cookies=()=>[...jar].map(([k,v])=>k+'='+v).join('; ');
  const auth=createAuthServer({...config,context:()=>({getCookies:cookies,setCookie:accept,getHeader:name=>name.toLowerCase()==='origin'?origin:null,getOrigin:()=>origin,getFramework:()=>'express'})});
- async function call(method,body){
+ function call(method,body){return observeDependency('auth',()=>callUnobserved(method,body));}
+ async function callUnobserved(method,body){
   if(expired)throw Object.assign(Error('Managed request expired'),{status:503});
   const action=method.split('.').reduce((value,key)=>value[key],auth);
   const result=await boundedUpstream(()=>action(body),()=>{expired=true;},timeoutMs);
@@ -45,7 +47,7 @@ export function createManagedProvider({baseURL,cookieSecret,origin,cookie='',onC
   async completeOAuth(verifier){
    if(!/^[A-Za-z0-9_.~-]{8,2048}$/.test(verifier??''))throw Error('Invalid OAuth verifier');
    const url=new URL('/managed-callback',origin);url.searchParams.set('neon_auth_session_verifier',verifier);
-   const result=await boundedUpstream(()=>processAuthMiddleware({...config,request:new Request(url,{headers:{cookie:cookies(),origin}}),pathname:url.pathname,skipRoutes:[],loginUrl:'/auth'}),()=>{expired=true;},timeoutMs);
+   const result=await observeDependency('auth',()=>boundedUpstream(()=>processAuthMiddleware({...config,request:new Request(url,{headers:{cookie:cookies(),origin}}),pathname:url.pathname,skipRoutes:[],loginUrl:'/auth'}),()=>{expired=true;},timeoutMs));
    if(result.action!=='redirect_oauth')throw Error('OAuth session could not be verified');
    for(const serialized of result.cookies){
     if(!/^__Secure-neon-auth\.[a-z0-9_.-]+=/i.test(serialized)||/;\s*Domain=/i.test(serialized)||!/;\s*HttpOnly(?:;|$)/i.test(serialized)||!/;\s*Secure(?:;|$)/i.test(serialized))throw Error('Unsafe OAuth cookie');

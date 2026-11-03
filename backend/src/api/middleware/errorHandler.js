@@ -1,5 +1,6 @@
 import {AuthenticationError,sendAuthenticationFailure} from '../../auth/authErrors.js';
 import { logger } from "../../monitoring/logger.js";
+import {errorCategory} from '../../monitoring/observability.js';
 export class ApiError extends Error {
     status;
     constructor(status, message) {
@@ -38,6 +39,6 @@ export function errorHandler(err, req, res, _next) {
     }
     // Error objects from body parsers can contain the submitted body. Never log
     // credentials, payment data or private notes through an error serializer.
-    logger.error({ errorName: parser.name ?? 'Error', code: parser.code, path: req.path }, "Unhandled API error");
+    logger.error({category:errorCategory(parser)}, "Unhandled API error");
     res.status(500).json({ error: "Internal server error" });
 }

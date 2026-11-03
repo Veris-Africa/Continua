@@ -1,0 +1,11 @@
+import {performance} from 'node:perf_hooks';
+import {createMetrics,requestContext,observeDependency} from '../../backend/src/monitoring/observability.js';
+const n=20000,clock=()=>600000;
+globalThis.gc?.();const before=process.memoryUsage().heapUsed,m=createMetrics({now:clock});
+const start=performance.now();
+for(let i=0;i<n;i++)m.record('request:/api/v1/engine/*:GET:warm',i%500,{responseBytes:1024,requestBytes:16,failed:i%1000===0});
+const histogramMs=performance.now()-start;
+const baseline=performance.now();for(let i=0;i<2000;i++)await Promise.resolve(1);const baselineMs=performance.now()-baseline;
+const dependency=performance.now();for(let i=0;i<2000;i++)await requestContext.run({requestId:'synthetic',dependencies:{}},()=>observeDependency('database',()=>Promise.resolve(1)));const dependencyMs=performance.now()-dependency;
+globalThis.gc?.();
+console.log(JSON.stringify({syntheticOnly:true,records:n,histogramMs,microsecondsPerRecord:histogramMs*1000/n,dependencyIterations:2000,baselineMs,dependencyMs,estimatedIncrementalMicroseconds:(dependencyMs-baselineMs)*1000/2000,heapDeltaBytes:process.memoryUsage().heapUsed-before,snapshotBytes:Buffer.byteLength(JSON.stringify(m.snapshot())),telemetrySqlQueries:0,externalRequests:0,warning:'Local CPU/heap microbenchmark; not production request percentiles, retained heap guarantee or Neon billed bytes'}));

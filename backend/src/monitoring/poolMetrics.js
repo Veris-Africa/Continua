@@ -1,5 +1,6 @@
 import {performance} from 'node:perf_hooks';
 import {queryVolume} from './queryVolume.js';
+import {recordDependency,requestContext} from './observability.js';
 
 // Fixed pool names only. No connection strings, claims, SQL or bind values are retained.
 const pools = new Map();
@@ -19,8 +20,9 @@ export function observePool(pool, name, volume = queryVolume) {
             // Streaming/Query objects keep their original event/return contract.
             if (typeof args[0] !== 'string' && typeof args[0]?.text !== 'string') return query.apply(this, args);
             const start = performance.now();
+            const context=requestContext.getStore();
             let finished = false;
-            const finish = (error, result) => { if (finished) return; finished = true; volume.record(args[0], result, performance.now() - start, Boolean(error)); };
+            const finish = (error, result) => { if (finished) return; finished = true; const ms=performance.now()-start;volume.record(args[0], result, ms, Boolean(error));recordDependency('database',ms,error,{context}); };
             const callback = typeof args.at(-1) === 'function' ? args.at(-1) : null;
             if (callback) {
                 args[args.length - 1] = function (error, result) { finish(error, result); return callback.apply(this, arguments); };
@@ -35,9 +37,11 @@ export function observePool(pool, name, volume = queryVolume) {
     const connect = pool.connect;
     pool.connect = function (...args) {
         const start = performance.now();
+        const context=requestContext.getStore();
         const finish = (error, client) => {
             metric.acquisitions++; metric.failures += Number(Boolean(error));
             metric.waitMilliseconds += Math.max(0, performance.now() - start);
+            recordDependency('pool',performance.now()-start,error,{context});
             instrument(client);
         };
         const callback = typeof args[0] === 'function' ? args[0] : null;

@@ -1,3 +1,4 @@
+import {browserErrorReport} from './telemetry.mjs';
 import {ownedIdentity} from './identity.mjs';
 import {scheduledMaintenance} from './maintenance.mjs';
 import {privateEvents} from './private-events.mjs';
@@ -30,9 +31,10 @@ export async function boundedBody(request,max=512*1024){
 }
 function reply(body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store',...security}});}
 import {media} from './media.mjs';
-export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
+const worker={scheduled:scheduledMaintenance,async fetch(request,env,ctx){
  if(env.MIGRATION_WRITE_FREEZE==='true'&&new URL(request.url).pathname.startsWith('/api/'))return new Response(JSON.stringify({error:'Continua is completing a database migration. Please retry shortly.',code:'MIGRATION_MAINTENANCE'}),{status:503,headers:{'Content-Type':'application/json','Cache-Control':'no-store','Retry-After':'60',...security}});
- const url=new URL(request.url),id=crypto.randomUUID();
+ const url=new URL(request.url),id=request.headers.get('X-Request-ID');
+ const telemetry=await browserErrorReport(request,env);if(telemetry)return telemetry;
  const eventsResponse=await privateEvents(request,env);if(eventsResponse)return eventsResponse;
  const identityResponse=await ownedIdentity(request,env);if(identityResponse)return identityResponse;
  if(url.pathname.startsWith('/api/session/'))return reply({error:'Legacy identity route unavailable'},410);
@@ -44,7 +46,7 @@ export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
   for(const [name,value]of Object.entries(security))headers.set(name,value);
   headers.set('Content-Security-Policy-Report-Only',reportPolicy);
   // Auth and checkout HTML must never be retained as a user-specific document.
-  if(/^\/(?:checkout|auth)(?:\/|$)/.test(url.pathname))headers.set('Cache-Control','no-store');
+  if(url.pathname==='/release.json'||/^\/(?:checkout|auth)(?:\/|$)/.test(url.pathname))headers.set('Cache-Control','no-store');
   return new Response(asset.body,{status:asset.status,headers});
  }
  if(!['GET','HEAD','POST','PUT','PATCH','DELETE','OPTIONS'].includes(request.method))return reply({error:'Method not allowed'},405);
@@ -87,4 +89,21 @@ export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
  if(publicCache)out.set('X-Continua-Edge-Cache',cache?'MISS':'UNAVAILABLE');
  if(response.status>=300&&response.status<400&&response.status!==304)return reply({error:'Unexpected upstream redirect',requestId:id},502);
  return new Response(response.body,{status:response.status,headers:out});
+}};
+
+let logMinute=-1,logCount=0;
+export default {scheduled:scheduledMaintenance,async fetch(request,env,ctx){
+ const id=crypto.randomUUID(),headers=new Headers(request.headers);headers.set('X-Request-ID',id);
+ const correlated=new Request(request,{headers}),start=Date.now();
+ let response;
+ try{response=await worker.fetch(correlated,env,ctx);}catch{response=reply({error:'Gateway unavailable',requestId:id},502);}
+ const out=new Headers(response.headers);out.set('X-Request-ID',id);if(env.CF_VERSION_METADATA?.id)out.set('X-Continua-Worker-Version',env.CF_VERSION_METADATA.id);
+ const minute=Math.floor(Date.now()/60000);if(minute!==logMinute){logMinute=minute;logCount=0;}
+ if(logCount<60&&(response.status>=500||Math.random()<.01)){
+  logCount++;
+  const path=new URL(request.url).pathname;
+  const route=path.startsWith('/api/v1/identity/')||path.startsWith('/api/auth/')?'auth':/^\/api\/v1\/(engine|data|functions|billing|health)(?:\/|$)/.exec(path)?.[1]??(path.startsWith('/api/')?'market':'asset');
+  console.info(JSON.stringify({event:'edge_request',requestId:id,route,status:response.status,ms:Date.now()-start,revision:env.CF_VERSION_METADATA?.id??null,sampling:'errors and 1% success; max 60/min/isolate'}));
+ }
+ return new Response(response.body,{status:response.status,statusText:response.statusText,headers:out});
 }};

@@ -1,3 +1,4 @@
+import {observeDependency} from '../monitoring/observability.js';
 import { createHash, randomUUID, createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { env } from '../config/index.js';
@@ -45,7 +46,8 @@ export function nativeSecret(mode) {
 export function nativeCheckoutForUser(userId) {
     return nativeCheckoutEnabled() && (env.PAYSTACK_NATIVE_MODE === 'live' || (env.PAYSTACK_TEST_USER_IDS ?? '').split(',').map(v => v.trim()).includes(userId));
 }
-export async function nativeProvider(mode, path, body) {
+export function nativeProvider(mode,path,body){return observeDependency('paystack',()=>callNativeProvider(mode,path,body));}
+async function callNativeProvider(mode, path, body) {
     const key = nativeSecret(mode);
     if (!key?.startsWith(`sk_${mode}_`))
         throw new ApiError(503, 'Payment mode is not configured.');

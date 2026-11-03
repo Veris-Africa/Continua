@@ -1,3 +1,4 @@
+import {observeDependency} from '../../monitoring/observability.js';
 import { buildResearchSynthesis } from "./engineSynthesis.js";
 import { summarizeNews } from "./newsDigest.js";
 import { newsRepository } from "../../storage/repositories/newsRepository.js";
@@ -23,7 +24,8 @@ import { engineCacheKeys } from './engineCacheKeys.js';
 import { collectedResearchRepository } from './collectedResearch.js';
 import {publicationPolicy} from './publicationPolicy.js';
 const pendingBundles = new Map();
-export async function getEngineBundle(symbol, exchange) {
+export function getEngineBundle(symbol,exchange){return observeDependency('research',()=>observedEngineBundle(symbol,exchange));}
+async function observedEngineBundle(symbol, exchange) {
     const policyRevision = await publicationPolicy.revision();
     const key = `${exchange}:${symbol}:${policyRevision}`;
     const staleKey = engineCacheKeys.lastGood(exchange, symbol);
