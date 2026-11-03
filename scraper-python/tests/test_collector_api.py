@@ -33,7 +33,7 @@ class APItests(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):await self.client.close();await self.runtime.scheduler.close()
 
     async def test_operator_routes_authenticate_before_operations(self):
-        for method,path in [('GET','/sources'),('GET','/diagnostics/bandwidth'),('POST','/extractions/sweep'),('POST','/artifacts/1/reprocess'),('GET','/crawl-status'),('GET','/dead-letters'),('GET','/adapters/nse/announcements/preview')]:
+        for method,path in [('GET','/sources'),('GET','/diagnostics/bandwidth'),('GET','/diagnostics/document-recovery'),('POST','/extractions/sweep'),('POST','/artifacts/1/reprocess'),('GET','/crawl-status'),('GET','/dead-letters'),('GET','/adapters/nse/announcements/preview')]:
             response=await self.client.request(method,path)
             self.assertEqual(response.status,401);self.assertEqual(response.headers['Cache-Control'],'no-store')
         self.assertEqual(self.runtime.extraction.calls,[])

@@ -51,6 +51,9 @@ class CollectorPostgresTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sorted((len(a),len(b))),[0,1])
         first=(a or b)[0]
         await self.database.query("UPDATE scraping.document_jobs SET lease_until=now()-interval '1 second' WHERE id=%s",(first['id'],))
+        await jobs.finish(first['id'],first['attempts'])
+        expired=await self.database.query('SELECT status FROM scraping.document_jobs WHERE id=%s',(first['id'],))
+        self.assertEqual(expired[0]['status'],'processing')
         other=await Database.open(os.environ['NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL'])
         try:
             restarted=DocumentJobs(other)

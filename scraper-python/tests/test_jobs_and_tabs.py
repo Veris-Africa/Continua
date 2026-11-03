@@ -59,7 +59,9 @@ class JobTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("WHERE id=%s AND attempts=%s",sql)
         self.assertEqual(params[0],"failed")
         self.assertEqual(len(params[1]),1000)
-        self.assertEqual(params[2:],(123,4))
+        self.assertEqual(params[3:],(123,4))
+        self.assertGreaterEqual(params[2],3600)
+        self.assertLessEqual(params[2],86400)
 
     async def test_invalid_batch_rejected_before_database(self):
         database=FakeDatabase()

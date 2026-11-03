@@ -1,14 +1,16 @@
 """Durable discovery/lease/retry ledger. Restart recovery never needs heap queues."""
 import json
+import random
 
 def encode(value):
     return json.dumps(value,ensure_ascii=False,allow_nan=False,separators=(",",":"))
 
 class DocumentJobs:
-    def __init__(self,database,*,max_attempts=None):
+    def __init__(self,database,*,max_attempts=None,retry_random=random.random):
         if max_attempts is not None and (type(max_attempts) is not int or not 1<=max_attempts<=10):raise ValueError('Invalid durable retry ceiling')
         self.database=database
         self.max_attempts=max_attempts
+        self.retry_random=retry_random
 
     async def enqueue(self,source_id,documents):
         refresh="""document_jobs.status='complete' AND (document_jobs.updated_at < now()-interval '7 days'
@@ -120,7 +122,8 @@ class DocumentJobs:
         return await self.database.query(sql,tuple([*values,limit]))
 
     async def finish(self,job_id,attempts,error=None):
-        # Attempt token prevents an expired worker overwriting a newer claim.
+        # Attempt plus live lease fences both restarted workers and expired ones.
+        delay=min(86400,3600*2**min(5,max(0,attempts-1))*(0.8+0.4*min(1,max(0,self.retry_random()))))
         await self.database.query("""UPDATE scraping.document_jobs SET status=%s,error_reason=%s,lease_until=NULL,
-          next_attempt_at=now()+interval '1 hour',updated_at=now() WHERE id=%s AND attempts=%s""",
-          ("failed" if error else "complete",str(error)[:1000] if error else None,job_id,attempts))
+          next_attempt_at=now()+(%s*interval '1 second'),updated_at=now() WHERE id=%s AND attempts=%s AND status='processing' AND lease_until>now()""",
+          ("failed" if error else "complete",str(error)[:1000] if error else None,delay,job_id,attempts))

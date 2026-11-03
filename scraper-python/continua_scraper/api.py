@@ -5,7 +5,7 @@ import json
 import time
 import asyncio
 from .archive import snapshot_json
-from .diagnostics import health,crawl_status,timestamp
+from .diagnostics import health,crawl_status,timestamp,document_recovery_status
 from .crawler import GenericCrawler
 from .rss import RssAdapter
 
@@ -92,6 +92,7 @@ def create_server(runtime,*,operator_key='',market_key='',release_ready=False,re
         if id<=0 or id>9007199254740991:return response({'error':'invalid_artifact_id'},400)
         return response(await runtime.extraction.reprocess(id))
     async def sweep(request):return response(await runtime.extraction.sweep(bounded((await body(request)).get('limit'),50)))
+    async def recovery_status(request):return response(await document_recovery_status(runtime.database))
     async def status(request):return response(await crawl_status(runtime.database))
     async def bandwidth(request):return response(runtime.storage.r2.transfers.snapshot())
     async def market_read(request):
@@ -102,5 +103,5 @@ def create_server(runtime,*,operator_key='',market_key='',release_ready=False,re
         web.post('/documents/refresh',refresh),web.post('/indices/refresh',refresh),web.post('/news/refresh',refresh),web.get('/sources',sources),web.post('/sources/{id}/crawl',crawl),
         web.get('/adapters/nse/announcements/preview',adapter_request),web.post('/adapters/nse/announcements',adapter_request),web.get('/dead-letters',dead),
         web.get('/adapters/rss/{sourceId}/preview',adapter_request),web.post('/adapters/rss/{sourceId}',adapter_request),web.get('/extractions/needs-review',review),
-        web.post('/artifacts/{id}/reprocess',reprocess),web.post('/extractions/sweep',sweep),web.get('/crawl-status',status)])
+        web.post('/artifacts/{id}/reprocess',reprocess),web.post('/extractions/sweep',sweep),web.get('/diagnostics/document-recovery',recovery_status),web.get('/crawl-status',status)])
     return app
