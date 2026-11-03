@@ -66,7 +66,7 @@ jobs:
       NATIVE_PYTHON_BIN: python
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version-file: api-candidate/go.mod
           cache-dependency-path: api-candidate/go.sum
