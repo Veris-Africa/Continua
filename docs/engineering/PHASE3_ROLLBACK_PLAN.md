@@ -1,6 +1,6 @@
 # Phase 3 rollback plan
 
-No Phase 3 rollout or rollback has occurred. Keep the known-good Phase 2 release 6fcfff1cad3178bc90c9e6bbadaca71adbc8106f available for a coordinated Render/Cloudflare application rollback. Preserve post-release writes, receipts, original references and diagnostics; do not force-push or restore customer tables over new writes.
+The disabled Phase 3 application rollout occurred at 4e35bf9; no durability activation or production rollback has occurred. See the release verification for the current security-fixed serving revisions. Keep the known-good Phase 2 release 6fcfff1cad3178bc90c9e6bbadaca71adbc8106f available for a coordinated Render/Cloudflare application rollback. Preserve post-release writes, receipts, original references and diagnostics; do not force-push or restore customer tables over new writes.
 
 Before rolling back an activated inbox, inspect pending/processing/review counts and pause new operational changes under an approved incident procedure. A provider has already received 200 for durably accepted events and may not redeliver them. Do not assume disabling the flag makes that backlog disappear. Export a bounded private reference/receipt inventory and arrange continued safe GET-only reconciliation or trusted operator verification for every accepted unresolved item.
 

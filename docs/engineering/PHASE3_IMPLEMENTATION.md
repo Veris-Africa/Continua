@@ -1,6 +1,6 @@
 # Phase 3 implementation
 
-Prepared locally on codex/phase3-payment-reliability, based on deployed Phase 2 6fcfff1. **Not pushed or deployed.** No production SQL, live payment changes, real charges, workflow activation, new infrastructure or paid AI use occurred.
+Implemented on codex/phase3-payment-reliability from Phase 2 6fcfff1. The owner subsequently authorized the disabled application release: main 4e35bf9 was pushed and deployed on 3 November 2026. See PHASE3_RELEASE_VERIFICATION_20261103.md for exact provider revisions and the separate security follow-up. Production SQL and feature activation remain pending; no live payment configuration, real charge, workflow activation, new infrastructure or paid AI use occurred.
 
 | Finding / component | Implemented code | Guarantee / limit |
 | --- | --- | --- |

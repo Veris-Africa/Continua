@@ -1,6 +1,6 @@
 # Phase 3 security results
 
-Local only, 3 November 2026. No Phase 3 production activation, DDL, real payment, account change, paid service or external collection was performed.
+Local validation on 3 November 2026. The disabled application was subsequently released with owner approval; see PHASE3_RELEASE_VERIFICATION_20261103.md. No Phase 3 production activation, DDL, real payment, account change, paid service or external collection was performed.
 
 | Validation | Executed result |
 | --- | --- |
