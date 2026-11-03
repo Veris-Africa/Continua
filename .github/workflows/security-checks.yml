@@ -24,6 +24,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node infra/security/repository-secret-audit.mjs
+      - run: node infra/security/dependency-floor.mjs
       - run: node --test infra/cloudflare/*.test.mjs
       - run: npm --workspace app test
       - run: node node_modules/typescript/bin/tsc --noEmit -p app/tsconfig.app.json

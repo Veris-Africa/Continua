@@ -1,7 +1,7 @@
 {
   "name": "continua-data",
   "version": "0.1.0",
-  "description": "Continua Data — core market data infrastructure layer (NSE-first, multi-exchange ready)",
+  "description": "Continua Data \u00e2\u20ac\u201d core market data infrastructure layer (NSE-first, multi-exchange ready)",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
@@ -71,6 +71,7 @@
       "@better-auth/core": "1.7.12",
       "@better-auth/oauth-provider": "1.7.12",
       "zod": "$zod"
-    }
+    },
+    "html-to-text": "10.0.1"
   }
 }

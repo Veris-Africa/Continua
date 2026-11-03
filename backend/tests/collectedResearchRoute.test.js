@@ -1,3 +1,4 @@
+import {rateLimit} from 'express-rate-limit';
 import {it,expect,vi} from 'vitest';
 import express from 'express';
 import {createServer} from 'node:http';
@@ -11,7 +12,7 @@ import {collectedResearch} from '../src/services/research/collectedResearch.js';
 
 it('reports private storage failures as retryable unavailability without disclosing provider details',async()=>{
     collectedResearch.mockRejectedValue(new Error('fixture-only private provider details'));
-    const app=express();app.use('/api/v1',financialsRoutes);app.use(errorHandler);
+    const app=express();app.use(rateLimit({windowMs:60000,limit:1000,standardHeaders:false,legacyHeaders:false}));app.use('/api/v1',financialsRoutes);app.use(errorHandler);
     const server=createServer(app);
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
     try {
