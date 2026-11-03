@@ -9,13 +9,14 @@
       "category": "Phase 4 observability and isolated recovery",
       "language": "Existing Node JavaScript, Cloudflare JavaScript, React integration and SQL fixtures",
       "runtime": "Existing services; AsyncLocalStorage and bounded in-memory histograms; no new runtime or paid exporter",
-      "reason": "Correlate existing pool, cache, SDK and calculation boundaries without telemetry database writes or changed financial formulas. Native Node async context preserves concurrent request isolation; existing PostgreSQL dump/restore fixtures cover recovery independently. Opt-in browser reports use enumerated fields and existing Worker rate limits. OpenTelemetry exporters add no required capability at current volume and would require a separate privacy/cost review.",
+      "reason": "Correlate existing pool, cache, SDK and calculation boundaries without telemetry database writes or changed financial formulas. Native Node async context preserves concurrent request isolation; existing PostgreSQL dump/restore fixtures cover recovery independently. Opt-in browser reports use enumerated fields and existing Worker rate limits. OpenTelemetry exporters add no required capability at current volume and would require a separate privacy/cost review. Frontend development tooling uses TypeScript6.0.3 and typescript-eslint8.72.1 because the parser supports<6.1 and TypeScript7 lacks its expected compiler API; this is a development-tool correction, not a TypeScript backend/runtime migration.",
       "references": [
         "https://nodejs.org/api/async_context.html",
         "https://www.postgresql.org/docs/17/backup-dump.html",
         "https://developers.cloudflare.com/workers/observability/logs/",
         "https://render.com/docs/rollbacks",
-        "https://neon.com/docs/postgres/backup-restore/branch-restore"
+        "https://neon.com/docs/postgres/backup-restore/branch-restore",
+        "https://typescript-eslint.io/users/dependency-versions/"
       ]
     },
     {

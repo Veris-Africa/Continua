@@ -1,4 +1,5 @@
 import {ingestionStatus} from '../src/monitoring/ingestionStatus.js';
+import {CalculationQueue} from '../src/services/research/calculationQueue.js';
 import {it,expect} from 'vitest';
 import {createMetrics,requestContext,observeDependency,safeRequestId,errorCategory,recordDependency} from '../src/monitoring/observability.js';
 import {createAlertTransitions,evaluateSignals} from '../src/monitoring/alertPolicy.js';
@@ -32,5 +33,13 @@ it('persists alert transitions, cooldown, recovery and bounded failed notificati
 });
 
 it('does not mistake rejected credentials for an authentication provider outage',()=>{const context={dependencies:{}};recordDependency('auth',5,{status:401},{context});expect(context.dependencies.auth.failures).toBe(0);recordDependency('auth',5,{status:503},{context});expect(context.dependencies.auth.failures).toBe(1);});
+
+it('preserves the queued caller context when another request releases an Engine slot',async()=>{
+ const queue=new CalculationQueue({concurrency:1});let release;const gate=new Promise(r=>release=r);
+ const a={requestId:'first',dependencies:{}},b={requestId:'second',dependencies:{}};
+ const first=requestContext.run(a,()=>queue.run(()=>gate));
+ const second=requestContext.run(b,()=>queue.run(async()=>{expect(requestContext.getStore()).toBe(b);await observeDependency('database',async()=>1);}));
+ release();await Promise.all([first,second]);expect(a.dependencies.database).toBeUndefined();expect(b.dependencies.database.calls).toBe(1);
+});
 
 it('keeps unavailable ingestion distinct from an empty backlog and returns no document payload',async()=>{let calls=0;const good=await ingestionStatus({query:async()=>{calls++;return {rows:[{status:'failed',count:2,oldest_seconds:90000,expired_leases:0,exhausted:2,url:'private'}]};}});expect(calls).toBe(1);expect(good.available).toBe(true);expect(good.categories.ingestion_retry_exhausted).toBe(true);expect(JSON.stringify(good)).not.toContain('private');expect((await ingestionStatus({query:async()=>{throw Error('private');}})).available).toBe(false);});

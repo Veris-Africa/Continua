@@ -1,4 +1,8 @@
 const kinds=new Set(['javascript','promise','render','network','auth','route']);
+export function classifyAppError(error,fallback='javascript'){
+ try{if(error?.name==='ChunkLoadError'||typeof error?.message==='string'&&/dynamically imported module|Loading chunk|Importing a module script failed/i.test(error.message))return 'route';}catch{/* Untrusted error objects are not inspected further. */}
+ return kinds.has(fallback)?fallback:'javascript';
+}
 export function safePage(path){return /^\/(markets|stock|track-investments|watchlist|traders-hub|account|engine|auth|checkout|upgrade)(?:\/|$)/.exec(path)?.[1]??'home';}
 // Opt in only after privacy review. No messages, stacks, URLs, identities or state.
 export function createErrorReporter({enabled=false,send=()=>{},now=Date.now,route=()=>location.pathname,revision='unknown',browser='other',device='other'}={}){
@@ -21,7 +25,7 @@ export function installErrorReports({enabled=false,revision='unknown'}={}){
  const original=window.fetch;
  const ua=navigator.userAgent;
  reporter=createErrorReporter({enabled,revision,browser:/Firefox/.test(ua)?'firefox':/Chrome|Chromium|Edg/.test(ua)?'chromium':/Safari/.test(ua)?'safari':'other',device:/Mobile|Android/.test(ua)?'mobile':'desktop',send:event=>original('/api/telemetry/errors',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',redirect:'error',body:JSON.stringify(event),signal:AbortSignal.timeout(2000)}).then(r=>r.body?.cancel())});
- const onError=()=>reporter('javascript'),onReject=()=>reporter('promise');
+ const onError=event=>reporter(classifyAppError(event.error,event.target?.tagName==='SCRIPT'?'route':'javascript')),onReject=event=>reporter(classifyAppError(event.reason,'promise'));
  window.addEventListener('error',onError);window.addEventListener('unhandledrejection',onReject);
  const observed=async(...args)=>{
   let url;try{url=new URL(typeof args[0]==='string'?args[0]:args[0] instanceof Request?args[0].url:String(args[0]),location.origin);}catch{}

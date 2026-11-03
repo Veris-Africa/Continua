@@ -1,4 +1,4 @@
-import {recordDependency} from '../../monitoring/observability.js';
+import {recordDependency,requestContext} from '../../monitoring/observability.js';
 import {performance} from 'node:perf_hooks';
 import {ApiError} from '../../api/middleware/errorHandler.js';
 export class CalculationQueue{
@@ -6,17 +6,19 @@ export class CalculationQueue{
  run(task,{priority=false}={}){
   if(this.active>=this.concurrency&&this.waiting.length>=(priority?this.maximumWaiting:Math.max(1,this.maximumWaiting-2)))return Promise.reject(new ApiError(503,'Analysis is busy. Please retry shortly.'));
   return new Promise((resolve,reject)=>{
-   const job={task,resolve,reject,priority,timer:null,queuedAt:performance.now()};
+   const job={task,resolve,reject,priority,timer:null,queuedAt:performance.now(),context:requestContext.getStore()};
    if(this.active<this.concurrency){this.start(job);return;}
-   job.timer=setTimeout(()=>{const index=this.waiting.indexOf(job);if(index>=0){this.waiting.splice(index,1);recordDependency('engine_queue',performance.now()-job.queuedAt,{code:'ETIMEDOUT'});reject(new ApiError(503,'Analysis is busy. Please retry shortly.'));}},this.waitMs);
+   job.timer=setTimeout(()=>{const index=this.waiting.indexOf(job);if(index>=0){this.waiting.splice(index,1);recordDependency('engine_queue',performance.now()-job.queuedAt,{code:'ETIMEDOUT'},{context:job.context});reject(new ApiError(503,'Analysis is busy. Please retry shortly.'));}},this.waitMs);
    const firstNormal=this.waiting.findIndex(item=>!item.priority);
    if(priority&&firstNormal>=0)this.waiting.splice(firstNormal,0,job);else this.waiting.push(job);
   });
  }
  start(job){
+  requestContext.run(job.context,()=>{
   clearTimeout(job.timer);recordDependency('engine_queue',performance.now()-job.queuedAt);this.active++;
   Promise.resolve().then(job.task).then(job.resolve,job.reject).finally(()=>{
    this.active--;const next=this.waiting.shift();if(next)this.start(next);
+  });
   });
  }
 }
