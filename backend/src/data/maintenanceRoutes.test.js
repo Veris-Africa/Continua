@@ -17,3 +17,14 @@ describe('private application maintenance route',()=>{
   }finally{await new Promise(resolve=>server.close(resolve));}
  });
 });
+
+it('keeps payment operational status behind dedicated server authority and sanitizes outages',async()=>{
+ const secret='synthetic-maintenance-'.repeat(3);let calls=0,unavailable=false;const app=express();app.use('/internal',createMaintenanceRouter({secret,run:async()=>({}),paymentStatus:async()=>{calls++;if(unavailable)throw Error('private dependency detail');return {groups:[],categories:{}};}}));
+ const server=createServer(app);await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url='http://127.0.0.1:'+server.address().port+'/internal/payment-operations';
+ try{
+  expect((await fetch(url,{headers:{Authorization:'Bearer synthetic-user-token'}})).status).toBe(401);
+  expect((await fetch(url,{headers:{'X-Continua-Maintenance-Key':secret,Origin:'https://continua.invalid'}})).status).toBe(401);expect(calls).toBe(0);
+  const r=await fetch(url,{headers:{'X-Continua-Maintenance-Key':secret}});expect(r.status).toBe(200);expect(r.headers.get('cache-control')).toBe('no-store');expect(await r.json()).toEqual({groups:[],categories:{}});
+  unavailable=true;const outage=await fetch(url,{headers:{'X-Continua-Maintenance-Key':secret}});expect(outage.status).toBe(503);expect(await outage.text()).not.toContain('private dependency');
+ }finally{await new Promise(resolve=>server.close(resolve));}
+});
