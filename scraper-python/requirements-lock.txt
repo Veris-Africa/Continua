@@ -28,7 +28,7 @@ propcache==0.5.4
 psycopg==3.3.6
 psycopg-binary==3.3.6
 psycopg-pool==3.3.3
-pycparser==3.11
+pycparser==3.12
 pypdfium2==5.14.0
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
