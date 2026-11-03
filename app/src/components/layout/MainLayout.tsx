@@ -1,3 +1,4 @@
+import { WorkspaceSkeleton } from "./WorkspaceSkeleton";
 import { Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { PageErrorBoundary } from "./PageErrorBoundary";
@@ -23,14 +24,7 @@ export function MainLayout({ children }: { children?: React.ReactNode }) {
           <div className="pb-20">
             <PageErrorBoundary resetKey={location.pathname}>
               <Suspense
-                fallback={
-                  <div
-                    role="status"
-                    className="px-4 py-8 text-sm text-muted-foreground"
-                  >
-                    Loading your workspace…
-                  </div>
-                }
+                fallback={<WorkspaceSkeleton path={location.pathname} />}
               >
                 {children ?? <Outlet />}
               </Suspense>

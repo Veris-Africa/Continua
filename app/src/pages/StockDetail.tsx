@@ -131,7 +131,7 @@ export default function StockDetail() {
   const stockMeta = metadata[upperSymbol] ?? STOCK_META[upperSymbol] ?? (liveProfile ? {name:liveProfile.company.name,sector:liveProfile.company.sectorName ?? 'Other'} : liveQuote ? {name:upperSymbol,sector:'Other'} : undefined);
   const { research: liveResearch } = useResearch(upperSymbol || undefined);
   const {data: statistics, isLoading: statisticsLoading} = useMarketStatistics(upperSymbol);
-  const { latest: reportedFinancials } = useStockFinancials(upperSymbol || undefined);
+  const { latest: reportedFinancials,isRefreshing: refreshingFinancials,historyError: financialsError,updatedAt: financialsCheckedAt } = useStockFinancials(upperSymbol || undefined);
   // Warm public Fundamentals before scrolling. Display/quota gates stay intact.
   usePublisherResearch(upperSymbol || undefined);
   const { actions: corporateActions, isLoading: actionsLoading } = useCorporateActions(upperSymbol || undefined);
@@ -828,6 +828,7 @@ export default function StockDetail() {
 
         <section ref={refs.fundamentals} data-section="fundamentals" className="space-y-4 scroll-mt-32">
           <Eyebrow>Fundamentals</Eyebrow>
+          {financialsError ? <p role="status" className="text-xs text-muted-foreground">Refresh unavailable. Previously loaded statements, if any, remain visible.</p> : refreshingFinancials && financialsCheckedAt>0 ? <p role="status" className="text-xs text-muted-foreground">Showing saved statements. Checking for updates…</p> : null}
           <FundamentalsGate key={upperSymbol} symbol={exchangeMeta.code === "NSE" ? upperSymbol : `${exchangeMeta.code}:${upperSymbol}`}>
             <StockFundamentals symbol={upperSymbol} currency={exchangeMeta.currency} price={stock.price} name={stock.name} sector={stock.sector} marketCap={stock.marketCap ?? "—"} />
           </FundamentalsGate>

@@ -1,3 +1,5 @@
+import {readFollowCounts} from '@/lib/followQueries.js';
+import {useQuery,useQueryClient} from "@tanstack/react-query";
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef, useMemo } from "react";
 import {SafetyMenuItems} from '@/components/social/SafetyMenuItems';
@@ -53,13 +55,17 @@ interface PortfolioHolding {
 }
 
 export default function UserProfile() {
+ const {userId}=useParams();const {user}=useAuth();
+ return <UserProfileContent key={`${user?.id}:${userId}`} />;
+}
+function UserProfileContent() {
   const { userId } = useParams();
   const [profileParams]=useSearchParams();
   const accountBlock=useAccountBlock(userId);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isFollowing, toggleFollow, fetchFollowers, fetchFollowing } = useFollows();
+  const { isFollowing, toggleFollow, loading: followsLoading,error: followError,refetch: retryFollowing } = useFollows();
   const { bookmarkPost, reactToPost, reactToComment, fetchComments, addComment, editComment, deleteComment, deletePost, reportPost, hidePost } = usePosts();
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,8 +77,14 @@ export default function UserProfile() {
   const [publicPortfolio, setPublicPortfolio] = useState<PortfolioHolding[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingBanner, setUploadingBanner] = useState(false);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const client=useQueryClient();
+  const counts=useQuery({queryKey:['continua','follow-counts',user?.id,userId],enabled:!!userId&&accountBlock.state==='clear',staleTime:30_000,gcTime:5*60_000,retry:1,queryFn:()=>readFollowCounts(supabase,userId)});
+  const followersCount=counts.data?.followers,followingCount=counts.data?.following;
+  const loadFollowCounts=()=>void client.invalidateQueries({queryKey:['continua','follow-counts']});
+  const [activeTab,setActiveTab]=useState(isOwnInitialTab());
+  function isOwnInitialTab(){return user?.id===userId&&profileParams.get('tab')==='bookmarks'?'bookmarks':'posts';}
+  const requestedTab=profileParams.get('tab');
+  useEffect(()=>{setActiveTab(user?.id===userId&&requestedTab==='bookmarks'?'bookmarks':'posts');},[user?.id,userId,requestedTab]);
   const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
   const [dialogTab, setDialogTab] = useState<"followers" | "following">("followers");
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -91,12 +103,17 @@ export default function UserProfile() {
     if (userId) {
       fetchProfile();
       if(accountBlock.state==='clear'){
-        fetchUserPosts(); fetchUserLikes(); fetchUserReposts();
-        loadFollowCounts(); fetchPublicPortfolio();
-        if (user?.id === userId) fetchBookmarks();
+        fetchUserPosts(); fetchUserReposts();
       }
     }
   }, [userId, user,accountBlock.state]);
+
+  useEffect(()=>{
+    if(accountBlock.state!=='clear')return;
+    if(activeTab==='likes')void fetchUserLikes();
+    if(activeTab==='bookmarks'&&user?.id===userId)void fetchBookmarks();
+    if(activeTab==='portfolio')void fetchPublicPortfolio();
+  },[activeTab,userId,user?.id,accountBlock.state]);
 
   // Does the profile being viewed already follow the current user? If so, the
   // follow button should read "Follow back" instead of a plain "Follow", the
@@ -152,12 +169,6 @@ export default function UserProfile() {
       if (data) setProfileData(data as UserProfileData);
     } catch (err) { console.error(err); }
     setLoading(false);
-  };
-
-  const loadFollowCounts = async () => {
-    if (!userId) return;
-    const [f1, f2] = await Promise.all([fetchFollowers(userId), fetchFollowing(userId)]);
-    setFollowersCount(f1.length); setFollowingCount(f2.length);
   };
 
   const fetchPublicPortfolio = async () => {
@@ -243,7 +254,8 @@ export default function UserProfile() {
     if (!user) { navigate("/auth"); return; }
     if (!userId) return;
     const { error } = await toggleFollow(userId);
-    if (!error) { toast({ title: userIsFollowing ? "Unfollowed" : "Following!" }); loadFollowCounts(); }
+    if (error) {toast({title:"Couldn't update following",description:error.message,variant:'destructive'});}
+    else { toast({ title: userIsFollowing ? "Unfollowed" : "Following!" }); loadFollowCounts(); }
   };
 
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -459,8 +471,8 @@ export default function UserProfile() {
             {isOwnProfile ? (
               <Button variant="outline" size="sm" className="h-9 rounded-full font-semibold text-[0.84375rem] px-4" onClick={() => setEditProfileOpen(true)}>Edit profile</Button>
             ) : (
-              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} className="h-9 rounded-full font-semibold text-[0.84375rem] px-4">
-                {userIsFollowing ? "Following" : followsMe ? "Follow back" : "Follow"}
+              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} disabled={followsLoading} className="h-9 rounded-full font-semibold text-[0.84375rem] px-4">
+                {followError&&followsLoading ? "Unavailable" : followsLoading ? "Checking…" : userIsFollowing ? "Following" : followsMe ? "Follow back" : "Follow"}
               </Button>
             )}
           </div>
@@ -490,19 +502,20 @@ export default function UserProfile() {
           </div>
 
           {/* Following/Followers */}
+          {followError&&followsLoading&&!isOwnProfile&&<p role="status" className="mt-2 text-xs text-muted-foreground">Following status could not load. <button type="button" className="text-primary" onClick={()=>void retryFollowing()}>Retry following status</button></p>}
           <div className="flex gap-4 mt-2">
             <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("following"); setFollowersDialogOpen(true); }}>
-              <span className="font-bold"><RollingNumber value={followingCount} /></span> <span className="text-muted-foreground">Following</span>
+              <span className="font-bold">{followingCount==null?<span aria-label="Following count unavailable">—</span>:<RollingNumber value={followingCount} />}</span> <span className="text-muted-foreground">Following</span>
             </button>
             <button className="hover:underline text-[0.8125rem]" onClick={() => { setDialogTab("followers"); setFollowersDialogOpen(true); }}>
-              <span className="font-bold"><RollingNumber value={followersCount} /></span> <span className="text-muted-foreground">Followers</span>
+              <span className="font-bold">{followersCount==null?<span aria-label="Follower count unavailable">—</span>:<RollingNumber value={followersCount} />}</span> <span className="text-muted-foreground">Followers</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs key={userId+profileParams.toString()} defaultValue={isOwnProfile&&profileParams.get('tab')==='bookmarks'?'bookmarks':'posts'} className="mt-4">
+      <Tabs key={userId+profileParams.toString()} value={activeTab} onValueChange={setActiveTab} className="mt-4">
         <TabsList className="w-full flex bg-transparent border-b border-border rounded-none h-11 p-0 gap-1 overflow-x-auto">
           {[
             { value: "posts", label: "Posts" },
@@ -671,6 +684,8 @@ export default function UserProfile() {
               <p className="font-semibold mb-1">Portfolio is private</p>
               <p className="text-sm text-muted-foreground">This user has chosen to keep their portfolio private</p>
             </div>
+          ) : !isOwnProfile&&profileData.portfolio_followers_only&&followsLoading ? (
+            <p role="status" className="p-12 text-center text-sm text-muted-foreground">{followError?'Following status is unavailable. Retry the status check above.':'Checking portfolio visibility…'}</p>
           ) : !canViewPortfolio ? (
             <div className="p-12 text-center">
               <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />

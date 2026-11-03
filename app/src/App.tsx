@@ -15,6 +15,7 @@ import {SessionAssuranceGate} from './components/security/SessionAssuranceGate';
 import { AppLockGate } from "./components/security/AppLockGate";
 import { useScrollRestoration } from "./hooks/useScrollRestoration";
 import { Suspense } from "react";
+import { WorkspaceSkeleton } from "./components/layout/WorkspaceSkeleton";
 import { lazyWithRetry as lazy } from "./lib/lazyWithRetry";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -55,7 +56,7 @@ function AccountAlias() {
 
 function EntryPage() {
   const { user, loading, initializationError, retrySession } = useAuth();
-  if (loading) return <div role="status" className="min-h-screen bg-background p-6">Loading…</div>;
+  if (loading) return <WorkspaceSkeleton label="Connecting your account" />;
   if(!user&&initializationError)return <main className="min-h-screen grid place-items-center p-6"><div role="alert" className="max-w-sm space-y-4"><h1 className="text-xl font-semibold">Reconnect your account</h1><p>{initializationError}</p><button className="rounded-full bg-primary px-5 py-3 text-primary-foreground" onClick={retrySession}>Retry account connection</button></div></main>;
   return user ? <MainLayout><Home /></MainLayout> : <Landing />;
 }
@@ -82,7 +83,7 @@ const App = () => (
               <BrowserRouter>
                 <CommunityReportHost />
                 <ScrollRestorationController />
-                <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="h-7 w-7 rounded-full border-2 border-muted-foreground/25 border-t-primary animate-spin" /></div>}>
+                <Suspense fallback={<WorkspaceSkeleton path={window.location.pathname} />}>
                 <Routes>
                   <Route path="/" element={<EntryPage />} />
                   <Route path="/landing" element={<Landing />} />

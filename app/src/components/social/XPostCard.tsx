@@ -138,8 +138,8 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {currentUserId !== post.user_id && onFollow && (
-                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[0.6875rem] font-semibold" onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
-                    {isFollowing ? "Following" : "Follow"}
+                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[0.6875rem] font-semibold" disabled={isFollowing===undefined} onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
+                    {isFollowing===undefined ? "Checking…" : isFollowing ? "Following" : "Follow"}
                   </Button>
                 )}
               <DropdownMenu>

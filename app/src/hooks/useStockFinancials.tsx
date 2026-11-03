@@ -27,7 +27,7 @@ export function useStockFinancials(
     enabled: !!symbol,
     staleTime: 30 * 60_000,
     refetchOnMount: true,
-    refetchInterval: 5 * 60_000,
+    refetchInterval: 30 * 60_000,
     retry: 1,
   });
 
@@ -40,6 +40,8 @@ export function useStockFinancials(
     latest: combined.at(-1),
     isLoading: history.isLoading,
     historyError: history.error,
+    isRefreshing: history.isFetching,
+    updatedAt: history.dataUpdatedAt,
     refetchHistory: history.refetch,
   };
 }

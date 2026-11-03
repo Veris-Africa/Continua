@@ -34,6 +34,7 @@ export function FollowersDialog({
   const [followers, setFollowers] = useState<FollowUser[]>([]);
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error,setError]=useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
@@ -47,14 +48,15 @@ export function FollowersDialog({
   }, [initialTab]);
 
   const loadData = async () => {
-    setLoading(true);
+    setLoading(true);setError(false);
+    try {
     const [followersData, followingData] = await Promise.all([
       fetchFollowers(userId),
       fetchFollowing(userId)
     ]);
     setFollowers(followersData);
     setFollowing(followingData);
-    setLoading(false);
+    }catch{setError(true);}finally{setLoading(false);}
   };
 
   const handleToggleFollow = async (targetUserId: string) => {
@@ -80,6 +82,7 @@ export function FollowersDialog({
       );
     }
 
+    if(error)return <p role="alert">People could not load. <button onClick={()=>void loadData()}>Retry</button></p>;
     if (users.length === 0) {
       return (
         <div className="text-center py-8 text-muted-foreground">
@@ -117,11 +120,11 @@ export function FollowersDialog({
               <Button
                 variant={isFollowing(profile.user_id) ? "outline" : "default"}
                 size="sm"
-                disabled={busyId===profile.user_id}
+                disabled={busyId===profile.user_id||isFollowing(profile.user_id)===undefined}
                 onClick={() => handleToggleFollow(profile.user_id)}
                 className="min-w-[90px]"
               >
-                {isFollowing(profile.user_id) ? (
+                {isFollowing(profile.user_id)===undefined ? "Checking…" : isFollowing(profile.user_id) ? (
                   <>
                     <UserMinus className="h-4 w-4 mr-1" />
                     Following
@@ -150,10 +153,10 @@ export function FollowersDialog({
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "followers" | "following")} className="flex-1 flex flex-col min-h-0">
           <TabsList className="w-full grid grid-cols-2 rounded-none border-b border-border bg-transparent h-11 shrink-0">
             <TabsTrigger value="followers" className="rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-              Followers (<RollingNumber value={followers.length} />)
+              Followers ({loading||error?"—":<RollingNumber value={followers.length} />})
             </TabsTrigger>
             <TabsTrigger value="following" className="rounded-none bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary">
-              Following (<RollingNumber value={following.length} />)
+              Following ({loading||error?"—":<RollingNumber value={following.length} />})
             </TabsTrigger>
           </TabsList>
 

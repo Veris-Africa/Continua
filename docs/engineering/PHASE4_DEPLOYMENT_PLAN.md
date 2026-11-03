@@ -1,6 +1,6 @@
 # Phase 4 deployment plan — approval required
 
-Phase4 is local only. Do not push this branch to main or deploy it under the Phase3/security approval. No Phase4 SQL migration is required. Review the final local commit(s), validation receipt and all operational limitations before requesting release approval.
+Phase 4 was released under its separate owner approval on 3 November 2026 at 7dfe140d009ac78db072dc7b2dc4a30c7805e12b. The original approval gates below are retained as the release procedure, not a claim that the release is still local. No Phase4 SQL migration is required. Review the final local commit(s), validation receipt and all operational limitations before requesting release approval.
 
 1. Verify main/provider baseline and exact rollback artifacts. Main includes Phase3 plus security-only66de6e4. Phase3 rollout was4e35bf9/Cloudflarebc1b76d9/Renderdep-dbknplgu01pc73drf6q0; current security release evidence is recorded separately. Do not infer live revision from main or checks alone.
 2. Keep PAYMENT_DURABILITY_ENABLED=false, PAYSTACK_CHECKOUT_INTENTS_ENABLED=false and ENGINE_PAID_AI_ENABLED=false. Preserve auth issuer/branch/cookies, renewal/native flags and scheduler configuration. No DDL, account change, real charge or new infrastructure accompanies this application release.

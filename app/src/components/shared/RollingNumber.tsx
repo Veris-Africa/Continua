@@ -1,7 +1,8 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { rollingDigits, rollingDirection } from "@/lib/rollingNumber";
-import { RollingDigit } from './RollingDigit';
+import {lazyWithRetry} from '@/lib/lazyWithRetry';
+const RollingDigit=lazyWithRetry(()=>import('./RollingDigit').then(module=>({default:module.RollingDigit})));
 
 /** Rolls only changed digits, aligned by place value; never animates through
  * invented intermediate financial values or announces animation frames. */
@@ -27,11 +28,11 @@ export const RollingNumber = memo(function RollingNumber({ value, className }: {
   return <span className={cn("rolling-number", className)} aria-label={text}>
     <span className="sr-only">{text}</span>
     <span aria-hidden="true" className="rolling-number-digits">
-      {transition.settled ? transition.to : rollingDigits(transition.from, transition.to).map(({character, old, changed, place}) => {
+      {transition.settled ? transition.to : <Suspense fallback={transition.to}>{rollingDigits(transition.from, transition.to).map(({character, old, changed, place}) => {
         return <span key={place} className={/\d/.test(character) ? "rolling-digit" : "rolling-symbol"}>
           {/\d/.test(character) ? <RollingDigit old={old ?? character} digit={character} down={down}/> : character}
         </span>;
-      })}
+      })}</Suspense>}
     </span>
   </span>;
 });

@@ -118,7 +118,7 @@ export function HubPostCard({
         </div>
 
         {/* Follow lives on the far right and disappears once following */}
-        {!isOwn && onFollow && !isFollowing && (
+        {!isOwn && onFollow && isFollowing === false && (
           <button
             type="button"
             data-small-target

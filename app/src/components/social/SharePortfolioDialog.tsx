@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toPng, toBlob } from "html-to-image";
 import { Sheet, SheetContent, SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -56,6 +55,7 @@ export function SharePortfolioDialog({ open, onOpenChange, holdings, totalValue,
 
   const renderToBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
+    const {toPng,toBlob}=await import('html-to-image');
     // Two passes: html-to-image's font/layout measurement is occasionally
     // off on the very first render of a node that just became visible
     // (dialog open transition) — a quick throwaway render warms it up.

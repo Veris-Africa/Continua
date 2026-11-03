@@ -1,3 +1,4 @@
+import { WorkspaceSkeleton } from "../layout/WorkspaceSkeleton";
 import {useEffect,useState} from 'react';
 import {supabase} from '@/integrations/continua/browserClient';
 import {useAuth} from '@/hooks/useAuth';
@@ -20,7 +21,7 @@ export function SessionAssuranceGate({children}:{children:React.ReactNode}){
  },[user?.id,token]);
  if(mfaPending)return <PendingAuthenticator/>;
  if(!user)return <>{children}</>;
- if(loading||state?.owner!==user.id)return <div role="status" className="min-h-screen grid place-items-center">Verifying your session…</div>;
+ if(loading||state?.owner!==user.id)return <WorkspaceSkeleton path={window.location.pathname} label="Verifying your session" />;
  if(!state.factor&&!state.error)return <>{children}</>;
  const verify=async(e:React.FormEvent)=>{e.preventDefault();if(!state.factor||!/^\d{6}$/.test(code)||busy)return;setBusy(true);setMessage('');
   const result=await supabase.auth.mfa.challengeAndVerify({factorId:state.factor,code});setBusy(false);

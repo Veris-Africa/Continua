@@ -6,6 +6,7 @@ import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
 import {signupAcknowledgement} from '@/lib/legalPolicy';
 import {isPublishedQuery} from '@/lib/researchCache';
 import {sessionRestoreMessage} from '@/lib/accountAccess';
+import {restoreAccount} from '@/lib/restoreAccount';
 
 function clearAccountQueries(){
  void queryClient.cancelQueries();
@@ -62,7 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    void restoreBrowserSession().then(()=>supabase.auth.getSession()).then(({data})=>{
+    // Recovery/OAuth exchanges can consume one-use values: never replay them.
+    const callbackPending=/[?&#](?:token|recovery_token|neon_auth_session_verifier)=/.test(window.location.search+window.location.hash);
+    const restore=callbackPending?restoreBrowserSession:()=>restoreAccount(restoreBrowserSession,()=>active);
+    void restore().then(()=>supabase.auth.getSession()).then(({data,error})=>{
+      if(error)throw error;
       if(!active)return;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
     }).catch(error=>{if(active)setInitializationError(sessionRestoreMessage(error));}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
     return () => {active=false;stopSecurity();subscription.unsubscribe();};

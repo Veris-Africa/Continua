@@ -1,6 +1,6 @@
 # Phase 4 implementation
 
-Local candidate on codex/phase4-observability-recovery. Do not push or deploy this branch without separate approval. Phase 3 was released at 4e35bf9a3a154c37ef51e16443d8116a6271bb17 with payment durability false. The separately requested security correction is main 66de6e460784be52964c144a29721db70e9a2fb8. It contains no Phase 4 code.
+Released to main and production with owner approval on 3 November 2026 at exact source 7dfe140d009ac78db072dc7b2dc4a30c7805e12b. Cloudflare Worker c32836d1-5a1c-441c-bfb8-a3d275b10f4b and Render deployment dep-dbks2759fdbs73c6nlk0 passed the exact release verifier at 11:11:37 UTC. No production SQL, environment changes or restricted feature activation occurred. The pre-release local candidate and prior security release are historical evidence; see PHASE5_IMPLEMENTATION.md for the release receipt.
 
 | Previously present | Implemented extension | Source / limits |
 | --- | --- | --- |

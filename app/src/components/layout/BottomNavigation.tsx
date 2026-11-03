@@ -5,6 +5,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { cn } from "@/lib/utils";
 import { useTouchClick } from "@/hooks/useTouchClick";
 import { useAuth } from "@/hooks/useAuth";
+import {prefetchRoute} from '@/lib/routePrefetch';
 
 const tabLocations = new Map<string, string>();
 
@@ -44,6 +45,8 @@ export function BottomNavigation() {
             <NavLink
               key={item.id}
               {...tap}
+              onPointerEnter={()=>prefetchRoute(item.path)}
+              onFocus={()=>prefetchRoute(item.path)}
               to={tabLocations.get(`${user?.id}:${item.path}`) ?? item.path}
               state={{ resumeTab: true }}
               className={cn(

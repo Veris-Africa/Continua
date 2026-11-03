@@ -527,9 +527,9 @@ export default function Discover() {
                             variant={isFollowing(trader.user_id) ? "outline" : "default"}
                             size="sm"
                             className="text-xs h-8 rounded-full"
-                            onClick={() => handleFollow(trader.user_id)}
+                            disabled={isFollowing(trader.user_id)===undefined} onClick={() => handleFollow(trader.user_id)}
                           >
-                            {isFollowing(trader.user_id) ? "Following" : (
+                            {isFollowing(trader.user_id)===undefined ? "Checking…" : isFollowing(trader.user_id) ? "Following" : (
                               <>
                                 <UserPlus className="h-3 w-3 mr-1" />
                                 Follow

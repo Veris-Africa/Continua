@@ -1,6 +1,6 @@
 # Phase 4 validation receipt — 3 November 2026
 
-Local branch codex/phase4-observability-recovery; initial implementation b7aa83f and local merge4e190c9 include current main history. Final follow-up commit records the Engine queue context fence, browser-hook integration tests and supported development-tool/lockfile corrections. No Phase4 push/deployment occurred.
+Local branch codex/phase4-observability-recovery; initial implementation b7aa83f and local merge4e190c9 include current main history. Final follow-up commit records the Engine queue context fence, browser-hook integration tests and supported development-tool/lockfile corrections. This paragraph describes pre-release validation. Release follow-up: owner-approved main push and Cloudflare/Render deployment of 7dfe140d009ac78db072dc7b2dc4a30c7805e12b completed on 3 November 2026; exact frontend/backend verification passed at 11:11:37 UTC. See PHASE5_IMPLEMENTATION.md for provider artifact IDs and read-only checks.
 
 | Executed check | Final result / private receipt |
 | --- | --- |

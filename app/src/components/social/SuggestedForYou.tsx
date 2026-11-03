@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Check } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/continua/browserClient";
 import { atHandle, getInitials } from "@/lib/handle";
 
@@ -78,8 +78,11 @@ export function SuggestedForYou({ currentUserId, myInterests, followingIds, onFo
   }, [candidates, followingIds, myInterests]);
 
   const handleFollow = async (userId: string) => {
+    if(followedJustNow.has(userId))return;
     setFollowedJustNow(prev => new Set(prev).add(userId));
-    await onFollow(userId);
+    try {await onFollow(userId);} finally {
+      setFollowedJustNow(prev=>{const next=new Set(prev);next.delete(userId);return next;});
+    }
   };
 
   if (loading || ranked.length === 0) return null;
@@ -112,7 +115,7 @@ export function SuggestedForYou({ currentUserId, myInterests, followingIds, onFo
                 disabled={justFollowed}
                 onClick={() => handleFollow(c.user_id)}
               >
-                {justFollowed ? <><Check className="h-3 w-3 mr-1" />Following</> : <><UserPlus className="h-3 w-3 mr-1" />Follow</>}
+                {justFollowed ? 'Saving…' : <><UserPlus className="h-3 w-3 mr-1" />Follow</>}
               </Button>
             </div>
           );
