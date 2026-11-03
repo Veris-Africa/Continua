@@ -1,3 +1,4 @@
+import {PriceHistoryStatus} from '@/components/stock/PriceHistoryStatus';
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useStockDirectory } from "@/hooks/useStockDirectory";
@@ -249,7 +250,7 @@ export default function StockDetail() {
   // see useHistoricalCandles for why). We deliberately do not draw a generated
   // price path when the provider has no history; synthetic lines can be mistaken
   // for market data and produce false returns or technical signals.
-  const { points: liveCandlePoints } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
+  const { points: liveCandlePoints,isLoading:historyLoading,isError:historyError,refetch:historyRefetch } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
   const periodData = liveCandlePoints;
   const priceCoverage = chartCoverage(periodData, selectedTimeframe, chartType);
   const hasHistoricalData = priceCoverage.available;
@@ -552,8 +553,7 @@ export default function StockDetail() {
           ) : (
             <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
               <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
-              <p className="text-xs font-semibold">Historical chart unavailable</p>
-              <p className="text-[0.625rem] text-muted-foreground mt-1">{priceCoverage.reason}</p>
+              <PriceHistoryStatus loading={historyLoading} error={historyError} reason={priceCoverage.reason} onRetry={historyRefetch}/>
             </div>
           )}
         </div>
@@ -729,6 +729,8 @@ export default function StockDetail() {
         onHideAll={fsToggleHideDrawings}
         onClearAll={fsClearDrawings}
       />
+
+      {hasHistoricalData&&<p className="px-4 pb-3 text-xs text-muted-foreground" role="note">{priceCoverage.reason}</p>}
 
       {/* STICKY SUB-NAV */}
       <div data-sticky-nav className="sticky top-[var(--sticky-header-height)] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">

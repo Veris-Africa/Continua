@@ -3,16 +3,16 @@ import type { Candle, CandleInterval, RangePerformance } from "./types";
 import type {PriceObservation} from '@/lib/priceHistory';
 
 export const historicalApi = {
-  getCloses(symbol: string, range: {from: string; to: string}) {
-    return continuaFetch<PriceObservation[]>(`/price-history/${encodeURIComponent(symbol)}`, {params: {exchange: 'NSE', ...range}});
+  getCloses(symbol: string, range: {from: string; to: string}, signal?:AbortSignal) {
+    return continuaFetch<PriceObservation[]>(`/price-history/${encodeURIComponent(symbol)}`, {signal,params: {exchange: 'NSE', ...range}});
   },
   getCandles(
     symbol: string,
-    opts: { interval?: CandleInterval; from?: string; to?: string; exchange?: string } = {}
+    opts: { interval?: CandleInterval; from?: string; to?: string; exchange?: string; signal?:AbortSignal } = {}
   ) {
-    const { interval = "1d", from, to, exchange = "NSE" } = opts;
+    const { interval = "1d", from, to, exchange = "NSE",signal } = opts;
     return continuaFetch<Candle[]>(`/historical/${encodeURIComponent(symbol)}`, {
-      params: { exchange, interval, from, to },
+      signal, params: { exchange, interval, from, to },
     });
   },
 

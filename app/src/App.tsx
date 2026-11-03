@@ -1,13 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CommunityReportHost } from "@/components/social/SafetyMenuItems";
+import { CommunityReportHost } from "@/components/social/CommunityReportHost";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { MainLayout } from "./components/layout/MainLayout";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProfileProvider } from "./hooks/useProfile";
 import { ExchangeProvider } from "./hooks/useExchange";
@@ -18,6 +17,7 @@ import { Suspense } from "react";
 import { WorkspaceSkeleton } from "./components/layout/WorkspaceSkeleton";
 import { lazyWithRetry as lazy } from "./lib/lazyWithRetry";
 
+const MainLayout=lazy(()=>import('./components/layout/MainLayout').then(module=>({default:module.MainLayout})));
 const Home = lazy(() => import("./pages/Home"));
 const Markets = lazy(() => import("./pages/Markets"));
 const Discover = lazy(() => import("./pages/Discover"));

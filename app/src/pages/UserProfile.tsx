@@ -65,8 +65,8 @@ function UserProfileContent() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isFollowing, toggleFollow, loading: followsLoading,error: followError,refetch: retryFollowing } = useFollows();
-  const { bookmarkPost, reactToPost, reactToComment, fetchComments, addComment, editComment, deleteComment, deletePost, reportPost, hidePost } = usePosts();
+  const { isFollowing,isFollowPending, toggleFollow, loading: followsLoading,error: followError,refetch: retryFollowing } = useFollows();
+  const { bookmarkPost, reactToPost, reactToComment, fetchComments, addComment, editComment, deleteComment, deletePost, reportPost, hidePost } = usePosts({enabled:false});
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
@@ -106,7 +106,7 @@ function UserProfileContent() {
         fetchUserPosts(); fetchUserReposts();
       }
     }
-  }, [userId, user,accountBlock.state]);
+  }, [userId, user?.id,accountBlock.state]);
 
   useEffect(()=>{
     if(accountBlock.state!=='clear')return;
@@ -185,21 +185,10 @@ function UserProfileContent() {
   };
 
   const fetchUserPosts = async () => {
-    const { data: postsData } = await supabase.from("posts").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    if (postsData) {
-      const withCounts = await Promise.all(postsData.map(async (post) => {
-        const [l, c, r, il, ir, ib] = await Promise.all([
-          supabase.from("post_likes").select("id", { count: "exact", head: true }).eq("post_id", post.id),
-          supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("post_id", post.id),
-          supabase.from("post_reposts").select("id", { count: "exact", head: true }).eq("post_id", post.id),
-          user ? supabase.from("post_likes").select("id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
-          user ? supabase.from("post_reposts").select("id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
-          user ? supabase.from("post_bookmarks").select("id").eq("post_id", post.id).eq("user_id", user.id).maybeSingle() : Promise.resolve({ data: null }),
-        ]);
-        return { ...post, likes_count: l.count || 0, comments_count: c.count || 0, reposts_count: r.count || 0, is_liked: !!il.data, is_reposted: !!ir.data, is_bookmarked: !!ib.data };
-      }));
-      setUserPosts(withCounts);
-    }
+    if(!userId||accountBlock.state!=='clear')return;
+    const {data,error}=await supabase.communityFeed({author:userId});
+    if(error){toast({title:"Couldn't load profile posts",description:'Please retry.',variant:'destructive'});return;}
+    if(Array.isArray(data))setUserPosts(data);
   };
 
   const fetchUserLikes = async () => {
@@ -280,7 +269,7 @@ function UserProfileContent() {
     else if (result.method === "failed") toast({ title: "Couldn't share this profile", variant: "destructive" });
   };
 
-  const handleReact = async (postId: string, reaction: ReactionKind) => { if (!user) { navigate("/auth"); return; } await reactToPost(postId, reaction); };
+  const handleReact = async (postId: string, reaction: ReactionKind) => { if (!user) { navigate("/auth"); return; } const current=([...userPosts,...bookmarkedPosts,...likedPosts,...repostedPosts].find(post=>post.id===postId) as (UserPost&{my_reaction?:ReactionKind|null})|undefined)?.my_reaction;const result=await reactToPost(postId,reaction,current);if(!result.error)await fetchUserPosts(); };
   const handleBookmark = async (postId: string) => {
     if (!user) { navigate("/auth"); return; }
     const current = [...userPosts, ...bookmarkedPosts, ...likedPosts, ...repostedPosts].find(p => p.id === postId);
@@ -471,8 +460,8 @@ function UserProfileContent() {
             {isOwnProfile ? (
               <Button variant="outline" size="sm" className="h-9 rounded-full font-semibold text-[0.84375rem] px-4" onClick={() => setEditProfileOpen(true)}>Edit profile</Button>
             ) : (
-              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} disabled={followsLoading} className="h-9 rounded-full font-semibold text-[0.84375rem] px-4">
-                {followError&&followsLoading ? "Unavailable" : followsLoading ? "Checking…" : userIsFollowing ? "Following" : followsMe ? "Follow back" : "Follow"}
+              <Button variant={userIsFollowing ? "outline" : "default"} size="sm" onClick={handleFollow} disabled={followsLoading||isFollowPending(userId??'')} className="h-9 rounded-full font-semibold text-[0.84375rem] px-4">
+                {isFollowPending(userId??'') ? "Updating…" : followError&&followsLoading ? "Unavailable" : followsLoading ? "Checking…" : userIsFollowing ? "Following" : followsMe ? "Follow back" : "Follow"}
               </Button>
             )}
           </div>

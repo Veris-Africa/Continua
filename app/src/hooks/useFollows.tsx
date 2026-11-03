@@ -1,5 +1,6 @@
+import {createFollowMutationState} from '@/lib/followMutationState.js';
 import {readFollowingIds} from '@/lib/followQueries.js';
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo,useSyncExternalStore } from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
@@ -15,9 +16,10 @@ export interface FollowUser {
 
 // Every mounted consumer shares one account-scoped ID query. Full profiles are
 // loaded only for an explicitly opened list, not to decide a Follow button.
-const pending=new Set<string>();
+const mutations=createFollowMutationState();
 export function useFollows() {
   const { user }=useAuth();
+  useSyncExternalStore(mutations.subscribe,mutations.snapshot,mutations.snapshot);
   const client=useQueryClient();
   const owner=user?.id;
   const key=useMemo(()=>['continua','following-ids',owner],[owner]);
@@ -26,13 +28,14 @@ export function useFollows() {
   const followingIds=useMemo(()=>new Set<string>(ids.data??[]),[ids.data]);
   useEffect(()=>{
     if(!owner)return;
+    const clear=()=>mutations.clear();window.addEventListener('continua:session-cleared',clear);
     const refresh=()=>{void client.invalidateQueries({queryKey:key});void client.invalidateQueries({queryKey:['continua','follow-counts']});};
     let channel:BroadcastChannel|null=null;
     try{if(typeof BroadcastChannel==='function')channel=new BroadcastChannel('continua-follows');}catch{/* Optional cross-tab transport. */}
     const message=(event:MessageEvent)=>{if(event.data?.owner===owner)refresh();};
     channel?.addEventListener('message',message);
     window.addEventListener('continua:community-safety-changed',refresh);
-    return()=>{channel?.close();window.removeEventListener('continua:community-safety-changed',refresh);};
+    return()=>{window.removeEventListener('continua:session-cleared',clear);channel?.close();window.removeEventListener('continua:community-safety-changed',refresh);};
   },[owner,client,key]);
   const list=useCallback(async(direction:'followers'|'following',target=owner)=>{
     if(!target)return [];
@@ -50,9 +53,9 @@ export function useFollows() {
   const isFollowing=useCallback((target:string):boolean|undefined=>ids.data===undefined?undefined:followingIds.has(target),[ids.data,followingIds]);
   const change=async(target:string,follow:boolean)=>{
     if(!owner||target===owner)return {error:{message:'Cannot follow this account'}};
-    const lock=owner+':'+target;
-    if(ids.data===undefined||pending.has(lock))return {error:{message:'Following status is still loading. Please retry.'}};
-    pending.add(lock);
+    if(ids.data===undefined)return {error:{message:'Following status is still loading. Please retry.'}};
+    if(!mutations.begin(owner,target,follow))return {error:{message:'Following update is pending.'}};
+    let failed=true;
     try {
       await client.cancelQueries({queryKey:key});
       const result=follow?await supabase.from('user_follows').insert({follower_id:owner,following_id:target}):await supabase.from('user_follows').delete().eq('follower_id',owner).eq('following_id',target);
@@ -62,10 +65,10 @@ export function useFollows() {
       void client.invalidateQueries({queryKey:['continua','follow-counts']});
       void client.invalidateQueries({queryKey:['continua','follow-list']});
       try{if(typeof BroadcastChannel==='function'){const channel=new BroadcastChannel('continua-follows');try{channel.postMessage({owner});}finally{channel.close();}}}catch{/* A saved write must not appear to fail when optional messaging is unavailable. */}
-      return {error:null};
-    }finally{pending.delete(lock);}
+      failed=false;return {error:null};
+    }catch(error){return {error:{message:error instanceof Error?error.message:'Following update could not complete.'}};}finally{mutations.finish(owner,target,failed);}
   };
-  return {followingIds,loading:!!owner&&ids.data===undefined,error:ids.error,isFollowing,
+  return {isFollowPending:(target:string)=>mutations.state(owner,target,isFollowing(target)).startsWith('pending-'),followState:(target:string)=>mutations.state(owner,target,isFollowing(target)),followingIds,loading:!!owner&&ids.data===undefined,error:ids.error,isFollowing,
     followUser:(target:string)=>change(target,true),unfollowUser:(target:string)=>change(target,false),
     toggleFollow:(target:string)=>change(target,!isFollowing(target)),fetchFollowers,fetchFollowing,refetch:ids.refetch};
 }

@@ -2,11 +2,11 @@
 // All relations are fixed, owner comes only from verified server claims, and
 // no privileged role or SECURITY DEFINER function is used.
 import {executeDataRequest} from './browserData.js';
-export function communityFeedQuery(owner){
+export function communityFeedQuery(owner,{author}={}){
  if(typeof owner!=='string'||!owner)throw Error('Verified feed owner required');
- return {params:[owner],head:false,mutation:false,sql:`WITH visible AS MATERIALIZED (
+ return {params:author?[owner,author]:[owner],head:false,mutation:false,sql:`WITH visible AS MATERIALIZED (
   SELECT p.* FROM public.posts p
-  WHERE NOT EXISTS(SELECT 1 FROM public.hidden_posts h WHERE h.user_id=$1 AND h.post_id=p.id)
+  WHERE ${author?'p.user_id=$2 AND ':''}NOT EXISTS(SELECT 1 FROM public.hidden_posts h WHERE h.user_id=$1 AND h.post_id=p.id)
    AND NOT EXISTS(SELECT 1 FROM public.blocked_users b WHERE b.blocker_id=$1 AND b.blocked_id=p.user_id)
    AND NOT EXISTS(SELECT 1 FROM public.muted_users m WHERE m.muter_id=$1 AND m.muted_id=p.user_id)
    AND NOT EXISTS(SELECT 1 FROM public.muted_keywords k WHERE k.user_id=$1 AND length(trim(k.keyword))>0 AND strpos(lower(p.content),lower(trim(k.keyword)))>0)
@@ -30,4 +30,4 @@ export function communityFeedQuery(owner){
   FROM visible p
  ) SELECT row_to_json(enriched)::text payload FROM enriched ORDER BY created_at DESC,id DESC`};
 }
-export function readCommunityFeed(database,claims){return executeDataRequest(database,communityFeedQuery(claims.sub),claims);}
+export function readCommunityFeed(database,claims,filters){return executeDataRequest(database,communityFeedQuery(claims.sub,filters),claims);}

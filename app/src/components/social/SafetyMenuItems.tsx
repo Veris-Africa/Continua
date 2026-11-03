@@ -5,10 +5,7 @@ import {supabase} from '@/integrations/continua/browserClient';
 import {useAuth} from '@/hooks/useAuth';
 import {useToast} from '@/hooks/use-toast';
 import {DropdownMenuItem} from '@/components/ui/dropdown-menu';
-import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
-import {Button} from '@/components/ui/button';
 export const COMMUNITY_SAFETY_CHANGED='continua:community-safety-changed';
-const reasons=['Spam or scam','Harassment or hate','Misleading financial claims','Copyright infringement','Threats or unsafe content','Other'];
 const REPORT_REQUEST='continua:report-request';
 /** Menu selection closes normally; the report host survives menu unmounting. */
 export function SafetyMenuItems({authorId,postId}:{authorId:string;postId?:string}) {
@@ -37,23 +34,5 @@ export function SafetyMenuItems({authorId,postId}:{authorId:string;postId?:strin
   <DropdownMenuItem disabled={!user||!state||busy} onSelect={()=>void change('block')}><UserX className="h-4 w-4 mr-2"/>{state?.blocked?'Unblock account':'Block account'}</DropdownMenuItem>
   {postId&&<DropdownMenuItem onSelect={()=>start('post')}><Flag className="h-4 w-4 mr-2"/>Report post</DropdownMenuItem>}
   <DropdownMenuItem onSelect={()=>start('user')}><Flag className="h-4 w-4 mr-2"/>Report account</DropdownMenuItem>
- </>;
-}
-
-export function CommunityReportHost(){
- const {user}=useAuth(),{toast}=useToast();
- const [report,setReport]=useState<{kind:'post'|'user';target:string}|null>(null),[busy,setBusy]=useState(false),[reason,setReason]=useState(reasons[0]),[details,setDetails]=useState('');
- useEffect(()=>{const open=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!detail?.target)return;setReason(reasons[0]);setDetails('');setReport(detail);};window.addEventListener(REPORT_REQUEST,open);return()=>window.removeEventListener(REPORT_REQUEST,open);},[]);
- const submit=async()=>{if(!user||!report||busy)return;setBusy(true);try{
-  const {error}=await (supabase.rpc as any)('community_submit_report',{p_kind:report.kind,p_target:report.target,p_reason:reason,p_details:details.trim()});if(error)throw error;
-  setReport(null);toast({title:'Report received',description:'Saved for review. Reporting does not automatically remove content.'});
- }catch{toast({title:"Couldn't submit your report",description:'Please retry. It has not been confirmed.',variant:'destructive'});}finally{setBusy(false);}};
- return <>
-  <Dialog open={!!report} onOpenChange={v=>{if(!v&&!busy)setReport(null);}}><DialogContent onClick={e=>e.stopPropagation()}>
-   <DialogTitle className="pr-10">Report {report?.kind==='post'?'post':'account'}</DialogTitle><DialogDescription>Help keep TradersHub safe. Choose the concern below. Your report is private and goes to the operator for review.</DialogDescription>
-   <label className="text-sm">Reason<select className="block w-full rounded border bg-background p-2 mt-1" value={reason} onChange={e=>setReason(e.target.value)}>{reasons.map(r=><option key={r}>{r}</option>)}</select></label>
-   <label className="text-sm">Additional context (optional)<textarea className="block w-full rounded border bg-background p-2 mt-1" maxLength={1000} value={details} onChange={e=>setDetails(e.target.value)} placeholder="Explain the concern. Do not include passwords or private payment details."/></label>
-   <Button disabled={busy} onClick={()=>void submit()}>{busy?'Submitting…':'Submit report'}</Button>
-  </DialogContent></Dialog>
  </>;
 }

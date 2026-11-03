@@ -34,7 +34,11 @@ export async function populatedFixture(req,url,json){
   if(table==='profiles'||table==='profiles_public'){
    const rows=selection(profiles);return json(200,req.headers.accept?.includes('vnd.pgrst')?rows[0]??null:rows);
   }
-  if(table==='community_feed')return json(200,[post]);
+  if(table==='portfolio_history'){
+   const today=new Date(),rows=Array.from({length:8},(_,index)=>({date:new Date(today.getTime()-(7-index)*86400000).toISOString().slice(0,10),value:300+index*2,cost:300,basis:'recorded_portfolio_snapshot'}));
+   return json(200,rows);
+  }
+  if(table==='community_feed')return json(200,url.searchParams.get('author')&&url.searchParams.get('author')!==peer?[]:[post]);
   if(table==='posts')return json(200,selection([post]));
   if(table==='portfolios'){
    if(url.searchParams.get('user_id')==='eq.'+peer)return json(403,{message:'Private fixture portfolio'});

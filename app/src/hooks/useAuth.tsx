@@ -39,14 +39,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [initializationError,setInitializationError]=useState<string|null>(null);
   const [restoreAttempt,setRestoreAttempt]=useState(0);
   const owner=useRef<string|null>(null);
+  const verifiedSession=useRef<Session|null>(null);
 
   useEffect(() => {
     let bootstrapping=true,active=true;
-    setLoading(true);setInitializationError(null);
+    setLoading(!verifiedSession.current||verifiedSession.current.expires_at*1000<=Date.now());setInitializationError(null);
     const stopSecurity=observeSessionSecurity(state=>{if(active){setMfaPending(state.mfaPending);setRecoveryMode(state.recoveryMode);}});
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if(event==='SESSION_UNAVAILABLE'){setInitializationError(sessionRestoreMessage({status:503}));setSession(null);setUser(null);setLoading(false);return;}
+        verifiedSession.current=session;
         if(session||event==='SIGNED_OUT')setInitializationError(null);
         const next=session?.user.id??null;
         if((owner.current&&owner.current!==next)||event==='SIGNED_OUT'){
@@ -68,10 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const restore=callbackPending?restoreBrowserSession:()=>restoreAccount(restoreBrowserSession,()=>active);
     void restore().then(()=>supabase.auth.getSession()).then(({data,error})=>{
       if(error)throw error;
-      if(!active)return;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
+      if(!active)return;verifiedSession.current=data.session;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
     }).catch(error=>{if(active)setInitializationError(sessionRestoreMessage(error));}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
     return () => {active=false;stopSecurity();subscription.unsubscribe();};
   }, [restoreAttempt]);
+
+  useEffect(()=>{
+    if(!initializationError)return;
+    let lastAttempt=0;
+    const recover=()=>{if(document.visibilityState!=='visible'||Date.now()-lastAttempt<15000)return;lastAttempt=Date.now();setRestoreAttempt(value=>value+1);};
+    window.addEventListener('online',recover);document.addEventListener('visibilitychange',recover);
+    return()=>{window.removeEventListener('online',recover);document.removeEventListener('visibilitychange',recover);};
+  },[initializationError]);
 
   const signUp = async (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => {
     const legal=signupAcknowledgement(acknowledgement.adult,acknowledgement.terms);
@@ -129,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     recoveryMode,
     mfaPending,
     initializationError,
-    retrySession:()=>{setLoading(true);setRestoreAttempt(value=>value+1);},
+    retrySession:()=>setRestoreAttempt(value=>value+1),
     signUp,
     signIn,
     signOut,

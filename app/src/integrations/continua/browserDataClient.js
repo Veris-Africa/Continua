@@ -51,5 +51,5 @@ export function createBrowserDataClient({identity,origin,fetcher=fetch}){
   catch(reject){return this.execute().catch(reject);}
   finally(work){return this.execute().finally(work);}
  }
- return {from:table=>new Query(table),rpc:(name,body={})=>{if(!/^[a-z][a-z0-9_]*$/.test(name))throw Error('Invalid function');return request('data/rpc/'+name,{method:'POST',body});},functions:{invoke:(name,{body}={})=>{if(!['delete-account','check-price-alerts','stock-thesis'].includes(name))throw Error('Function unavailable');return request('functions/'+name,{method:'POST',body:body??{}});}}};
+ return {communityFeed:({author}={})=>request('data/community_feed'+(author?'?'+new URLSearchParams({author}):'')),portfolioHistory:(range,signal)=>request('data/portfolio_history?'+new URLSearchParams({from:range.from,to:range.to}),{signal}),from:table=>new Query(table),rpc:(name,body={})=>{if(!/^[a-z][a-z0-9_]*$/.test(name))throw Error('Invalid function');return request('data/rpc/'+name,{method:'POST',body});},functions:{invoke:(name,{body}={})=>{if(!['delete-account','check-price-alerts','stock-thesis'].includes(name))throw Error('Function unavailable');return request('functions/'+name,{method:'POST',body:body??{}});}}};
 }

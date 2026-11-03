@@ -5342,6 +5342,18 @@
         "https://nodejs.org/api/timers.html",
         "https://docs.python.org/3.13/library/asyncio-sync.html"
       ]
+    },
+    {
+      "file": "app/src, backend/src/data, financial-data-collector/continua_scraper/run_health.py",
+      "category": "Phase 7 reliability, measured UI performance and recorded-history access",
+      "language": "Existing React TypeScript/JavaScript frontend, Node JavaScript backend, Python collector and SQL contracts",
+      "runtime": "No new runtime or service; retained production Node API and candidate boundaries",
+      "reason": "Fix owned session recovery, bounded request sharing, actual recorded valuation reads and redacted pipeline health within their current trust boundaries. Preserve numerical Python oracles, existing auth, RLS and source-rights gates; no TypeScript backend runtime.",
+      "references": [
+        "https://react.dev/reference/react/lazy",
+        "https://tanstack.com/query/latest/docs/framework/react/guides/query-cancellation",
+        "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+      ]
     }
   ],
   "nativeRewrite": {

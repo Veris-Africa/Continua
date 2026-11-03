@@ -119,19 +119,20 @@ let __postsCache: Post[] | null = null;
 let __postsCacheKey: string | null = null;
 if(typeof window!=='undefined')window.addEventListener('continua:session-cleared',()=>{__postsCache=null;__postsCacheKey=null;});
 
-export function usePosts() {
+export function usePosts({enabled=true}:{enabled?:boolean}={}) {
   const { user } = useAuth();
   const { toast } = useToast();
   const cacheKey = user?.id || 'anon';
-  const initial = __postsCache && __postsCacheKey === cacheKey ? __postsCache : user ? readFeedSnapshot(cacheKey) ?? [] : [];
+  const initial = !enabled?[]:__postsCache && __postsCacheKey === cacheKey ? __postsCache : user ? readFeedSnapshot(cacheKey) ?? [] : [];
   const [postState, setPostState] = useState<{owner:string;rows:Post[]}>({owner:cacheKey,rows:initial});
   const posts = postState.owner === cacheKey ? postState.rows : initial;
   const setPosts = useCallback((update: Post[] | ((previous:Post[])=>Post[])) => setPostState(previous => ({owner:cacheKey,rows:typeof update === 'function' ? update(previous.owner===cacheKey?previous.rows:[]) : update})),[cacheKey]);
-  const [loading, setLoading] = useState(initial.length === 0);
+  const [loading, setLoading] = useState(enabled&&initial.length === 0);
   const [error, setError] = useState<string | null>(null);
   const fetchVersion=useRef(0);
 
   const fetchPosts = useCallback(async () => {
+    if(!enabled)return;
     const version=++fetchVersion.current;
     if (!__postsCache || __postsCacheKey !== cacheKey) setLoading(true);
     try {
@@ -302,12 +303,12 @@ export function usePosts() {
     } finally {
       if(version===fetchVersion.current)setLoading(false);
     }
-  }, [user?.id, cacheKey]);
+  }, [user?.id, cacheKey,enabled]);
 
   usePageRefresh(fetchPosts);
-  useEffect(() => { setPosts(initial); setLoading(initial.length===0); void fetchPosts(); return()=>{fetchVersion.current++;}; }, [cacheKey, fetchPosts]);
-  useEffect(() => { __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey]);
-  useEffect(()=>{const refresh=()=>{clearFeedSnapshot(cacheKey);__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
+  useEffect(() => { if(!enabled)return; setPosts(initial); setLoading(initial.length===0); void fetchPosts(); return()=>{fetchVersion.current++;}; }, [cacheKey, fetchPosts,enabled]);
+  useEffect(() => { if(!enabled)return; __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey,enabled]);
+  useEffect(()=>{if(!enabled)return;const refresh=()=>{clearFeedSnapshot(cacheKey);__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts,enabled]);
 
   const postSubmission=useRef(createPostSubmission({
     insert:async payload=>supabase.from('posts').insert(payload).select().single(),

@@ -1,0 +1,47 @@
+{
+  "method": "Single first-navigation pair in the same sandbox/in-app browser; unthrottled loopback, same empty synthetic account and 2000ms identity delay; different fresh origins. No production requests or mutation. This is not Lighthouse mobile, field p75, INP or statistical evidence.",
+  "baselineCommit": "7fd6f34ab543012eec18fd2cd7eb5d244570534d",
+  "baseline": {
+    "fcpMs": 2404,
+    "lastObservedLcpMs": 2724,
+    "syntheticHomeContentMs": 2543.900000035763,
+    "longTasks": [
+      {
+        "at": 2277.2000000476837,
+        "duration": 101
+      },
+      {
+        "at": 2490.600000023842,
+        "duration": 57
+      },
+      {
+        "at": 2548.300000011921,
+        "duration": 122
+      }
+    ],
+    "layoutShiftSum": 0.00002062910929208482
+  },
+  "candidateWorkingTree": {
+    "fcpMs": 172,
+    "lastObservedLcpMs": 2472,
+    "syntheticHomeContentMs": 2268.600000023842,
+    "longTasks": [
+      {
+        "at": 2215,
+        "duration": 59
+      },
+      {
+        "at": 2291.400000035763,
+        "duration": 82
+      }
+    ],
+    "layoutShiftSum": 0
+  },
+  "candidateHtmlSha256": "a5d7aa2e45567f93b28b471dd18cb499bb6c43bb5ffe78ca6db52af656816cca",
+  "limits": [
+    "Useful content marker denotes the synthetic empty-account portfolio view, not all APIs complete.",
+    "Final mobile performance target remains unverified.",
+    "Long-task entries are raw observations, not standardized TBT.",
+    "Final LCP means last observed candidate before leaving the page, not a field percentile."
+  ]
+}

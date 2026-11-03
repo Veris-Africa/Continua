@@ -10,7 +10,8 @@ test('close-only observations never become OHLC or zero-volume candles', () => {
     assert.equal(points[0].body, undefined); assert.equal(points[0].volume, undefined); assert.equal(points[1].volume, 0);
     assert.equal(chartCoverage(points, 'ALL', 'candle', now).available, false);
     assert.equal(chartCoverage(points, 'ALL', 'line', now).available, true);
-    assert.equal(chartCoverage(points, '3M', 'area', now).available, false);
+    assert.equal(chartCoverage(points, '3M', 'area', now).available, true);
+    assert.match(chartCoverage(points,'3M','area',now).reason,/Partial 3M coverage/);
     assert.equal(chartCoverage(points, '1D', 'line', now).available, false);
 });
 test('conflicts, invalid dates, nonpositive prices and future rows are withheld; canonical OHLC wins', () => {

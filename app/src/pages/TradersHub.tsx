@@ -59,7 +59,7 @@ export default function TradersHub() {
   const { user } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { posts, loading, error: feedError, fetchPosts, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
-  const { isFollowing, toggleFollow, followingIds, loading: followsLoading,error: followError,refetch: retryFollowing } = useFollows();
+  const { isFollowing,isFollowPending, toggleFollow, followingIds, loading: followsLoading,error: followError,refetch: retryFollowing } = useFollows();
   const { portfolio } = usePortfolio();
   const { watchlist } = useWatchlist();
   const { notifications } = useNotifications();
@@ -519,6 +519,7 @@ export default function TradersHub() {
               priority={index < 2}
               currentUserId={user?.id}
               isFollowing={isFollowing(post.user_id)}
+              followPending={isFollowPending(post.user_id)}
               onFollow={handleFollow}
               onOpen={p => navigate(`/traders-hub/post/${p.id}`)}
               onComment={p => navigate(`/traders-hub/post/${p.id}`)}

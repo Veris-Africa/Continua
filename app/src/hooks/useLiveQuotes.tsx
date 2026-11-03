@@ -1,3 +1,4 @@
+import {usePageVisible} from './usePageVisible';
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { quotesApi } from "@/api/quotesApi";
@@ -8,6 +9,7 @@ import { readQuoteSnapshot, writeQuoteSnapshot } from "@/lib/quoteSnapshotCache"
 
 /** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
 export function useLiveQuotes(symbols: string[], exchange?: string) {
+  const visible=usePageVisible();
   const { exchange: selectedExchange } = useExchange();
   const activeExchange = exchange ?? selectedExchange;
 
@@ -25,9 +27,9 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
   const query = useQuery({
     queryKey: ["continua", "quotes", activeExchange, key],
     queryFn: () => quotesApi.getBatch(normalized, activeExchange),
-    enabled: normalized.length > 0,
+    enabled: visible&&normalized.length > 0,
     staleTime: 15_000,
-    refetchInterval: 30_000,
+    refetchInterval: visible?30_000:false,
     refetchOnMount: "always",
     refetchOnReconnect: "always",
     initialData: persistedSnapshot?.quotes,
@@ -40,6 +42,7 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
 
   useEffect(() => {
     setLiveTicks({});
+    if(!visible)return;
     const unsubscribers = normalized.map((symbol) =>
       continuaRealtime.subscribeQuote(symbol, (quote) => {
         if (quote.exchange !== activeExchange) return;
@@ -48,7 +51,7 @@ export function useLiveQuotes(symbols: string[], exchange?: string) {
     );
     return () => unsubscribers.forEach((unsub) => unsub());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, activeExchange]);
+  }, [key, activeExchange,visible]);
 
   useEffect(() => continuaRealtime.onConnectionChange(setIsConnected), []);
 

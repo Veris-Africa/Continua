@@ -32,9 +32,10 @@ export function useAlertsWatcher() {
   const inFlight = useRef(new Set<string>());
   const [retryTick, setRetryTick] = useState(0);
   useEffect(() => {
+    if(!symbols.length)return;
     const timer = setInterval(() => setRetryTick(t => t + 1), 30000);
     return () => clearInterval(timer);
-  }, []);
+  }, [symbols.join(',')]);
   const alertSignature = activePriceAlerts.map(a => [a.id, a.target_value, a.exchange].join(':')).sort().join('|');
 
   useEffect(() => {

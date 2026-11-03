@@ -39,7 +39,10 @@
   </head>
 
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <style>
+      .continua-boot{box-sizing:border-box;min-height:100dvh;margin:auto;padding:28px 20px 100px;max-width:720px;font:16px system-ui,sans-serif;color:#24222b;background:#faf9fd}.continua-boot header{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:650}.continua-boot i{display:block;background:#ece9f3;border-radius:14px}.continua-boot header i{width:40px;height:40px;background:#6c4fe0}.continua-boot section{margin-top:28px}.continua-boot section i:first-child{height:180px}.continua-boot section i+ i{height:60px;margin-top:18px}.continua-boot p{font-size:14px;color:#625e70}body{margin:0}
+    </style>
+    <div id="root"><main class="continua-boot" role="status" aria-label="Opening Continua"><header><i aria-hidden="true"></i>Continua</header><p>Connecting securely…</p><section aria-hidden="true"><i></i><i></i><i></i></section></main></div>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>

@@ -19,11 +19,12 @@ export function HomePortfolioOverview({ portfolio, quotes, visible, onToggle }) 
   const gradient = useId().replace(/:/g, '');
   const mapped = Object.fromEntries(Object.values(quotes).map(q => [q.symbol.toUpperCase(), { price: q.lastPrice, dayChangeAbs: q.change }]));
   const stats = computePortfolioStats(portfolio, mapped);
-  const { points, isLoading } = usePortfolioHistory(portfolio, period);
+  const { points, isLoading,error:historyError,refetch:retryHistory } = usePortfolioHistory(portfolio, period,visible);
   const covered = hasHomeHistoryCoverage(points, period);
   const displayValue = inspected?.value ?? stats.totalValue;
-  const displayGain = displayValue - stats.totalCost;
-  const displayPct = stats.totalCost > 0 ? displayGain / stats.totalCost * 100 : 0;
+  const displayCost=inspected?.cost??stats.totalCost;
+  const displayGain = displayValue - displayCost;
+  const displayPct = displayCost > 0 ? displayGain / displayCost * 100 : 0;
   const color = (points.at(-1)?.value ?? 0) >= (points[0]?.value ?? 0) ? 'hsl(var(--bull))' : 'hsl(var(--bear))';
   const inspectPointer = event => {
     if (!visible || !covered) return;
@@ -43,9 +44,9 @@ export function HomePortfolioOverview({ portfolio, quotes, visible, onToggle }) 
     <p className={`home-portfolio-return ${displayGain >= 0 ? 'text-bull' : 'text-bear'}`}>{ready ? visible ? <>{displayGain >= 0 ? '↗' : '↘'} <RollingNumber value={signedMoney(displayGain)}/> (<RollingNumber value={`${displayPct >= 0 ? '+' : ''}${displayPct.toFixed(2)}%`}/>){inspected && <span> · {new Date(inspected.timestamp).toLocaleDateString('en-KE')}</span>}</> : '••••••' : portfolio.length ? `${stats.pricedCount}/${portfolio.length} holdings priced` : 'Add your first holding to track your portfolio'}</p>
     <div className="home-portfolio-chart relative touch-none select-none" onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId); inspectPointer(event);}} onPointerMove={inspectPointer} onPointerUp={event => {if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);setInspected(null);}} onPointerCancel={() => setInspected(null)} onPointerLeave={event => {if(!event.currentTarget.hasPointerCapture(event.pointerId))setInspected(null);}}>
       {inspected && visible && covered && <div aria-hidden="true" className="pointer-events-none absolute top-4 bottom-7 z-10 w-px bg-muted-foreground/50" style={{left: 'calc((100% - 42px) * '+((inspected.timestamp-points[0].timestamp)/Math.max(1,points.at(-1).timestamp-points[0].timestamp))+')'}}/>}
-      {!visible ? <p>Portfolio chart hidden</p> : isLoading ? <p role="status">Loading historical prices…</p> : covered ? <Suspense fallback={<div role="status" className="h-[180px] rounded bg-muted motion-safe:animate-pulse" aria-label="Opening chart" />}><HomeHistoryPlot points={points} gradient={gradient} color={color} inspected={inspected}/></Suspense> : <p>{period === '1D' ? 'Intraday portfolio history is not available.' : 'Not enough historical prices for this timeframe.'}</p>}
+      {!visible ? <p>Portfolio chart hidden</p> : isLoading ? <p role="status">Loading recorded valuations…</p> : covered ? <Suspense fallback={<div role="status" className="h-[180px] rounded bg-muted motion-safe:animate-pulse" aria-label="Opening chart" />}><HomeHistoryPlot points={points} gradient={gradient} color={color} inspected={inspected}/></Suspense> : historyError?<p role="status">Recorded history could not load. <button type="button" className="underline" onClick={()=>void retryHistory()}>Retry history</button></p>: <p>{period === '1D' ? 'Intraday portfolio history is not available.' : 'At least two recorded portfolio valuations are needed. Current holdings do not establish past ownership.'}</p>}
     </div>
-    {visible && covered && <p className="home-chart-note">Value of today’s holdings at historical closing prices. {points.at(-1)?.date ? ' Prices through '+new Date(points.at(-1).timestamp).toLocaleDateString('en-KE')+'.' : ''}</p>}
     <div className="home-portfolio-metrics"><div><span>Day change</span><strong className={stats.todayGain >= 0 ? 'text-bull' : 'text-bear'}>{ready ? metric(stats.todayGain, stats.todayPct) : '—'}</strong></div><div><span>Total return</span><strong className={stats.totalGain >= 0 ? 'text-bull' : 'text-bear'}>{ready ? metric(stats.totalGain, stats.gainPct) : '—'}</strong></div><Link to="/track-investments"><span>Holdings</span><strong><RollingNumber value={portfolio.length}/> <ChevronRight size={15}/></strong></Link></div>
+    {visible&&covered&&<p className="text-xs text-muted-foreground">Recorded valuations: {points[0].date} to {points.at(-1).date}. Unrecorded dates are omitted.</p>}
   </section>;
 }

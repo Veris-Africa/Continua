@@ -2,14 +2,14 @@
 // the provider session remains in a host-only, HttpOnly cookie.
 export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location=()=>globalThis.location,replaceUrl=url=>globalThis.history?.replaceState(null,'',url),channel}={}){
  const site=new URL(origin);if(site.origin!==origin||site.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(site.hostname))throw Error('An owned HTTPS origin is required');
- let session=null,pendingMfa=false,recoveryToken=null,oauthVerifier=null,restoring=null,signingOut=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false;const listeners=new Set(),securityListeners=new Set();
+ let session=null,pendingMfa=false,recoveryToken=null,oauthVerifier=null,restoring=null,signingOut=null,timer,failures=0,destroyed=false,revision=0,restored=false,checkedAt=0,recoveryStarted=false,lastRefreshError=null,nextAttemptAt=0;const listeners=new Set(),securityListeners=new Set();
  const security=()=>({mfaPending:pendingMfa,recoveryMode:!!recoveryToken});
  function publish(event){for(const listener of listeners){try{Promise.resolve(listener(event,session)).catch(()=>{});}catch{}}for(const listener of securityListeners){try{listener(security());}catch{}}}
  function schedule(delay){clearTimeout(timer);if(destroyed||!session)return;timer=setTimeout(()=>void refresh(),delay??Math.max(5000,session.expires_at*1000-now()-30000));timer?.unref?.();}
  function assign(value,event='TOKEN_REFRESHED'){
   if(destroyed)throw Error('Identity client is closed');
   if(value!==null&&(!value?.user?.id||!Number.isFinite(value.expires_at)||typeof value.access_token!=='string'||value.access_token.length>16384||value.access_token.split('.').length!==3||value.refresh_token!=='cookie-session'))throw Error('Invalid identity response');
-  const previous=session;session=value;restored=true;checkedAt=now();failures=0;if(value)pendingMfa=false;schedule();publish(value?previous?.user.id===value.user.id?event:'SIGNED_IN':previous?'SIGNED_OUT':'INITIAL_SESSION');
+  const previous=session;session=value;restored=true;checkedAt=now();failures=0;lastRefreshError=null;nextAttemptAt=0;if(value)pendingMfa=false;schedule();publish(value?previous?.user.id===value.user.id?event:'SIGNED_IN':previous?'SIGNED_OUT':'INITIAL_SESSION');
  }
  async function call(path,body){
   const response=await fetcher(origin+'/api/v1/identity/'+path,{method:body?'POST':'GET',credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','X-Continua-Session':'1',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(60000)});
@@ -19,11 +19,12 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
  const result=async work=>{try{return {data:await work(),error:null};}catch(error){return {data:{session:null,user:null},error:error instanceof Error?error:new Error('Identity request could not complete')};}};
  function consumeRecoveryUrl(){const current=location();if(!current?.href)return;const url=new URL(current.href),fragment=new URLSearchParams(url.hash.slice(1));if(url.origin!==origin||!url.searchParams.has('token')&&!fragment.has('recovery_token'))return;const token=fragment.get('recovery_token')??url.searchParams.get('token');url.searchParams.delete('token');fragment.delete('recovery_token');url.hash=fragment.toString();replaceUrl(url.pathname+url.search+url.hash);if(/^[A-Za-z0-9_-]{8,256}$/.test(token??'')){recoveryToken=token;recoveryStarted=false;revision++;}}
  function consumeOAuthUrl(){const current=location();if(!current?.href)return;const url=new URL(current.href);if(url.origin!==origin||!url.searchParams.has('neon_auth_session_verifier'))return;const values=url.searchParams.getAll('neon_auth_session_verifier');url.searchParams.delete('neon_auth_session_verifier');replaceUrl(url.pathname+url.search+url.hash);if(values.length===1&&/^[A-Za-z0-9_.~-]{8,2048}$/.test(values[0]))oauthVerifier=values[0];}
- async function refresh(){
+ async function refresh(force=false){
   if(signingOut)return signingOut.then(({error})=>({data:{session,user:session?.user??null},error}));
   if(restoring)return restoring;
+  if(!force&&lastRefreshError&&now()<nextAttemptAt)return {data:{session:null,user:null},error:lastRefreshError};
   const startedAtRevision=revision;
-  restoring=result(async()=>{try{const data=await call('session');if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};pendingMfa=data.mfaRequired===true;assign(data.session??null);if(recoveryToken){if(!recoveryStarted){const pending=await call('recovery-begin',{token:recoveryToken});if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};recoveryStarted=true;pendingMfa=pending.mfaRequired===true;}publish('PASSWORD_RECOVERY');}return {session,user:session?.user??null,mfaRequired:pendingMfa};}catch(error){if(startedAtRevision!==revision)throw error;if(error.status===401){pendingMfa=false;assign(null);}else{failures++;schedule(Math.min(60000,10000*failures));}throw error;}}).finally(()=>{restoring=null;});return restoring;
+  restoring=result(async()=>{try{const data=await call('session');if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};pendingMfa=data.mfaRequired===true;assign(data.session??null);if(recoveryToken){if(!recoveryStarted){const pending=await call('recovery-begin',{token:recoveryToken});if(startedAtRevision!==revision)return {session,user:session?.user??null,mfaRequired:pendingMfa};recoveryStarted=true;pendingMfa=pending.mfaRequired===true;}publish('PASSWORD_RECOVERY');}return {session,user:session?.user??null,mfaRequired:pendingMfa};}catch(error){if(startedAtRevision!==revision)throw error;if(error.status===401){pendingMfa=false;assign(null);}else{failures++;lastRefreshError=error;nextAttemptAt=now()+Math.min(60000,10000*failures);if(session&&session.expires_at*1000<=now())publish('SESSION_UNAVAILABLE');schedule(Math.min(60000,10000*failures));}throw error;}}).finally(()=>{restoring=null;});return restoring;
  }
  async function sessionOperation(path,body){if(signingOut)throw Error('Sign-out is in progress');const operationRevision=++revision;const data=await call(path,body);if(operationRevision!==revision)throw Error('Identity request was superseded');pendingMfa=data.mfaRequired===true;if(Object.hasOwn(data,'session')){assign(data.session);if(data.session)channel?.postMessage({type:'session-changed'});}else publish('USER_UPDATED');return {...data,user:session?.user??null};}
  const auth={
@@ -36,8 +37,8 @@ export function createIdentityClient({origin,fetcher=fetch,now=Date.now,location
    }
    return !session&&restored&&now()-checkedAt<30000?{data:{session},error:null}:refresh();
   },
-  refreshSession:()=>refresh(),
-  restoreSession:()=>result(async()=>{consumeRecoveryUrl();consumeOAuthUrl();if(oauthVerifier){const data=await sessionOperation('oauth-complete',{verifier:oauthVerifier});oauthVerifier=null;return data;}const current=await refresh();if(current.error)throw current.error;return current.data;}),
+  refreshSession:()=>refresh(true),
+  restoreSession:()=>result(async()=>{consumeRecoveryUrl();consumeOAuthUrl();if(oauthVerifier){const data=await sessionOperation('oauth-complete',{verifier:oauthVerifier});oauthVerifier=null;return data;}const current=await refresh(true);if(current.error)throw current.error;return current.data;}),
   onAuthStateChange:listener=>{listeners.add(listener);queueMicrotask(()=>{if(listeners.has(listener)){try{Promise.resolve(listener('INITIAL_SESSION',session)).catch(()=>{});}catch{}}});return {data:{subscription:{unsubscribe:()=>listeners.delete(listener)}}};},
   onSecurityStateChange:listener=>{securityListeners.add(listener);listener(security());return ()=>securityListeners.delete(listener);},
   getSecurityState:security,

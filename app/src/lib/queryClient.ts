@@ -17,7 +17,10 @@ try {
 } catch { /* Storage disabled, quota or old malformed cache: use live queries. */ }
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
-queryClient.getQueryCache().subscribe(() => {
+queryClient.getQueryCache().subscribe(event => {
+  // Observer/fetch/status events and private queries do not change persisted
+  // public data. Avoid serializing the whole cache for every mounted observer.
+  if(!isPublishedQuery(event.query.queryKey)||!(event.type==='removed'||event.type==='updated'&&event.action.type==='success'))return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try {

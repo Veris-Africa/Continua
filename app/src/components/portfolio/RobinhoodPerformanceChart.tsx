@@ -19,6 +19,7 @@ interface PerformancePoint {
   date: string;
   value: number; // real KES value at this point
   timestamp: number;
+  cost?: number;
 }
 
 interface RobinhoodPerformanceChartProps {
@@ -33,10 +34,7 @@ interface RobinhoodPerformanceChartProps {
   hideValue?: boolean;
   /** Retained for API compatibility; charts never synthesize market data. */
   seed?: string;
-  /** Current holdings (symbol + share count) — when provided, every
-   *  timeframe except "1D" plots the portfolio's REAL historical value
-   *  (real daily closes × today's share count). Without holdings, historical
-   *  windows remain empty rather than fabricating a market path. */
+  /** Compatibility prop; historical values come only from owner snapshots. */
   holdings?: { symbol: string; shares: number }[];
 }
 
@@ -95,7 +93,7 @@ export function RobinhoodPerformanceChart({
   const {
     points: realPoints,
     isLoading: realLoading,
-    hasRealData,
+    hasRealData,error:historyError,refetch:retryHistory,
   } = usePortfolioHistory(holdings ?? [], activeTimeframe);
   const useRealData =
     activeTimeframe !== "1D" && !!holdings && hasRealData && !realLoading;
@@ -122,11 +120,7 @@ export function RobinhoodPerformanceChart({
     });
   };
 
-  // Real daily closes × today's share count, formatted the same way the
-  // generated series is, with one synthetic point appended for "right
-  // now" (using the live totalValue) — real daily candles only go up to
-  // the last close, so without this the line would visibly stop a day
-  // short of the live total shown in the hero number above it.
+  // Preserve recorded dates and cost basis; never append a current quote.
   const realData = useMemo((): PerformancePoint[] => {
     if (!useRealData) return [];
     const windowDays =
@@ -134,6 +128,7 @@ export function RobinhoodPerformanceChart({
     const formatted: PerformancePoint[] = realPoints.map((p) => ({
       date: formatDateLabel(new Date(p.timestamp), windowDays),
       value: p.value,
+      cost: p.cost,
       timestamp: p.timestamp,
     }));
 
@@ -149,8 +144,8 @@ export function RobinhoodPerformanceChart({
     if (mode !== "performance" || totalCost <= 0) return rawData;
     return rawData.map((p) => ({
       ...p,
-      value: ((p.value - totalCost) / totalCost) * 100,
-    }));
+      value: p.cost && p.cost>0 ? ((p.value - p.cost) / p.cost) * 100 : NaN,
+    })).filter(p=>Number.isFinite(p.value));
   }, [rawData, mode, totalCost]);
 
   const startOfWindow = chartData[0]?.value ?? 0;
@@ -336,8 +331,7 @@ export function RobinhoodPerformanceChart({
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-xs text-muted-foreground">
-            Verified historical portfolio prices are still being collected for
-            this period.
+{realLoading?"Opening recorded valuations…":historyError?<>Recorded history could not load. <button type="button" className="underline ml-1" onClick={()=>void retryHistory()}>Retry history</button></>:"At least two recorded portfolio valuations are needed. Holdings alone do not establish past ownership."}
           </div>
         )}
       </div>
@@ -345,7 +339,7 @@ export function RobinhoodPerformanceChart({
       <p className="mt-2 text-[0.625rem] leading-4 text-muted-foreground">
         {activeTimeframe === "1D"
           ? "Previous close to latest quote only; not an intraday price path."
-          : "Historical closes at today's share counts. Excludes past trades, cash flows and dividends; not your account's historical return."}
+          : "Recorded daily portfolio snapshots only. Gain percentages use each snapshot’s recorded cost; they are not cash-flow-adjusted investment returns."}
       </p>
       {/* Timeframe */}
       <div className="flex justify-between mt-3 border-t border-border pt-3">

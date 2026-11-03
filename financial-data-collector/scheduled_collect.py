@@ -12,6 +12,7 @@ import hashlib
 from contextlib import asynccontextmanager
 from continua_scraper.download import Artifact
 from continua_scraper import transfer_budget
+from continua_scraper.run_health import write_action_summary
 from continua_scraper.config import validate_environment
 from continua_scraper.database import Database
 from continua_scraper.documents import encode
@@ -347,6 +348,7 @@ def main():
         operation=maintenance(args.maintenance) if args.maintenance else run(args.kind,args.source,args.issuer,args.fresh,args.history_issuers)
         result=asyncio.run(operation,loop_factory=database_event_loop)
         print(json.dumps(result,allow_nan=False,separators=(',',':')))
+        write_action_summary(result)
         return 1 if result['status']=='failed' else 0
     except Exception as error:
         # Never print SDK exception strings: they may contain URLs or secrets.

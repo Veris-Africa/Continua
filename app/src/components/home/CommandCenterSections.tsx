@@ -1,137 +1,14 @@
-import { RollingNumber } from "@/components/shared/RollingNumber";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { TrendingUp, Calendar, Coins, ArrowUpRight, ChevronRight } from "lucide-react";
-import { getDivYield, getStockName } from "@/lib/stockPrices";
-import { STOCK_POOL } from "@/lib/homeSymbolPools";
-import { getFundamentals } from "@/data/stockFundamentals";
-import type { Quote } from "@/api/types";
-
-const upcomingEarnings = [
-  { symbol: "SCOM", date: "Tomorrow", time: "9:00 AM" },
-  { symbol: "EQTY",   date: "Fri",      time: "Pre-market" },
-  { symbol: "KCB",    date: "Next Mon", time: "Post-market" },
+import {useNavigate} from 'react-router-dom';
+import {TrendingUp,Calendar,Coins,ChevronRight} from 'lucide-react';
+// No seeded target prices, growth rates, yields or relative earnings dates.
+const tools=[
+ {title:'Company research',description:'Compare published company evidence and disclosed coverage.',path:'/screener',icon:TrendingUp},
+ {title:'Financial statements',description:'Open an issuer to inspect dated reported financials.',path:'/markets',icon:Coins},
+ {title:'Dividends and events',description:'Check source-backed corporate actions and announcement dates.',path:'/engine?tool=Events',icon:Calendar},
 ];
-
-interface CommandCenterSectionsProps {
-  /** Quotes for (at least) STOCK_POOL, fetched once by Home.tsx as part
-   *  of its shared union quote batch — see Home.tsx's `homeQuotes`. This
-   *  component used to fetch STOCK_POOL's quotes itself, which meant
-   *  every Home page load fired this as its own separate request on top
-   *  of Home's own portfolio/watchlist fetches and QuickTradeWidget's. */
-  quotes: Record<string, Quote>;
-}
-
-export function CommandCenterSections({ quotes }: CommandCenterSectionsProps) {
-  const navigate = useNavigate();
-
-  // Derive every displayed number — and which stocks even qualify — from the
-  // shared price/fundamentals data, then rank and take the top few. Nothing
-  // here is hand-picked, so a section simply won't show a stock that the
-  // underlying data doesn't actually support (e.g. no fake "upside" on a
-  // stock trading above its analyst target).
-  // "Undervalued" upside is computed against a synthetic analyst target
-  // price (data/stockFundamentals.ts — the Data Layer has no real analyst-
-  // target source yet, flagged as a separate follow-up from the price fix
-  // below). The CURRENT price used in that comparison is real and live
-  // only — a symbol with no live quote yet is excluded, never priced at a
-  // fabricated fallback.
-  const undervalued = STOCK_POOL
-    .map((symbol) => {
-      const price = quotes[symbol]?.lastPrice;
-      if (price == null) return null;
-      const targetAvg = getFundamentals(symbol, price).analystTargets.avg;
-      const upside = price > 0 ? ((targetAvg - price) / price) * 100 : 0;
-      return { symbol, name: getStockName(symbol), price, upside };
-    })
-    .filter((s): s is { symbol: string; name: string; price: number; upside: number } => s !== null && s.upside > 0)
-    .sort((a, b) => b.upside - a.upside)
-    .slice(0, 3);
-
-  const highGrowth = STOCK_POOL
-    .map((symbol) => {
-      const price = quotes[symbol]?.lastPrice;
-      if (price == null) return null;
-      const growth = getFundamentals(symbol, price)
-        .growthMetrics.find(g => g.label === "Revenue (3yr CAGR)")?.value ?? 0;
-      return { symbol, name: getStockName(symbol), growth };
-    })
-    .filter((s): s is { symbol: string; name: string; growth: number } => s !== null)
-    .sort((a, b) => b.growth - a.growth)
-    .slice(0, 3);
-
-  const dividendStars = STOCK_POOL
-    .map((symbol) => ({ symbol, name: getStockName(symbol), yield: getDivYield(symbol) }))
-    .sort((a, b) => b.yield - a.yield)
-    .slice(0, 3);
-
-  const Section = ({ title, icon: Icon, iconClass, children, actionLabel, onAction }: any) => (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <p className="section-eyebrow flex items-center gap-1.5">
-          <Icon className={`h-3 w-3 ${iconClass || "text-primary"}`} /> {title}
-        </p>
-        {actionLabel && (
-          <button data-small-target onClick={onAction} className="text-[0.6875rem] text-primary font-semibold flex items-center">
-            {actionLabel} <ChevronRight className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-      <div className="border-t border-border/60">{children}</div>
-    </div>
-  );
-
-  const Row = ({ onClick, left, right }: { onClick: () => void; left: React.ReactNode; right: React.ReactNode }) => (
-    <button
-      data-small-target
-      onClick={onClick}
-      className="w-full flex items-center justify-between py-2.5 border-b border-border/40 hover:bg-muted/30 -mx-4 px-4 text-left transition-colors"
-    >
-      {left}
-      {right}
-    </button>
-  );
-
-  return (
-    <div className="space-y-6">
-      {undervalued.length > 0 && (
-        <Section title="Undervalued Picks" icon={Coins} iconClass="text-bull" actionLabel="More" onAction={() => navigate("/screener")}>
-          {undervalued.map(s => (
-            <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-              left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground tabular">KES <RollingNumber value={s.price.toFixed(2)} /></p></div>}
-              right={<div className="text-right"><p className="text-xs font-semibold text-bull tabular flex items-center gap-0.5 justify-end"><ArrowUpRight className="h-3 w-3" />+<RollingNumber value={s.upside.toFixed(2)} />%</p><p className="text-[0.625rem] text-muted-foreground">upside</p></div>}
-            />
-          ))}
-        </Section>
-      )}
-
-      <Section title="High-Growth Stocks" icon={TrendingUp} iconClass="text-accent">
-        {highGrowth.map(s => (
-          <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">3-yr revenue</p></div>}
-            right={<p className="text-xs font-semibold text-accent tabular">+<RollingNumber value={s.growth.toFixed(2)} />%</p>}
-          />
-        ))}
-      </Section>
-
-      <Section title="Strong Dividends" icon={Coins} iconClass="text-chart-3">
-        {dividendStars.map(s => (
-          <Row key={s.symbol} onClick={() => navigate(`/stock/${s.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{s.symbol} <span className="font-normal text-muted-foreground">· {s.name}</span></p><p className="text-[0.625rem] text-muted-foreground">forward yield</p></div>}
-            right={<p className="text-xs font-semibold text-chart-3 tabular"><RollingNumber value={s.yield.toFixed(2)} />%</p>}
-          />
-        ))}
-      </Section>
-
-      <Section title="Upcoming Earnings" icon={Calendar} iconClass="text-primary">
-        {upcomingEarnings.map(e => (
-          <Row key={e.symbol} onClick={() => navigate(`/stock/${e.symbol}`)}
-            left={<div><p className="text-xs font-semibold">{e.symbol} <span className="font-normal text-muted-foreground">· {getStockName(e.symbol)}</span></p><p className="text-[0.625rem] text-muted-foreground">{e.time}</p></div>}
-            right={<p className="text-xs font-semibold text-primary tabular">{e.date}</p>}
-          />
-        ))}
-      </Section>
-
-    </div>
-  );
+export function CommandCenterSections(){
+ const navigate=useNavigate();
+ return <section aria-label="Verified research tools" className="space-y-3"><p className="section-eyebrow">Continue your research</p>
+ {tools.map(({title,description,path,icon:Icon})=><button type="button" key={title} className="w-full flex items-center gap-3 border-t border-border/60 py-3 text-left" onClick={()=>navigate(path)}><Icon className="h-4 w-4 text-primary shrink-0"/><span className="flex-1"><strong className="block text-xs">{title}</strong><span className="text-xs text-muted-foreground">{description}</span></span><ChevronRight className="h-4 w-4"/></button>)}
+ </section>;
 }

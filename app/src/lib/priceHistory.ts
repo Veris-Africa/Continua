@@ -54,8 +54,18 @@ export function chartCoverage(points: ChartPoint[], timeframe: string, chartType
         const tolerance = Math.min(7, Math.max(3, span * .1));
         const enough = points.length >= Math.max(2, Math.floor(span * 5 / 7 * .6));
         const gaps = points.some((p, i) => i > 0 && p.timestamp - points[i - 1].timestamp > 10 * day);
-        if (!enough || points[0].timestamp > start + tolerance * day || points.at(-1)!.timestamp < end - 7 * day || gaps)
-            return {available: false, reason: `Historical prices are not current enough for ${timeframe}. Last available close: ${points.at(-1)!.date}.`};
+        if(gaps)return {available:false,reason:'Recorded prices contain a gap longer than ten days. Missing dates are not interpolated.'};
+        if (!enough || points[0].timestamp > start + tolerance * day || points.at(-1)!.timestamp < end - 7 * day)
+            return {available:true,partial:true,reason:`Partial ${timeframe} coverage: ${points.length} observed closes from ${points[0].date} to ${points.at(-1)!.date}. Missing dates are not generated.`};
     }
     return {available: true, reason: `${points.length} observed prices · ${points[0].date} to ${points.at(-1)!.date}. No missing dates or OHLC values are generated.`};
+}
+
+/** An empty successful fallback must not disguise another source's outage. */
+export function observedHistoryResults(results:PromiseSettledResult<PriceObservation[]>[],timeframe:string,now=new Date()){
+    const [candles,closes]=results;
+    const points=normalizePriceHistory(candles?.status==='fulfilled'?candles.value:[],closes?.status==='fulfilled'?closes.value:[],timeframe,now);
+    const failure=results.find((result):result is PromiseRejectedResult=>result.status==='rejected'&&(result.reason?.status!==404));
+    if(!points.length&&failure)throw failure.reason;
+    return points;
 }

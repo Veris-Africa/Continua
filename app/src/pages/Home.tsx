@@ -17,7 +17,7 @@ import { usePosts } from "@/hooks/usePosts";
 import { getTimeBasedGreeting } from "@/utils/timeGreeting";
 import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { STOCK_POOL } from "@/lib/homeSymbolPools";
+import { QUICK_SYMBOLS } from "@/lib/homeSymbolPools";
 import { useIndices } from "@/hooks/useIndices";
 import { formatPostDate } from "@/lib/formatTimestamp";
 import { UpdatesFeed } from "@/components/home/UpdatesFeed";
@@ -54,14 +54,9 @@ export default function Home() {
 
   const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'Investor';
 
-  // ONE shared quote fetch for the whole Home page — portfolio holdings,
-  // watchlist, and CommandCenterSections'/QuickTradeWidget's pools, all in
-  // a single request instead of each section firing its own. Previously
-  // 4 separate useLiveQuotes calls hit the backend in parallel on every
-  // Home mount; QUICK_SYMBOLS is a subset of STOCK_POOL, so this one
-  // union covers everything below.
+  // One quote batch for actual holdings/watchlist and the visible default ticker.
   const unionSymbols = useMemo(
-    () => [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol), ...STOCK_POOL])],
+    () => [...new Set([...portfolio.map(h => h.symbol), ...watchlist.map(w => w.symbol), ...(watchlist.length?[]:QUICK_SYMBOLS)])],
     [portfolio, watchlist]
   );
   const { quotes: homeQuotes, isLoading: quotesLoading, isError: quotesError } = useLiveQuotes(unionSymbols);
@@ -283,7 +278,7 @@ export default function Home() {
         )}
 
         {/* AI INSIGHT + opportunities + calendar (already flat) */}
-        <CommandCenterSections quotes={homeQuotes} />
+        <CommandCenterSections />
 
         {/* Upgrade banner (free) */}
         {user && profile?.subscription_plan !== 'premium' && (

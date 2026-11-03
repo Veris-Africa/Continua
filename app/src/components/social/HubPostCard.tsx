@@ -19,6 +19,7 @@ export interface HubPostCardProps {
   priority?: boolean;
   currentUserId?: string;
   isFollowing?: boolean;
+  followPending?:boolean;
   onFollow?: (userId: string) => void;
   onOpen: (post: Post) => void;
   onComment: (post: Post) => void;
@@ -70,7 +71,7 @@ export function renderRichText(text: string, navigate: (url: string) => void) {
 
 export function HubPostCard({
   priority = false,
-  post, currentUserId, isFollowing, onFollow, onOpen, onComment,
+  post, currentUserId, isFollowing, followPending=false,onFollow, onOpen, onComment,
   onReact, onBookmark, onShare, onDelete, onEdit, onReport, onHide,
 }: HubPostCardProps) {
   const navigate = useNavigate();
@@ -117,15 +118,17 @@ export function HubPostCard({
           </p>
         </div>
 
+        {!isOwn&&onFollow&&isFollowing===undefined&&<span role="status" className="text-xs text-muted-foreground">Checking…</span>}
         {/* Follow lives on the far right and disappears once following */}
         {!isOwn && onFollow && isFollowing === false && (
           <button
             type="button"
             data-small-target
+            disabled={followPending}
             onClick={e => { e.stopPropagation(); onFollow(post.user_id); }}
             className="shrink-0 h-7 px-2.5 rounded-full text-[0.75rem] font-bold text-primary hover:bg-primary/10 transition-colors"
           >
-            + Follow
+            {followPending?"Updating…":"+ Follow"}
           </button>
         )}
       </div>

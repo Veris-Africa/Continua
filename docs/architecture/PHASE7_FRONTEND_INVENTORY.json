@@ -1,0 +1,384 @@
+{
+  "scope": "Every app/src runtime module and stylesheet; static/dynamic literal imports. Candidates are NOT deletion approval. Type contracts, assets, tests, runtime registration and external consumers require separate review.",
+  "sourceFiles": 463,
+  "reachableFiles": 408,
+  "routes": [
+    "/",
+    "/landing",
+    "/features/:feature",
+    "/docs",
+    "/developers",
+    "/about",
+    "/help",
+    "/trust",
+    "/legal",
+    "/terms",
+    "/privacy",
+    "/copyright",
+    "/billing-policy",
+    "/auth",
+    "/checkout",
+    "/admin/financials-review",
+    "markets",
+    "markets/:section",
+    "discover",
+    "account",
+    "profile",
+    "upgrade",
+    "engine",
+    "settings",
+    "stock/:symbol",
+    "watchlist",
+    "sector/:sector",
+    "theme/:themeId",
+    "featured/:slug",
+    "learn",
+    "notifications",
+    "alerts",
+    "sector-heatmap",
+    "market-brief",
+    "track-investments",
+    "traders-hub",
+    "traders-hub/post/:postId",
+    "rooms",
+    "screener",
+    "compare",
+    "profile/:userId",
+    "*"
+  ],
+  "retainedCandidates": [
+    {
+      "file": "app/src/api/index.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/api/moversApi.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/api/sectorsApi.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/api/types.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/charts/ChartTooltip.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/engine/EngineConnectionCheck.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/engine/PipelineHealthDesk.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/engine/PortfolioRiskAttribution.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/home/EngineFocus.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/markets/StockScreener.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/news/LiveConferencePlayer.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/news/NewsDetailDialog.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/portfolio/PortfolioCorrelation.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/portfolio/PortfolioRiskAnalysis.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/shared/ExchangeSelector.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/stock/AIThesisCard.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/stock/CompanyProcessingStatus.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/alert.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/aspect-ratio.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/breadcrumb.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/calendar.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/carousel.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/chart.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/collapsible.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/command.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/context-menu.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/drawer.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/empty-state.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/form.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/hover-card.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/input-otp.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/loading-spinner.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/menubar.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/navigation-menu.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/pagination.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/radio-group.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/resizable.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/sidebar.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/slider.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/table.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/toggle-group.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/toggle.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/components/ui/use-toast.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/data/stockFundamentals.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/hooks/use-mobile.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/hooks/useAfriScreener.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/hooks/useCompanyAnnouncements.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/hooks/useMovers.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/hooks/useRealtimePrices.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/integrations/supabase/types.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/lib/portfolioHistory.js",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/lib/refreshTasks.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/lib/sessionTransport.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/lib/valuationHistory.ts",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    },
+    {
+      "file": "app/src/pages/News.tsx",
+      "decision": "Retain: graph absence does not establish removable runtime/type/reference/operational ownership."
+    }
+  ],
+  "background": [
+    {
+      "file": "app/src/components/engine/EngineWorkspace.tsx",
+      "line": 479,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/components/markets/NseActivityCards.tsx",
+      "line": 6,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/components/news/LiveConferencePlayer.tsx",
+      "line": 74,
+      "kind": "setInterval"
+    },
+    {
+      "file": "app/src/components/social/TradersHubOnboarding.tsx",
+      "line": 250,
+      "kind": "setInterval"
+    },
+    {
+      "file": "app/src/components/stock/CompanyProcessingStatus.tsx",
+      "line": 7,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useAlertsWatcher.tsx",
+      "line": 36,
+      "kind": "setInterval"
+    },
+    {
+      "file": "app/src/hooks/useEngineBundle.ts",
+      "line": 16,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useHistoricalCandles.tsx",
+      "line": 18,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useIndices.ts",
+      "line": 14,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useLiveQuotes.tsx",
+      "line": 32,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useMarketNews.ts",
+      "line": 34,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useMarketStatistics.ts",
+      "line": 13,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useMovers.tsx",
+      "line": 20,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/usePortfolioEngine.ts",
+      "line": 33,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/usePortfolioUpdates.tsx",
+      "line": 54,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/usePublisherResearch.ts",
+      "line": 8,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useSecurityNews.ts",
+      "line": 18,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/hooks/useStockFinancials.tsx",
+      "line": 30,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/pages/Checkout.tsx",
+      "line": 58,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/pages/Checkout.tsx",
+      "line": 123,
+      "kind": "setInterval"
+    },
+    {
+      "file": "app/src/pages/Markets.tsx",
+      "line": 187,
+      "kind": "refetchInterval"
+    },
+    {
+      "file": "app/src/pages/Markets.tsx",
+      "line": 197,
+      "kind": "refetchInterval"
+    }
+  ],
+  "dynamicRegistries": []
+}

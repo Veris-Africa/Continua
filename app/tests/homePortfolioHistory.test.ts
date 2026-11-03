@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { hasHomeHistoryCoverage } from '../src/lib/homePortfolioHistory.js';
 const now = Date.UTC(2026, 9, 20);
 const history = Array.from({length: 30}, (_, i) => ({timestamp: now - (30 - i) * 86400000, value: 1000 + i}));
-test('home chart requires the real requested window, never extrapolates a month into a year', () => {
+test('home chart displays only existing snapshots inside the selected range without extrapolating', () => {
   assert.equal(hasHomeHistoryCoverage(history, '1M', now), true);
-  assert.equal(hasHomeHistoryCoverage(history, '1Y', now), false);
+  assert.equal(hasHomeHistoryCoverage(history, '1Y', now), true);
   assert.equal(hasHomeHistoryCoverage(history, '1D', now), false);
-  assert.equal(hasHomeHistoryCoverage(history.slice(-2), '1M', now), false);
+  assert.equal(hasHomeHistoryCoverage(history.slice(-2), '1M', now), true);
   assert.equal(hasHomeHistoryCoverage([], 'ALL', now), false);
 });
 test('home chart rejects stale, future and non-finite observations', () => {
