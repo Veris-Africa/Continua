@@ -1,3 +1,4 @@
+import {rateLimit} from 'express-rate-limit';
 import {afterEach,expect,it,vi} from 'vitest';
 import express from 'express';
 import type {Server} from 'node:http';
@@ -8,7 +9,7 @@ import {engineNotebookRoutes} from '../src/api/routes/engineNotebook.routes.js';
 import {errorHandler} from '../src/api/middleware/errorHandler.js';
 let server:Server|undefined;
 afterEach(async()=>{vi.clearAllMocks();if(server)await new Promise<void>(resolve=>server!.close(()=>resolve()));server=undefined;});
-async function start(){const app=express();app.use(express.json(),engineNotebookRoutes,errorHandler);server=await new Promise<Server>(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});return `http://127.0.0.1:${(server.address() as {port:number}).port}`;}
+async function start(){const app=express();app.use(rateLimit({windowMs:60000,limit:1000,standardHeaders:false,legacyHeaders:false}));app.use(express.json(),engineNotebookRoutes,errorHandler);server=await new Promise<Server>(resolve=>{const s=app.listen(0,'127.0.0.1',()=>resolve(s));});return `http://127.0.0.1:${(server.address() as {port:number}).port}`;}
 it('protects the notebook with the Plus boundary and scopes reads to the verified owner',async()=>{
  mocks.query.mockResolvedValue({rows:[]});const url=await start();
  expect((await fetch(url+'/engine/notebook')).status).toBe(403);

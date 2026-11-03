@@ -1,3 +1,4 @@
+import {rateLimit} from 'express-rate-limit';
 import {createHmac} from 'node:crypto';
 import {afterEach,it,expect,vi} from 'vitest';
 import express from 'express';
@@ -14,7 +15,7 @@ import {paystackWebhook} from '../src/api/routes/billing.routes.js';
 import {errorHandler} from '../src/api/middleware/errorHandler.js';
 const servers=[];
 afterEach(async()=>{await Promise.all(servers.splice(0).map(s=>new Promise(r=>s.close(r))));vi.resetAllMocks();});
-async function fixture(){const app=express();app.post('/hook',express.raw({type:'application/json',limit:'64kb'}),paystackWebhook);app.use(errorHandler);const s=app.listen(0,'127.0.0.1');servers.push(s);await new Promise(r=>s.once('listening',r));return 'http://127.0.0.1:'+s.address().port+'/hook';}
+async function fixture(){const app=express();app.use(rateLimit({windowMs:60000,limit:1000,standardHeaders:false,legacyHeaders:false}));app.post('/hook',express.raw({type:'application/json',limit:'64kb'}),paystackWebhook);app.use(errorHandler);const s=app.listen(0,'127.0.0.1');servers.push(s);await new Promise(r=>s.once('listening',r));return 'http://127.0.0.1:'+s.address().port+'/hook';}
 const event={event:'charge.success',data:{id:42,reference:'continua-test-11111111-1111-4111-8111-111111111111'}};
 const post=(url,value,key='sk_test_synthetic',signature)=>{const body=JSON.stringify(value);return fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-paystack-signature':signature??createHmac('sha512',key).update(body).digest('hex')},body});};
 it('only acknowledges a signed event after its receipt is durably written',async()=>{
