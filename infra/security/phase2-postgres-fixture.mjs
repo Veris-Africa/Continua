@@ -113,6 +113,7 @@ try{
   const service=await pool.connect();try{await service.query('SET ROLE service_role');const paid=(await service.query('SELECT public.fulfill_paystack_live_order($1,801,now()) receipt',[replay.reference])).rows[0].receipt;check((await service.query('SELECT public.fulfill_paystack_live_order($1,801,now()) receipt',[replay.reference])).rows[0].receipt,paid);}finally{await service.query('RESET ROLE');service.release();}
  }finally{globalThis.fetch=originalFetch;}
  }
+ if(process.argv.includes('--phase3')){const {phase3PaymentFixture}=await import('./phase3-payment-fixture.mjs');await phase3PaymentFixture({pool,read,ids});}
  console.log(JSON.stringify({fixtureOnly:true,database:'local PostgreSQL 17.11',checks,concurrentDefaultRequests:16,concurrentQuotaRequests:24,concurrentPostReplays:12,staleEditWinnerCount:1,productionTouched:false,preDdl,passed:true}));
 }finally{
  process.exit=originalExit;

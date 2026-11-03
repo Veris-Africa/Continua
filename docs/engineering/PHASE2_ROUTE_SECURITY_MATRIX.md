@@ -8,13 +8,13 @@ All paths below have /api/v1 prefix. Main market router: project API key, pre-au
 | --- | --- | --- | --- |
 | GET | `/announcements/:symbol` | Public project API key; public market/research data | [announcements.routes.js:7](../../backend/src/api/routes/announcements.routes.js#L7) |
 | POST | `/backtest` | Verified owner; fresh Premium or Plus | [backtest.routes.js:9](../../backend/src/api/routes/backtest.routes.js#L9) |
-| POST | `/billing/checkout` | Verified owner; any plan | [billing.routes.js:45](../../backend/src/api/routes/billing.routes.js#L45) |
-| POST | `/billing/native-checkout` | Verified owner; any plan | [billing.routes.js:24](../../backend/src/api/routes/billing.routes.js#L24) |
-| GET | `/billing/native-verify/:reference` | Verified owner; any plan | [billing.routes.js:31](../../backend/src/api/routes/billing.routes.js#L31) |
-| DELETE | `/billing/renewal` | Verified owner; any plan | [billing.routes.js:19](../../backend/src/api/routes/billing.routes.js#L19) |
-| GET | `/billing/renewal` | Verified owner; any plan | [billing.routes.js:15](../../backend/src/api/routes/billing.routes.js#L15) |
-| GET | `/billing/status` | Mounted verified owner; any plan (see declared handler) | [billing.routes.js:14](../../backend/src/api/routes/billing.routes.js#L14) |
-| GET | `/billing/verify/:reference` | Verified owner; any plan | [billing.routes.js:52](../../backend/src/api/routes/billing.routes.js#L52) |
+| POST | `/billing/checkout` | Verified owner; any plan | [billing.routes.js:46](../../backend/src/api/routes/billing.routes.js#L46) |
+| POST | `/billing/native-checkout` | Verified owner; any plan | [billing.routes.js:25](../../backend/src/api/routes/billing.routes.js#L25) |
+| GET | `/billing/native-verify/:reference` | Verified owner; any plan | [billing.routes.js:32](../../backend/src/api/routes/billing.routes.js#L32) |
+| DELETE | `/billing/renewal` | Verified owner; any plan | [billing.routes.js:20](../../backend/src/api/routes/billing.routes.js#L20) |
+| GET | `/billing/renewal` | Verified owner; any plan | [billing.routes.js:16](../../backend/src/api/routes/billing.routes.js#L16) |
+| GET | `/billing/status` | Mounted verified owner; any plan (see declared handler) | [billing.routes.js:15](../../backend/src/api/routes/billing.routes.js#L15) |
+| GET | `/billing/verify/:reference` | Verified owner; any plan | [billing.routes.js:53](../../backend/src/api/routes/billing.routes.js#L53) |
 | GET | `/companies/:symbol` | Public project API key; public market/research data | [companies.routes.js:7](../../backend/src/api/routes/companies.routes.js#L7) |
 | GET | `/corporate-actions/:symbol` | Public project API key; public market/research data | [corporateActions.routes.js:7](../../backend/src/api/routes/corporateActions.routes.js#L7) |
 | GET | `/diagnostics/query-volume` | Public project API key; public market/research data | [admin.routes.js:11](../../backend/src/api/routes/admin.routes.js#L11) |

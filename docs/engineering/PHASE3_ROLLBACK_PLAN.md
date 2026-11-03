@@ -1,0 +1,19 @@
+# Phase 3 rollback plan
+
+No Phase 3 rollout or rollback has occurred. Keep the known-good Phase 2 release 6fcfff1cad3178bc90c9e6bbadaca71adbc8106f available for a coordinated Render/Cloudflare application rollback. Preserve post-release writes, receipts, original references and diagnostics; do not force-push or restore customer tables over new writes.
+
+Before rolling back an activated inbox, inspect pending/processing/review counts and pause new operational changes under an approved incident procedure. A provider has already received 200 for durably accepted events and may not redeliver them. Do not assume disabling the flag makes that backlog disappear. Export a bounded private reference/receipt inventory and arrange continued safe GET-only reconciliation or trusted operator verification for every accepted unresolved item.
+
+An approved PAYMENT_DURABILITY_ENABLED=false setting returns new webhook requests to the unchanged Phase 2 inline verification path and stops new Phase 3 scheduling/status use. Existing accepted work remains durable in operations tables. Keep those tables, indexes and service grants while any receipts/recovery work remain. Roll back application code independently; do not DROP the schema or delete metadata to achieve a clean deployment.
+
+If renewal behavior is uncertain, separately approve pausing future automatic renewal before rollback/reconciliation. Disabling a future schedule does not prove an in-flight provider charge stopped. Preserve native active_reference and attempt state; never clear an unknown reference or issue another charge as a rollback test. Phase 2 still knows the same native/order/fulfillment tables, and independently verified callbacks/webhooks remain idempotent. The older worker lacks the new bounded review window, so do not leave unresolved review items cycling unattended after rollback.
+
+Allow valid leases to expire or prove the old worker stopped before an approved targeted recovery. Old lease completion is fenced. Resuming a reviewed item requires inspection of the original provider transaction, amount/currency/owner and existing receipt. Never reset all attempts, replay all events, refund, reverse or change access merely to exercise recovery. Cancellation/refund/dispute policy remains unchanged.
+
+For collector rollback, revert the code independently of archived data. Do not remove hashes, immutable extraction/version receipts, checkpoints or financial history. The stricter live-lease completion fence and retry delays do not require a schema rollback. Retaining that fence is preferable to reintroducing expired-worker acknowledgements; a targeted compatibility fix is safer than deleting evidence or resetting the queue.
+
+For maintenance/alert rollback, preserve periodic_jobs and alert_state so operator review and transition suppression survive. The effective subscription-plan function remains expiry-aware even if materialized cleanup is temporarily delayed. Resume the existing approved independent schedule only after health and ownership checks; do not reactivate paused collectors or add keep-alives automatically.
+
+A failed Phase 3 SQL transaction is rolled back atomically. If no app ever accepted work and separately approved schema removal is necessary, first prove the tables empty and ownership/grants unchanged, then review a narrow inverse migration. No automatic down-migration or CASCADE deletion is supplied. Phase 2 E01/E04 permission/constraint rollback remains governed by its captured ACL/function definitions, not blanket GRANT ALL.
+
+Rollback success criteria: known-good app SHA live, managed sessions and owner/plan checks intact, existing read paths work, no duplicate charge/initiation path, all accepted unresolved references accounted for, scheduler state explicit and financial/archive data preserved.

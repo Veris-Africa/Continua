@@ -10,7 +10,12 @@
       "language": "Existing Python collector, JavaScript compatibility API, React TypeScript frontend and PostgreSQL JSON projections",
       "runtime": "Existing GitHub Actions, Render, Cloudflare and optional existing Upstash; no new production runtime or paid service",
       "reason": "The measured problem is repeated result transfer, not numerical execution speed. Project only assembly inputs, refresh contexts once per bounded archive run, share identical indicator history within one job, and coalesce existing cache lookups. Preserve decimal calculations, complete histories, source rights, live session revocation and entitlements. Python and JavaScript telemetry retains only bounded aggregate byte estimates and statement hashes. This does not complete or cut over the separately gated Go rewrite.",
-      "references": ["https://www.postgresql.org/docs/current/functions-json.html", "https://www.psycopg.org/psycopg3/docs/advanced/pool.html", "https://node-postgres.com/features/queries", "https://tanstack.com/query/latest/docs/framework/react/guides/query-keys"]
+      "references": [
+        "https://www.postgresql.org/docs/current/functions-json.html",
+        "https://www.psycopg.org/psycopg3/docs/advanced/pool.html",
+        "https://node-postgres.com/features/queries",
+        "https://tanstack.com/query/latest/docs/framework/react/guides/query-keys"
+      ]
     },
     {
       "file": "backend/src/data/communityFeed.js",
@@ -18,7 +23,10 @@
       "language": "Existing JavaScript compatibility API/browser adapter and PostgreSQL",
       "runtime": "Existing Render and Cloudflare deployment; no new runtime or paid service",
       "reason": "Accept the existing minimal 201 write contract without replaying mutations. Assemble a bounded feed with set-based SQL under the existing authenticated role, live guard and RLS instead of 13-plus independently verified browser calls. Keep existing endpoints and a 404-only deployment fallback. The native rewrite remains separately gated.",
-      "references": ["https://docs.postgrest.org/en/v14/references/api/preferences.html", "https://www.postgresql.org/docs/18/ddl-rowsecurity.html"]
+      "references": [
+        "https://docs.postgrest.org/en/v14/references/api/preferences.html",
+        "https://www.postgresql.org/docs/18/ddl-rowsecurity.html"
+      ]
     },
     {
       "file": "app/src/integrations/continua/readRecovery.js",
@@ -26,7 +34,10 @@
       "language": "Existing JavaScript transport, React frontend and Python publisher collector",
       "runtime": "Existing browser, Cloudflare, Render compatibility API and bounded GitHub collector",
       "reason": "Serve an unexpired in-memory JWT during background refresh without weakening server authorization; retry only idempotent transient reads. Persist owner-scoped display hints separately from allowlisted public research. Python Selenium can select and verify an observed publisher tab without adding a runtime or bypassing source permissions. The Go rewrite remains independently gated.",
-      "references": ["https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults", "https://kenyanstocks.com/stock/nse/SCOM?tab=Financials"]
+      "references": [
+        "https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults",
+        "https://kenyanstocks.com/stock/nse/SCOM?tab=Financials"
+      ]
     },
     {
       "file": "backend/src/data/handlePolicy.js",
@@ -5301,6 +5312,20 @@
         "https://nodejs.org/api/errors.html",
         "https://www.postgresql.org/docs/current/explicit-locking.html",
         "https://www.postgresql.org/docs/current/ddl-constraints.html"
+      ]
+    },
+    {
+      "file": "backend/src/services/paymentOperations.js",
+      "category": "Phase 3 durable payment intake and recovery",
+      "language": "Existing JavaScript/Node.js and PostgreSQL SQL; retain Python collector",
+      "runtime": "Existing Render API, Neon durable metadata and existing independent Cloudflare wake-up",
+      "reason": "HMAC verification and bounded provider HTTP belong in the existing API. PostgreSQL uniqueness, SKIP LOCKED leases and fenced completion preserve effects across restarts without a queue service, paid worker or Go rewrite. Payment money and entitlement calculations remain in existing verified services/SQL. Existing bounded Python calculations stay synchronous unless measured work justifies a durable user job. Existing Python collector lease completion gains a live-lease fence and bounded retry jitter without changing archival or numerical algorithms; process-local asyncio locks are not treated as durable ownership.",
+      "references": [
+        "https://paystack.com/docs/payments/webhooks/",
+        "https://paystack.com/docs/payments/recurring-charges/",
+        "https://www.postgresql.org/docs/17/sql-select.html",
+        "https://nodejs.org/api/timers.html",
+        "https://docs.python.org/3.13/library/asyncio-sync.html"
       ]
     }
   ],

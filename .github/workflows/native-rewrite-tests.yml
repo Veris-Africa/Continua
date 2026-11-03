@@ -101,6 +101,8 @@ jobs:
       - run: python -m unittest discover -s scraper-python/tests -v
       - run: node --test infra/cloudflare/*.test.mjs
       - run: npm ci --prefix backend
+      - name: Payment durability and renewal regression tests (synthetic only)
+        run: npm --prefix backend test -- --run tests/durableWebhook.test.js tests/paymentOperations.test.js tests/phase3RenewalRecovery.test.js tests/cardRenewalWorker.test.ts tests/nativeWebhook.test.ts tests/paystackNative.test.ts tests/paystackLive.test.ts
       - run: npm ci --prefix scraper
       - run: npm --prefix scraper test -- --run tests/storage/storagePolicy.test.ts tests/storage/r2Storage.test.ts tests/storage/r2Archive.test.ts tests/storage/sourceCompression.test.ts
       - run: node infra/migration/native-engine-parity.mjs
@@ -118,8 +120,8 @@ jobs:
       - run: node infra/security/route-security-matrix.mjs --check
       - name: Phase 2 pre-DDL application compatibility
         run: node infra/security/phase2-postgres-fixture.mjs --pre-ddl
-      - name: Phase 2 real-role concurrency and payment-intent fixture
-        run: node infra/security/phase2-postgres-fixture.mjs
+      - name: Phase 2 and Phase 3 real-role payment and recovery fixtures
+        run: node infra/security/phase2-postgres-fixture.mjs --phase3
       - run: node infra/migration/native-bundle-parity.mjs
       - run: node infra/migration/native-valuation-parity.mjs
       - run: node infra/migration/native-statistics-parity.mjs
