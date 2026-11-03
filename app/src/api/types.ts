@@ -4,9 +4,9 @@
 // coupling to how the backend stores anything — so the frontend only ever
 // depends on the wire contract, not the backend's internals.
 
-export type Currency = "KES" | "NGN" | "ZAR" | "EGP" | "GHS" | "XOF" | "USD";
+export type Currency = "KES" | "NGN" | "ZAR" | "EGP" | "GHS" | "XOF" | "USD" | "TZS" | "ZMW";
 export type SecurityStatus = "active" | "suspended" | "halted" | "delisted";
-export type ExchangeCode = "NSE" | "NGX" | "JSE" | "EGX" | "GSE" | "BRVM";
+export type ExchangeCode = "NSE" | "NGX" | "JSE" | "EGX" | "GSE" | "BRVM" | "LuSE" | "DSE";
 
 export interface Quote {
   securityId: string;
@@ -25,6 +25,20 @@ export interface Quote {
   marketCap?: number;
   currency: Currency;
   status: SecurityStatus;
+  timestamp: string;
+  source: "live" | "delayed" | "eod";
+}
+
+export interface MarketIndex {
+  id: string;
+  code: string;
+  name: string;
+  exchange: ExchangeCode;
+  value: number;
+  previousClose: number;
+  change: number;
+  changePercent: number;
+  currency: Currency;
   timestamp: string;
   source: "live" | "delayed" | "eod";
 }
@@ -70,12 +84,15 @@ export interface CompanyProfile {
     founded?: string;
     website?: string;
     sectorName?: string;
+    profileSourceUrl?:string;
+    profileObservedAt?:string;
   };
 }
 
 export type FiscalPeriodType = "annual" | "quarterly";
 
 export interface FinancialPeriodBundle {
+  basis?: 'publisher_observation';
   periodId: string;
   securityId: string;
   periodType: FiscalPeriodType;
@@ -112,11 +129,38 @@ export interface FinancialPeriodBundle {
 }
 
 export interface FinancialHistoryEntry {
+  basis?: 'publisher_observation';
+  ratios?: Partial<ComputedRatios>;
+  processingVersion?: string;
+  qualityStatus?: string;
+  calculationEligibility?: {historicalObservation:boolean;pointInTime:boolean;reason:string};
+  sourceUrls?: string[] | null;
+  costOfRevenue?: number | null;
+  operatingExpenses?: number | null;
   fiscalYear: number;
   fiscalQuarter?: number | null;
+  periodEnd?: string;
+  reportedAt?: string;
+  currency?: Currency;
   revenue: number;
   netIncome: number;
   eps: number;
+  grossProfit?: number | null;
+  operatingIncome?: number | null;
+  ebitda?: number | null;
+  totalAssets?: number | null;
+  totalLiabilities?: number | null;
+  totalEquity?: number | null;
+  cash?: number | null;
+  totalDebt?: number | null;
+  currentAssets?: number | null;
+  currentLiabilities?: number | null;
+  sharesOutstanding?: number | null;
+  operatingCashFlow?: number | null;
+  investingCashFlow?: number | null;
+  financingCashFlow?: number | null;
+  freeCashFlow?: number | null;
+  capex?: number | null;
 }
 
 export type CorporateActionType =
@@ -134,6 +178,135 @@ export interface CorporateAction {
   effectiveDate?: string;
   details: Record<string, unknown>;
   status: "announced" | "confirmed" | "completed" | "cancelled";
+}
+
+/** GET /dividends/upcoming — market-wide, real ex-dates only (a fact from
+ *  the company's own announcement, not a prediction). */
+export interface UpcomingDividend extends CorporateAction {
+  symbol: string;
+  companyName: string;
+}
+
+/** GET /earnings/recent — deliberately only ever carries reportedDate/
+ *  epsActual/revenueActual (facts). There is no forward "upcoming
+ *  earnings" endpoint — see API.md for why. */
+export interface RecentEarnings {
+  id: string;
+  securityId: string;
+  fiscalYear: number;
+  fiscalQuarter: number | null;
+  reportedDate: string;
+  epsActual: number | null;
+  revenueActual: number | null;
+  symbol: string;
+  companyName: string;
+}
+
+export interface StockEarningsEvent {
+  id: string;
+  fiscalYear: number;
+  fiscalQuarter: number | null;
+  expectedDate: string | null;
+  reportedDate: string | null;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+}
+
+/** Regulatory/company announcement, sourced by continua-scraper from NSE
+ *  filings (PDFs) and other configured feeds — not editorial content.
+ *  `publishedAt` is frequently null: the scraper doesn't yet reliably
+ *  read a publish date off every source, and the Data Layer leaves it
+ *  honest rather than guessing. `needsReview` means entity resolution
+ *  matched this to a company with low confidence. */
+export interface CompanyAnnouncement {
+  id: string;
+  companyId: string | null;
+  securityId: string | null;
+  rawCompanyName: string | null;
+  title: string;
+  documentUrl: string;
+  source: string;
+  exchange: ExchangeCode;
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  extractionConfidence: number | null;
+  needsReview: boolean;
+  excerpt: string | null;
+  publishedAt: string | null;
+}
+
+/** General market/business news (not company filings — see
+ *  CompanyAnnouncement for those), scraped via continua-scraper's RSS
+ *  adapter and bridged into market.news_items. `securityIds` is a
+ *  best-effort keyword match against article text and can be empty for
+ *  genuine market/economy-wide stories, not just a missed match — see
+ *  `needsReview` for whether the bridge itself flagged this one as
+ *  uncertain. List endpoints omit `content`; the detail endpoint includes
+ *  extracted body text when the source permits it. */
+export interface NewsItem {
+  relevance?: { version: number; evidence: { symbol: string; companyName: string; evidence: string; basis: "headline" | "article"; relationship: "issuer" | "brand" }[]; methodology: string };
+  impact?: { topic: string; reason: string; symbols: string[]; methodology: string } | null;
+  id: string;
+  headline: string;
+  excerpt: string | null;
+  content?: string | null;
+  articleUrl: string;
+  source: string;
+  sourceName: string;
+  category: "markets" | "earnings" | "companies" | "economy" | "top";
+  /** og:image off the article page, when the publisher set one. Null is
+   *  normal (not every source has one) — render a placeholder, not an
+   *  error state. */
+  imageUrl: string | null;
+  securityIds: string[];
+  /** Ticker symbols for securityIds, resolved server-side. */
+  symbols: string[];
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  extractionConfidence: number | null;
+  needsReview: boolean;
+  publishedAt: string | null;
+}
+
+/** Minimal shape for the admin securities picker — GET /admin/securities.
+ *  Not the full Security type the backend has internally, just what's
+ *  needed to populate a dropdown. */
+export interface Security {
+  id: string;
+  symbol: string;
+  exchange: string;
+  companyId: string;
+}
+
+/** A scraped financial table awaiting human review before it's trusted
+ *  into market.income_statements/balance_sheets/cash_flow_statements —
+ *  see the admin financials review page. Mirrors
+ *  backend/src/types/market.ts's FinancialStatementCandidate exactly. */
+export interface FinancialStatementCandidate {
+  id: string;
+  companyId: string | null;
+  securityId: string | null;
+  rawCompanyName: string | null;
+  source: string;
+  exchange: string;
+  documentUrl: string;
+  documentTitle: string | null;
+  tableIndex: number;
+  detectedTable: {
+    title: string | null;
+    headerLine: string | null;
+    rows: { label: string; values: string[] }[];
+  };
+  detectionConfidence: number | null;
+  scrapedArtifactId: number | null;
+  scrapedExtractionId: number | null;
+  status: "pending" | "confirmed" | "rejected";
+  reviewedAt: string | null;
+  reviewedNote: string | null;
+  resultingPeriodId: string | null;
+  createdAt: string;
 }
 
 export interface OwnershipRecord {
@@ -159,6 +332,7 @@ export interface ComputedRatios {
   securityId: string;
   asOf: string;
   pe?: number | null;
+  ps?: number | null;
   pb?: number | null;
   evEbitda?: number | null;
   roe?: number | null;
@@ -179,23 +353,32 @@ export interface ComputedRatios {
 export interface AfriScoreResult {
   securityId: string;
   asOf: string;
-  afriScore: number;
-  afriValue: number;
-  afriGrowth: number;
-  afriHealth: number;
-  afriIncome: number;
-  afriRisk: number;
-  afriQuality: number;
-  afriMomentum: number;
-  inputs: Record<string, number | null>;
+  afriScore: number | null;
+  afriValue: number | null;
+  afriGrowth: number | null;
+  afriHealth: number | null;
+  afriIncome: number | null;
+  afriRisk: number | null;
+  afriQuality: number | null;
+  afriMomentum: number | null;
+  inputs: Record<string, unknown> & {methodologyVersion?: string; coveragePercent?: number; confidence?: string; reason?: string | null; sectorProfile?: string};
 }
 
 export interface ResearchBundle {
   ratios: ComputedRatios;
-  score: AfriScoreResult;
+  score: AfriScoreResult | null;
 }
 
 export interface ScreenerRow {
+  priceMomentum3m?: number | null;
+  pb?: number | null;
+  roe?: number | null;
+  roa?: number | null;
+  netMargin?: number | null;
+  debtToEquity?: number | null;
+  payoutRatio?: number | null;
+  currentRatio?: number | null;
+  ratiosAsOf?: string | null;
   symbol: string;
   securityId: string;
   companyName: string;

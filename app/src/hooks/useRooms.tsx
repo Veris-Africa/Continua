@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { usePageRefresh } from './usePageRefresh';
+import { supabase } from "@/integrations/continua/browserClient";
 import { useAuth } from "./useAuth";
 
 export interface Room {
@@ -42,6 +43,7 @@ export function useRooms() {
     setLoading(false);
   }, [user]);
 
+  usePageRefresh(fetch);
   useEffect(() => { fetch(); }, [fetch]);
 
   const createRoom = async (input: {

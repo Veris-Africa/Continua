@@ -1,0 +1,31 @@
+
+> vite_react_shadcn_ts@0.0.0 build
+> vite build
+
+[36mvite v8.2.0 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...[33m[vite:css][postcss] @import must precede all other statements (besides @charset or empty @layer)
+12 |     brand palette. */
+13 |  
+14 |  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700;...
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+15 |  
+16 |  @layer base {[39m
+✓ 2490 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     2.53 kB │ gzip:   1.01 kB
+dist/assets/index-wZygANPS.css    111.76 kB │ gzip:  18.62 kB
+dist/assets/index-BRbw7zmu.js   1,727.07 kB │ gzip: 478.62 kB
+
+[33m[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - vite:css (37%)
+  - vite:build-html (26%)
+  - rolldown:vite-resolve (25%)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+[39m
+[33m[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 4.72s[39m

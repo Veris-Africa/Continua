@@ -57,10 +57,20 @@ export const fx = {
 export const tooltipStyle = {
   background: "hsl(var(--card))",
   border: "1px solid hsl(var(--border))",
-  borderRadius: 10,
+  borderRadius: 0,
   fontSize: 11,
-  boxShadow: "0 8px 24px -8px rgba(0,0,0,0.18)",
+  boxShadow: "none",
+  color: "hsl(var(--card-foreground))",
 } as const;
+
+// Explicit label/item text colors for recharts <Tooltip>. Without these,
+// the label ("Current", a date, etc.) and value text can end up relying on
+// ambient/inherited color and go invisible against a dark tooltip
+// background in dark mode. These always resolve to whatever the theme's
+// current popover/card foreground is, so the text is guaranteed to
+// contrast with `tooltipStyle`'s background in any mode.
+export const tooltipLabelStyle = { color: "hsl(var(--popover-foreground))" } as const;
+export const tooltipItemStyle = { color: "hsl(var(--popover-foreground))" } as const;
 
 export const axisStyle = {
   tick: { fontSize: 10, fill: "hsl(var(--muted-foreground))" },
@@ -70,6 +80,6 @@ export const axisStyle = {
 
 export const gridStyle = {
   stroke: "hsl(var(--border))",
-  strokeDasharray: "2 4",
+  strokeDasharray: "3 5",
   vertical: false,
 };

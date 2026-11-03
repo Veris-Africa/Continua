@@ -1,4 +1,7 @@
+import {holdingInputError,combinedAverageCost} from '../../../../backend/src/data/holdingContract.js';
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
+import {useKeyboardPanel} from '@/hooks/useKeyboardPanel';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -38,6 +41,8 @@ export function AddInvestmentDialog({
   const { portfolio, addToPortfolio, updatePortfolioItem } = usePortfolio();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const keyboardPanel=useKeyboardPanel(open);
+  const [saving, setSaving] = useState(false);
 
   const existing: PortfolioItem | undefined = lockedSymbol
     ? portfolio.find(p => p.symbol.toUpperCase() === lockedSymbol.toUpperCase())
@@ -63,11 +68,15 @@ export function AddInvestmentDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    try {
     const sharesNum = parseFloat(shares);
     const costNum = parseFloat(avgCost);
 
-    if (!symbol || !name || !sharesNum || !costNum) {
-      toast({ title: "Missing info", description: "Fill all required fields", variant: "destructive" });
+    const inputError=holdingInputError({shares:sharesNum,avg_cost:costNum});
+    if (!symbol || !name || inputError) {
+      toast({ title: "Missing info", description: inputError??"Fill all required fields", variant: "destructive" });
       return;
     }
 
@@ -77,15 +86,17 @@ export function AddInvestmentDialog({
       if (mode === "add") {
         const totalShares = existing.shares + sharesNum;
         newShares = totalShares;
-        newAvg = ((existing.shares * existing.avg_cost) + (sharesNum * costNum)) / totalShares;
+        const average=combinedAverageCost(existing.shares,existing.avg_cost,sharesNum,costNum);
+        if(average===null){toast({title:'Invalid holding',description:'The combined holding exceeds its supported numeric range',variant:'destructive'});return;}
+        newAvg=average;
       }
       const result = await updatePortfolioItem(existing.id, {
         shares: newShares,
-        avg_cost: parseFloat(newAvg.toFixed(4)),
+        avg_cost: newAvg,
         sector: sector || existing.sector,
       });
       if (result.error) {
-        toast({ title: "Error", description: "Failed to update holding", variant: "destructive" });
+        toast({ title: "Error", description: typeof result.error==='string'?result.error:result.error.message??'Refresh this holding and retry', variant: "destructive" });
         return;
       }
       toast({
@@ -95,17 +106,18 @@ export function AddInvestmentDialog({
     } else {
       const result = await addToPortfolio(symbol.toUpperCase(), name, sharesNum, costNum, sector || undefined);
       if (result.error) {
-        toast({ title: "Error", description: "Failed to add investment", variant: "destructive" });
+        toast({ title: "Error", description: typeof result.error==='string'?result.error:result.error.message??'Failed to add investment', variant: "destructive" });
         return;
       }
       toast({ title: "Investment added", description: `${sharesNum} shares of ${symbol.toUpperCase()}` });
     }
 
     setOpen(false);
+    } finally { setSaving(false); }
   };
 
   const defaultTrigger = (
-    <Button size={size === "sm" ? "sm" : "default"} className={size === "sm" ? "h-7 px-2.5 rounded-full text-[11px] font-semibold gap-1" : "btn-primary"}>
+    <Button size={size === "sm" ? "sm" : "default"} className={size === "sm" ? "h-7 px-2.5 rounded-full text-[0.6875rem] font-semibold gap-1" : "btn-primary"}>
       {existing ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
       <span>{existing ? "Update" : "Add"}</span>
     </Button>
@@ -114,14 +126,14 @@ export function AddInvestmentDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger ?? defaultTrigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
+      <DialogContent {...keyboardPanel} className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
         <DialogHeader className="p-5 pb-3 border-b">
           <DialogTitle className="text-base">
             {existing ? `Update ${existing.symbol} Holding` : "Add Investment"}
           </DialogTitle>
           {existing && (
             <p className="text-xs text-muted-foreground mt-1">
-              You hold {existing.shares} shares · avg KES {existing.avg_cost.toFixed(2)}
+              You hold <RollingNumber value={existing.shares} /> shares · avg KES <RollingNumber value={existing.avg_cost.toFixed(2)} />
             </p>
           )}
         </DialogHeader>
@@ -153,7 +165,7 @@ export function AddInvestmentDialog({
                 <Label htmlFor="symbol" className="text-xs font-medium">Stock Symbol *</Label>
                 <Input
                   id="symbol"
-                  placeholder="e.g., SAFCOM"
+                  placeholder="e.g., SCOM"
                   value={symbol}
                   onChange={(e) => setSymbol(e.target.value.toUpperCase())}
                   className="h-10"
@@ -225,8 +237,8 @@ export function AddInvestmentDialog({
 
           <div className="flex gap-2.5 pt-1">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1 h-10">Cancel</Button>
-            <Button type="submit" className="flex-1 h-10 btn-primary">
-              {existing ? "Save Changes" : "Add Investment"}
+            <Button type="submit" disabled={saving} className="flex-1 h-10 btn-primary">
+              {saving ? "Saving…" : existing ? "Save Changes" : "Add Investment"}
             </Button>
           </div>
         </form>

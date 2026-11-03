@@ -1,37 +1,37 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, TrendingUp, TrendingDown, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
-import { CANONICAL_SYMBOLS, STOCK_META, getDayChange, getStockFundamentals, parseMagnitude, getRangeChangePct, getMoneyFlowM, type ChangeRange } from "@/lib/stockPrices";
+import { CANONICAL_SYMBOLS, STOCK_META } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { Waves, BarChart3 } from "lucide-react";
 
-// Derived from the shared price/fundamentals source — same list AllStocks, the Screener,
-// and Compare use — so this heatmap can't show a stock (or a change%) that disagrees with
-// the rest of the app, and can't include a ticker (like the old placeholder "NMG") that
-// isn't actually part of the app's real NSE universe. Change% is overlaid with live
-// Continua Data Layer quotes inside the component below wherever the Data Layer covers
-// a symbol; market cap (used only for relative bubble sizing) stays on the static table.
-function buildStaticStocks(range: ChangeRange, flowMode: boolean) {
-  return CANONICAL_SYMBOLS.map(symbol => {
-    const change = getRangeChangePct(symbol, range);
-    const f = getStockFundamentals(symbol);
-    return {
-      symbol,
-      name: STOCK_META[symbol].name,
-      change,
-      // Performance mode sizes tiles by market cap; Capital Flow mode sizes them by
-      // signed money flow (price × volume) so the tiles show where money is actually
-      // moving rather than just which stocks are biggest.
-      marketCap: flowMode ? Math.abs(getMoneyFlowM(symbol, range)) : parseMagnitude(f.marketCap) / 1e9,
-      sector: STOCK_META[symbol].sector,
-    };
-  });
-}
+// Derived from the shared reference table (same list AllStocks, the Screener,
+// and Compare use) so this heatmap can't show a stock that disagrees with the
+// rest of the app. Change% and market cap for tile sizing come ONLY from live
+// quotes below (useLiveQuotes) — a symbol with no live quote yet is simply
+// excluded from the grid, never shown with a fabricated change/size.
+//
+// 1W/1M/YTD ranges and "Capital Flow" mode used to be powered by a seeded
+// pseudo-random generator (removed along with the rest of the fabricated
+// price engine — see stockPrices.ts). There's no real batch multi-range
+// performance source wired up yet (the real per-symbol /historical/:symbol
+// /performance endpoint exists but isn't practical to call once per NSE
+// symbol per page load), so those options are disabled below rather than
+// re-fabricated. Flagged as a follow-up: a batch performance endpoint
+// mirroring GET /historical/sparklines would unlock this properly.
+type ChangeRange = "1D" | "1W" | "1M" | "YTD";
 
 const SECTORS = ["All", ...Array.from(new Set(CANONICAL_SYMBOLS.map(s => STOCK_META[s].sector))).sort()];
-const RANGES = ["1D", "1W", "1M", "YTD"] as const;
+const RANGES: { value: ChangeRange; available: boolean }[] = [
+  { value: "1D", available: true },
+  { value: "1W", available: false },
+  { value: "1M", available: false },
+  { value: "YTD", available: false },
+];
 
 export default function SectorHeatmap() {
   const navigate = useNavigate();
@@ -41,16 +41,20 @@ export default function SectorHeatmap() {
 
   const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
   const ALL_STOCKS = useMemo(() => {
-    const base = buildStaticStocks(range, flowMode);
-    if (range !== "1D") return base;
-    // 1D is the one range with a real live feed — overlay it wherever the Data Layer covers a symbol.
-    return base.map(s => {
-      const q = quotes[s.symbol];
-      if (!q) return s;
-      const change = +q.changePercent.toFixed(2);
-      return { ...s, change, marketCap: flowMode ? Math.abs(getMoneyFlowM(s.symbol, range)) : s.marketCap };
-    });
-  }, [quotes, range, flowMode]);
+    return CANONICAL_SYMBOLS
+      .map(symbol => {
+        const q = quotes[symbol];
+        if (!q) return null;
+        return {
+          symbol,
+          name: STOCK_META[symbol].name,
+          change: +q.changePercent.toFixed(2),
+          marketCap: (q.marketCap ?? 0) / 1e9, // billions, tile-sizing only
+          sector: STOCK_META[symbol].sector,
+        };
+      })
+      .filter((s): s is { symbol: string; name: string; change: number; marketCap: number; sector: string } => s !== null);
+  }, [quotes]);
 
   const filtered = useMemo(
     () => sector === "All" ? ALL_STOCKS : ALL_STOCKS.filter(s => s.sector === sector),
@@ -72,20 +76,22 @@ export default function SectorHeatmap() {
     <div className="page-canvas min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2 px-3 py-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9" data-small-target>
+          <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="h-9 w-9" data-small-target>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
             <h1 className="text-base font-semibold">Sector Heatmap</h1>
-            <p className="text-[11px] text-muted-foreground">
-              NSE · size = {flowMode ? "money flow" : "market cap"} · colour = {flowMode ? `${range} flow` : `${range} performance`}
+            <p className="text-[0.6875rem] text-muted-foreground">
+              NSE · size = market cap · colour = today's performance
             </p>
           </div>
         </div>
       </header>
 
       <div className="px-4 pt-4 space-y-6">
-        {/* Performance vs Capital Flow */}
+        {/* Performance vs Capital Flow — Capital Flow needs a real batch
+            volume×price data source not wired up yet, so it's disabled
+            rather than shown with fabricated numbers. */}
         <div className="flex rounded-full bg-muted/50 p-0.5">
           <button
             data-small-target
@@ -96,28 +102,33 @@ export default function SectorHeatmap() {
           </button>
           <button
             data-small-target
-            onClick={() => setFlowMode(true)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${flowMode ? 'bg-background shadow-sm' : 'text-muted-foreground'}`}
+            disabled
+            title="Coming soon — needs a real capital-flow data source"
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-full text-xs font-semibold text-muted-foreground/50 cursor-not-allowed"
           >
             <Waves className="h-3.5 w-3.5" /> Capital Flow
           </button>
         </div>
 
-        {/* Range pills */}
+        {/* Range pills — only 1D has a real live source right now */}
         <div className="flex items-center gap-2">
           <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          {RANGES.map(r => (
+          {RANGES.map(({ value: r, available }) => (
             <button
               key={r}
               data-small-target
-              onClick={() => setRange(r)}
-              className={`px-3 py-1 text-[11px] font-semibold rounded-full transition-colors ${range === r ? 'brand-active' : 'text-muted-foreground hover:text-foreground border border-border/60'}`}
+              disabled={!available}
+              title={available ? undefined : "Coming soon — needs a real historical performance source"}
+              onClick={() => available && setRange(r)}
+              className={`px-3 py-1 text-[0.6875rem] font-semibold rounded-full transition-colors ${
+                range === r ? 'brand-active' : available ? 'text-muted-foreground hover:text-foreground border border-border/60' : 'text-muted-foreground/40 border border-border/30 cursor-not-allowed'
+              }`}
             >{r}</button>
           ))}
         </div>
 
         {flowMode && (
-          <p className="text-[11px] text-muted-foreground -mt-3">
+          <p className="text-[0.6875rem] text-muted-foreground -mt-3">
             Tile size reflects net capital moving in or out of each stock over {range}, not company size — spot where the money's going, not just who's biggest.
           </p>
         )}
@@ -136,9 +147,9 @@ export default function SectorHeatmap() {
                 <p className="text-xs font-semibold">{s.name}</p>
                 <p className={`text-base font-bold tabular ${s.change >= 0 ? 'text-bull' : 'text-bear'} flex items-center gap-1`}>
                   {s.change >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                  {s.change >= 0 ? '+' : ''}{s.change.toFixed(2)}%
+                  {s.change >= 0 ? '+' : ''}<RollingNumber value={s.change.toFixed(2)} />%
                 </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{s.count} stocks</p>
+                <p className="text-[0.625rem] text-muted-foreground mt-0.5"><RollingNumber value={s.count} /> stocks</p>
               </button>
             ))}
           </div>
@@ -158,7 +169,7 @@ export default function SectorHeatmap() {
 
         {/* Heatmap */}
         <div>
-          <p className="section-eyebrow mb-2">{sector === "All" ? "Full NSE" : sector} · {filtered.length} stocks</p>
+          <p className="section-eyebrow mb-2">{sector === "All" ? "Full NSE" : sector} · <RollingNumber value={filtered.length} /> stocks</p>
           <StockHeatmap stocks={filtered} />
         </div>
       </div>

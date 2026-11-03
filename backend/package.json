@@ -1,38 +1,59 @@
 {
   "name": "continua-data",
   "version": "0.1.0",
-  "description": "Continua Data \u2014 core market data infrastructure layer (NSE-first, multi-exchange ready)",
+  "description": "Continua Data \u00e2\u20ac\u201d core market data infrastructure layer (NSE-first, multi-exchange ready)",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
+    "dev": "node --watch src/index.js",
+    "build": "node scripts/build.mjs",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "worker:price": "tsx src/workers/priceWorker.ts",
-    "worker:financials": "tsx src/workers/financialsWorker.ts",
-    "worker:corporate-actions": "tsx src/workers/corporateActionsWorker.ts",
-    "worker:candles": "tsx src/workers/candlesWorker.ts",
-    "apikey:create": "tsx scripts/generateApiKey.ts",
-    "apikey:revoke": "tsx scripts/revokeApiKey.ts"
+    "worker:price": "node src/workers/priceWorker.js",
+    "worker:financials": "node src/workers/financialsWorker.js",
+    "worker:corporate-actions": "node src/workers/corporateActionsWorker.js",
+    "worker:announcements": "node scripts/runAnnouncementsBridgeOnce.js",
+    "worker:candles": "node src/workers/candlesWorker.js",
+    "worker:financial-candidates": "node scripts/runFinancialCandidatesBridgeOnce.js",
+    "worker:news": "node scripts/runNewsBridgeOnce.js",
+    "research:import": "node scripts/importMarketResearch.js",
+    "history:import": "node scripts/importHistoricalPrices.js",
+    "history:coverage": "node scripts/historyCoverage.js",
+    "history:migrate": "node scripts/applyHistoryMigration.js",
+    "news:revalidate": "node scripts/revalidateNews.js",
+    "source:remove": "node scripts/removeNewsSource.js",
+    "financials:review": "node scripts/listFinancialStatementCandidates.js",
+    "financials:draft": "node scripts/draftFinancialStatementCandidate.js",
+    "financials:confirm": "node scripts/confirmFinancialStatementCandidate.js",
+    "financials:reject": "node scripts/rejectFinancialStatementCandidate.js",
+    "apikey:create": "node scripts/generateApiKey.js",
+    "apikey:revoke": "node scripts/revokeApiKey.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1149.0",
+    "@neondatabase/auth": "0.7.0-beta",
+    "bcrypt": "6.0.0",
+    "better-auth": "1.7.12",
+    "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
     "helmet": "^7.1.0",
     "ioredis": "^6.0.0",
+    "jose": "6.2.5",
     "lru-cache": "^10.4.3",
     "node-cron": "^4.6.0",
+    "nodemailer": "10.2.0",
     "pg": "^8.12.0",
     "pino": "^9.3.2",
     "pino-pretty": "^11.2.2",
+    "qrcode": "1.5.4",
     "ws": "^8.18.0",
-    "zod": "^3.23.8"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -41,8 +62,16 @@
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.6",
     "@types/ws": "^8.5.12",
-    "tsx": "^4.16.5",
     "typescript": "^5.5.4",
-    "vitest": "^4.1.10"
+    "vitest": "4.1.12"
+  },
+  "overrides": {
+    "@neondatabase/auth": {
+      "better-auth": "$better-auth",
+      "@better-auth/core": "1.7.12",
+      "@better-auth/oauth-provider": "1.7.12",
+      "zod": "$zod"
+    },
+    "html-to-text": "10.0.1"
   }
 }

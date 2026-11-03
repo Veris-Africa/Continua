@@ -1,5 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import {createPostSubmission} from '../lib/postSubmission.js';
+import { readFeedSnapshot, saveFeedSnapshot, clearFeedSnapshot } from '@/lib/feedSnapshot';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePageRefresh } from './usePageRefresh';
+import { supabase } from '@/integrations/continua/browserClient';
+import { uploadCloudImage, removeCloudImages } from '@/lib/cloudMedia.js';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
@@ -29,6 +33,8 @@ export interface Post {
   user_id: string;
   content: string;
   image_url: string | null;
+  image_urls?: string[];
+  poll?: import("@/components/social/PostAttachments").PostPoll | null;
   stock_mentions: string[] | null;
   created_at: string;
   updated_at: string;
@@ -54,6 +60,7 @@ export interface Comment {
   user_id: string;
   content: string;
   created_at: string;
+  edited_at?: string | null;
   parent_comment_id?: string | null;
   author?: PostAuthor;
   replies?: Comment[];
@@ -65,38 +72,99 @@ export interface Comment {
   my_reaction?: ReactionKind | null;
 }
 
+// ── Pure helpers for working with the nested comment tree client-side ──────
+// (editing/deleting a comment happens against a single comment somewhere in
+// a tree of replies, so callers need to patch that tree locally rather than
+// refetch the whole thread on every action).
+
+/** 1 + every nested reply underneath this comment. */
+export function countCommentSubtree(comment: Comment): number {
+  return 1 + (comment.replies || []).reduce((sum, r) => sum + countCommentSubtree(r), 0);
+}
+
+/** Returns a new tree with the given comment id patched via `updater`, wherever it sits. */
+export function updateCommentInTree(comments: Comment[], id: string, updater: (c: Comment) => Comment): Comment[] {
+  return comments.map(c => {
+    if (c.id === id) return updater(c);
+    if (c.replies && c.replies.length) return { ...c, replies: updateCommentInTree(c.replies, id, updater) };
+    return c;
+  });
+}
+
+/** Returns a new tree with the given comment id (and all its replies) removed, plus how many nodes were removed. */
+export function removeCommentFromTree(comments: Comment[], id: string): { tree: Comment[]; removedCount: number } {
+  let removedCount = 0;
+  const tree = comments
+    .filter(c => {
+      if (c.id === id) {
+        removedCount = countCommentSubtree(c);
+        return false;
+      }
+      return true;
+    })
+    .map(c => {
+      if (removedCount > 0 || !c.replies || !c.replies.length) return c;
+      const nested = removeCommentFromTree(c.replies, id);
+      if (nested.removedCount > 0) {
+        removedCount = nested.removedCount;
+        return { ...c, replies: nested.tree };
+      }
+      return c;
+    });
+  return { tree, removedCount };
+}
+
 // Module-level cache so re-entering TradersHub is instant
 let __postsCache: Post[] | null = null;
 let __postsCacheKey: string | null = null;
+if(typeof window!=='undefined')window.addEventListener('continua:session-cleared',()=>{__postsCache=null;__postsCacheKey=null;});
 
 export function usePosts() {
   const { user } = useAuth();
   const { toast } = useToast();
   const cacheKey = user?.id || 'anon';
-  const initial = __postsCache && __postsCacheKey === cacheKey ? __postsCache : [];
-  const [posts, setPosts] = useState<Post[]>(initial);
+  const initial = __postsCache && __postsCacheKey === cacheKey ? __postsCache : user ? readFeedSnapshot(cacheKey) ?? [] : [];
+  const [postState, setPostState] = useState<{owner:string;rows:Post[]}>({owner:cacheKey,rows:initial});
+  const posts = postState.owner === cacheKey ? postState.rows : initial;
+  const setPosts = useCallback((update: Post[] | ((previous:Post[])=>Post[])) => setPostState(previous => ({owner:cacheKey,rows:typeof update === 'function' ? update(previous.owner===cacheKey?previous.rows:[]) : update})),[cacheKey]);
   const [loading, setLoading] = useState(initial.length === 0);
   const [error, setError] = useState<string | null>(null);
+  const fetchVersion=useRef(0);
 
   const fetchPosts = useCallback(async () => {
+    const version=++fetchVersion.current;
     if (!__postsCache || __postsCacheKey !== cacheKey) setLoading(true);
     try {
-      const { data: postsDataRaw, error: postsError } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (postsError) throw postsError;
-
-      let postsData = postsDataRaw;
-      if (user && postsData && postsData.length > 0) {
-        const [hiddenRes, blockedRes, mutedRes, mutedKeywordsRes] = await Promise.all([
-          supabase.from('hidden_posts' as any).select('post_id').eq('user_id', user.id),
-          supabase.from('blocked_users' as any).select('blocked_id').eq('blocker_id', user.id),
-          supabase.from('muted_users' as any).select('muted_id').eq('muter_id', user.id),
-          supabase.from('muted_keywords' as any).select('keyword').eq('user_id', user.id),
-        ]);
+      const feedResponse=await supabase.from('community_feed').select();
+      if(!feedResponse.error){
+        if(!Array.isArray(feedResponse.data))throw Error('Invalid community feed');
+        if(version!==fetchVersion.current)return;
+        const rows=feedResponse.data as Post[];
+        setPosts(rows);__postsCache=rows;__postsCacheKey=cacheKey;
+        if(user)saveFeedSnapshot(cacheKey,rows);
+        setError(null);return;
+      }
+      // Deploy safely against the previous backend until its new read route is
+      // live. Auth, privacy and upstream failures never fall back to less checks.
+      if(feedResponse.error.status!==404)throw feedResponse.error;
+      // Safety preferences and posts are independent reads. Start together,
+      // but never publish rows until all safety filters have succeeded.
+      const [postResponse, safety] = await Promise.all([
+        supabase.from('posts').select('*').order('created_at', {ascending:false}).limit(50),
+        user ? Promise.all([
+          supabase.from('hidden_posts' as any).select('post_id').eq('user_id',user.id),
+          supabase.from('blocked_users' as any).select('blocked_id').eq('blocker_id',user.id),
+          supabase.from('muted_users' as any).select('muted_id').eq('muter_id',user.id),
+          supabase.from('muted_keywords' as any).select('keyword').eq('user_id',user.id),
+        ]) : Promise.resolve([]),
+      ]);
+      const {data:postsDataRaw,error:postsError}=postResponse;
+      if(postsError)throw postsError;
+      let postsData=postsDataRaw;
+      if(user && postsData && postsData.length>0){
+        const [hiddenRes,blockedRes,mutedRes,mutedKeywordsRes]=safety;
+        const safetyError=hiddenRes.error||blockedRes.error||mutedRes.error||mutedKeywordsRes.error;
+        if(safetyError){clearFeedSnapshot(cacheKey);__postsCache=null; if(version===fetchVersion.current)setPosts([]);throw safetyError;}
         const hiddenSet = new Set((hiddenRes.data as any[] | null)?.map(r => r.post_id));
         // Blocking/muting someone only meant anything if it actually kept
         // their posts out of your feed — previously these tables were
@@ -123,7 +191,8 @@ export function usePosts() {
       }
 
       if (!postsData || postsData.length === 0) {
-        setPosts([]); setError(null); setLoading(false); return;
+        if(version!==fetchVersion.current)return;
+        setPosts([]); __postsCache=[]; __postsCacheKey=cacheKey; if(user)saveFeedSnapshot(cacheKey,[]); setError(null); setLoading(false); return;
       }
 
       const postIds = postsData.map(p => p.id);
@@ -221,30 +290,36 @@ export function usePosts() {
       }));
 
 
+      if(version!==fetchVersion.current)return;
       setPosts(enriched as Post[]);
       __postsCache = enriched as Post[];
       __postsCacheKey = cacheKey;
+      if(user)saveFeedSnapshot(cacheKey,enriched as Post[]);
       setError(null);
     } catch (err) {
       console.error('Error fetching posts:', err);
-      setError('Failed to load posts');
+      if(version===fetchVersion.current)setError('Failed to load posts');
     } finally {
-      setLoading(false);
+      if(version===fetchVersion.current)setLoading(false);
     }
-  }, [user, cacheKey]);
+  }, [user?.id, cacheKey]);
 
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
-  useEffect(() => { if (posts.length > 0) { __postsCache = posts; __postsCacheKey = cacheKey; } }, [posts, cacheKey]);
+  usePageRefresh(fetchPosts);
+  useEffect(() => { setPosts(initial); setLoading(initial.length===0); void fetchPosts(); return()=>{fetchVersion.current++;}; }, [cacheKey, fetchPosts]);
+  useEffect(() => { __postsCache = posts; __postsCacheKey = cacheKey; }, [posts, cacheKey]);
+  useEffect(()=>{const refresh=()=>{clearFeedSnapshot(cacheKey);__postsCache=null;setPosts([]);void fetchPosts();};window.addEventListener('continua:community-safety-changed',refresh);return()=>window.removeEventListener('continua:community-safety-changed',refresh);},[fetchPosts]);
 
-  const createPost = async (content: string, imageUrl?: string, quotedPostId?: string) => {
-    if (!user) return { error: { message: 'Must be logged in' } };
-    const stockMentions = content.match(/\$[A-Z]+/g)?.map(s => s.slice(1)) || [];
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({ user_id: user.id, content, image_url: imageUrl || null, stock_mentions: stockMentions.length > 0 ? stockMentions : null, quoted_post_id: quotedPostId || null } as any)
-      .select().single();
-    if (!error) fetchPosts();
-    return { data, error };
+  const postSubmission=useRef(createPostSubmission({
+    insert:async payload=>supabase.from('posts').insert(payload).select().single(),
+    upload:async image=>{const blob=await(await fetch(image)).blob();return uploadCloudImage('post-images',blob);},
+    remove:urls=>removeCloudImages(urls),
+  }));
+  const createPost = async (content:string,imageInput?:string|string[],quotedPostId?:string,poll?:import('@/components/social/PostAttachments').PostPoll)=>{
+    if(!user)return {error:{message:'Must be logged in'}};
+    const images=Array.isArray(imageInput)?imageInput:imageInput?[imageInput]:[];
+    const result=await postSubmission.current({userId:user.id,content,images,quotedPostId,poll});
+    if(!result.error)void fetchPosts();
+    return result;
   };
 
   const deletePost = async (postId: string) => {
@@ -300,26 +375,37 @@ export function usePosts() {
 
   const reportPost = async (postId: string, reason: string = 'unspecified') => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const { error } = await supabase.from('post_reports' as any).insert({ post_id: postId, reporter_id: user.id, reason });
+    const { error } = await (supabase.rpc as any)('community_submit_report',{p_kind:'post',p_target:postId,p_reason:reason==='unspecified'?'Other':reason,p_details:''});
     return { error };
   };
 
   const hidePost = async (postId: string) => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const { error } = await supabase.from('hidden_posts' as any).insert({ post_id: postId, user_id: user.id });
+    const { error } = await supabase.from('hidden_posts' as any).upsert({ post_id: postId, user_id: user.id },{onConflict:'post_id,user_id',ignoreDuplicates:true});
     if (!error) setPosts(prev => prev.filter(p => p.id !== postId));
+    toast(error?{title:"Couldn't hide this post",variant:'destructive'}:{title:'Post hidden',description:'This hides the post from your feed.'});
     return { error };
   };
 
-  const reactToPost = async (postId: string, reaction: ReactionKind) => {
+  const reactToPost = async (postId: string, reaction: ReactionKind, currentReaction?: ReactionKind | null) => {
     if (!user) return { error: { message: 'Must be logged in' } };
-    const current = posts.find(p => p.id === postId)?.my_reaction;
+    const current = currentReaction !== undefined ? currentReaction : posts.find(p => p.id === postId)?.my_reaction;
     const query = current === reaction
       ? supabase.from('post_reactions' as any).delete().eq('post_id', postId).eq('user_id', user.id)
       : supabase.from('post_reactions' as any).upsert({ post_id: postId, user_id: user.id, reaction }, { onConflict: 'post_id,user_id' });
     const { error } = await query;
     if (!error) {
-      await fetchPosts();
+      // This changes only after the server confirms the write. Do not make a
+      // saved reaction wait for another complete timeline refresh to appear.
+      setPosts(previous=>previous.map(post=>{
+        if(post.id!==postId)return post;
+        const counts={...post.reaction_counts};
+        if(post.my_reaction)counts[post.my_reaction]=Math.max(0,(counts[post.my_reaction]??0)-1);
+        const next=current===reaction?null:reaction;
+        if(next)counts[next]=(counts[next]??0)+1;
+        return {...post,reaction_counts:counts,my_reaction:next};
+      }));
+      void fetchPosts();
     } else {
       toast({ title: "Couldn't save that reaction", description: error.message, variant: "destructive" });
     }
@@ -414,6 +500,28 @@ export function usePosts() {
     return { data, error };
   };
 
+  const editComment = async (commentId: string, newContent: string) => {
+    if (!user) return { error: { message: 'Must be logged in' } };
+    const editedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from('post_comments')
+      .update({ content: newContent, edited_at: editedAt } as any)
+      .eq('id', commentId).eq('user_id', user.id);
+    return { error, editedAt };
+  };
+
+  /** removedCount defaults to 1 but should be the full subtree size (comment + its
+   *  nested replies, see countCommentSubtree) since deleting a comment cascades to
+   *  its replies in the database. */
+  const deleteComment = async (commentId: string, postId: string, removedCount = 1) => {
+    if (!user) return { error: { message: 'Must be logged in' } };
+    const { error } = await supabase.from('post_comments').delete().eq('id', commentId).eq('user_id', user.id);
+    if (!error) {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - removedCount) } : p));
+    }
+    return { error };
+  };
+
   const getUserPosts = async (userId: string) => {
     const { data, error } = await supabase.from('posts').select('*').eq('user_id', userId).order('created_at', { ascending: false });
     return { data, error };
@@ -442,7 +550,7 @@ export function usePosts() {
     posts, loading, error,
     fetchPosts, createPost, deletePost, editPost,
     likePost, repostPost, bookmarkPost, reactToPost, reactToComment, reportPost, hidePost,
-    fetchComments, addComment, getUserPosts,
+    fetchComments, addComment, editComment, deleteComment, getUserPosts,
     likeComment, repostComment,
   };
 }

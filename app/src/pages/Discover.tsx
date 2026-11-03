@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Users, Trophy, MessageCircle, BookOpen, TrendingUp, Hash, Play, PieChart, Coffee, Heart, Repeat2, UserPlus, Flame, ChevronRight, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,11 +12,11 @@ import { usePosts, Post } from "@/hooks/usePosts";
 import { useFollows } from "@/hooks/useFollows";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { StockHeatmap } from "@/components/home/StockHeatmap";
 import { usePortfolio } from "@/hooks/usePortfolio";
-import { STOCK_META, getPrice, getDayChange, computePortfolioStats } from "@/lib/stockPrices";
+import { STOCK_META, computePortfolioStats } from "@/lib/stockPrices";
 import { useLivePortfolioQuotes, useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { shareLink } from "@/lib/share";
 
@@ -42,25 +43,26 @@ export default function Discover() {
   const { portfolio, loading: portfolioLoading } = usePortfolio();
   const { liveQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
   const portfolioStats = computePortfolioStats(portfolio, liveQuotes);
-  const portfolioWithLive = portfolio.map(h => {
-    const live = liveQuotes[h.symbol.toUpperCase()];
-    const price = live?.price ?? getPrice(h.symbol, h.avg_cost);
-    return { ...h, gainPct: h.avg_cost > 0 ? ((price - h.avg_cost) / h.avg_cost) * 100 : 0 };
-  });
+  const portfolioWithLive = portfolio
+    .map(h => {
+      const live = liveQuotes[h.symbol.toUpperCase()];
+      if (!live) return null; // no live price yet — excluded rather than defaulted to a fabricated/zero gain
+      return { ...h, gainPct: h.avg_cost > 0 ? ((live.price - h.avg_cost) / h.avg_cost) * 100 : 0 };
+    })
+    .filter((h): h is NonNullable<typeof h> => h !== null);
   const topGainerHolding = portfolioWithLive.length > 0 ? [...portfolioWithLive].sort((a, b) => b.gainPct - a.gainPct)[0] : null;
 
-  // Trending = today's biggest movers, computed from the shared price source (and, when
-  // available, live Continua Data Layer quotes) — never a separate hand-typed list that
-  // can disagree with what every other page shows.
+  // Trending = today's biggest movers, from live Continua Data Layer quotes
+  // only — a symbol with no live quote yet is excluded, never fabricated.
   const { quotes: trendingQuotes } = useLiveQuotes(TRENDING_SYMBOLS);
   const trendingStocks = useMemo(() => {
     return TRENDING_SYMBOLS
       .map(symbol => {
         const q = trendingQuotes[symbol];
-        const { pct } = getDayChange(symbol);
-        const changePct = q?.changePercent ?? pct;
-        return { symbol, price: q?.lastPrice ?? getPrice(symbol), pct: changePct, isUp: changePct >= 0 };
+        if (!q) return null;
+        return { symbol, price: q.lastPrice, pct: q.changePercent, isUp: q.changePercent >= 0 };
       })
+      .filter((s): s is { symbol: string; price: number; pct: number; isUp: boolean } => s !== null)
       .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
       .slice(0, 10)
       .map(s => ({ symbol: s.symbol, price: s.price, change: `${s.isUp ? '+' : ''}${s.pct.toFixed(2)}%`, isUp: s.isUp }));
@@ -187,8 +189,8 @@ export default function Discover() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <TopBar 
-        title="Discover" 
+      <TopBar
+        title="Discover"
         subtitle="Social investing & learning"
         showSearch={true}
         showNotifications={true}
@@ -204,8 +206,8 @@ export default function Discover() {
               onClick={() => navigate(`/stock/${s.symbol}`)}
             >
               <span className="text-xs font-bold">${s.symbol}</span>
-              <span className="text-[10px] text-muted-foreground">{s.price}</span>
-              <span className={`text-[10px] font-semibold ${s.isUp ? 'text-bull' : 'text-bear'}`}>
+              <span className="text-[0.625rem] text-muted-foreground"><RollingNumber value={s.price} /></span>
+              <span className={`text-[0.625rem] font-semibold ${s.isUp ? 'text-bull' : 'text-bear'}`}>
                 {s.change}
               </span>
             </button>
@@ -238,7 +240,7 @@ export default function Discover() {
                   <h3 className="font-semibold text-sm">Portfolio Insights</h3>
                 </div>
                 <Badge variant="secondary" className={`text-xs ${portfolioStats.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {portfolioStats.gainPct >= 0 ? '+' : ''}{portfolioStats.gainPct.toFixed(1)}%
+                  {portfolioStats.gainPct >= 0 ? '+' : ''}<RollingNumber value={portfolioStats.gainPct.toFixed(2)} />%
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
@@ -253,7 +255,7 @@ export default function Discover() {
                     <div className="mt-2 text-xs">
                       <span className="text-muted-foreground">Best: </span>
                       <span className={`font-medium ${topGainerHolding.gainPct >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}{topGainerHolding.gainPct.toFixed(1)}%
+                        {topGainerHolding.symbol} {topGainerHolding.gainPct >= 0 ? '+' : ''}<RollingNumber value={topGainerHolding.gainPct.toFixed(2)} />%
                       </span>
                     </div>
                   )}
@@ -338,10 +340,10 @@ export default function Discover() {
             <div className="flex justify-between items-center mb-3">
               <div className="flex space-x-1.5">
                 {["latest", "top", "following"].map(tab => (
-                  <Button 
+                  <Button
                     key={tab}
-                    variant={feedTab === tab ? "default" : "ghost"} 
-                    size="sm" 
+                    variant={feedTab === tab ? "default" : "ghost"}
+                    size="sm"
                     className="text-xs h-8 rounded-full capitalize"
                     onClick={() => setFeedTab(tab)}
                   >
@@ -363,8 +365,8 @@ export default function Discover() {
               <Card className="card-gradient">
                 <CardContent className="p-6 text-center">
                   <p className="text-muted-foreground text-sm">
-                    {feedTab === "following" 
-                      ? "Follow traders to see their posts here" 
+                    {feedTab === "following"
+                      ? "Follow traders to see their posts here"
                       : "No posts yet. Be the first to share!"}
                   </p>
                   <Button className="mt-3" size="sm" onClick={() => navigate('/traders-hub')}>
@@ -375,13 +377,13 @@ export default function Discover() {
             ) : (
               <div className="divide-y divide-border/50">
                 {filteredPosts.map((post) => (
-                  <div 
-                    key={post.id} 
+                  <div
+                    key={post.id}
                     className="py-3 cursor-pointer active:bg-muted/20 transition-colors"
                     onClick={() => navigate(`/traders-hub/post/${post.id}`)}
                   >
                     <div className="flex items-start space-x-3">
-                      <Avatar 
+                      <Avatar
                         className="h-9 w-9 cursor-pointer shrink-0"
                         onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
                       >
@@ -392,7 +394,7 @@ export default function Discover() {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span 
+                          <span
                             className="font-semibold text-sm cursor-pointer hover:underline truncate"
                             onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}
                           >
@@ -403,7 +405,7 @@ export default function Discover() {
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed mb-2.5">{renderPostContent(post.content)}</p>
-                        
+
                         {/* X-style interaction bar */}
                         <div className="flex items-center justify-between max-w-[280px] text-muted-foreground">
                           <button
@@ -411,21 +413,21 @@ export default function Discover() {
                             onClick={(e) => { e.stopPropagation(); navigate(`/traders-hub/post/${post.id}`); }}
                           >
                             <MessageCircle className="h-3.5 w-3.5 group-hover:bg-primary/10 rounded-full p-0" />
-                            <span>{post.comments_count}</span>
+                            <span><RollingNumber value={post.comments_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors group ${post.is_reposted ? 'text-bull' : 'hover:text-bull'}`}
                             onClick={(e) => handleRepost(e, post.id)}
                           >
                             <Repeat2 className="h-3.5 w-3.5" />
-                            <span>{post.reposts_count}</span>
+                            <span><RollingNumber value={post.reposts_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors group ${post.is_liked ? 'text-red-500' : 'hover:text-red-500'}`}
                             onClick={(e) => handleLike(e, post.id)}
                           >
                             <Heart className={`h-3.5 w-3.5 transition-transform ${post.is_liked ? 'fill-current scale-110' : 'group-hover:scale-110'}`} />
-                            <span>{post.likes_count}</span>
+                            <span><RollingNumber value={post.likes_count} /></span>
                           </button>
                           <button
                             className={`flex items-center gap-1 text-xs transition-colors ${post.is_bookmarked ? 'text-primary' : 'hover:text-primary'}`}
@@ -467,7 +469,7 @@ export default function Discover() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <h4 className="font-semibold text-sm">{course.title}</h4>
-                      <Badge variant="outline" className="text-[10px] px-1.5 rounded-full">{course.level}</Badge>
+                      <Badge variant="outline" className="text-[0.625rem] px-1.5 rounded-full">{course.level}</Badge>
                     </div>
                     <div className="flex items-center space-x-1">
                       {course.type === 'video' && <Play className="h-3 w-3" />}
@@ -477,11 +479,11 @@ export default function Discover() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">{course.lessons} lessons</span>
-                    <span className="text-xs text-primary font-medium">{course.progress}%</span>
+                    <span className="text-xs text-muted-foreground"><RollingNumber value={course.lessons} /> lessons</span>
+                    <span className="text-xs text-primary font-medium"><RollingNumber value={course.progress} />%</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-1.5">
-                    <div 
+                    <div
                       className="bg-primary rounded-full h-1.5 transition-all"
                       style={{ width: `${course.progress}%` }}
                     />
@@ -504,7 +506,7 @@ export default function Discover() {
                 <Card key={trader.id} className="soft-card tap-scale">
                   <CardContent className="p-3.5">
                     <div className="flex items-center justify-between">
-                      <div 
+                      <div
                         className="flex items-center space-x-3 cursor-pointer"
                         onClick={() => navigate(`/profile/${trader.user_id}`)}
                       >
@@ -516,14 +518,14 @@ export default function Discover() {
                         </Avatar>
                         <div>
                           <div className="font-semibold text-sm">{trader.full_name || "Trader"}</div>
-                          <div className="text-xs text-muted-foreground">{trader.posts_count} posts</div>
+                          <div className="text-xs text-muted-foreground"><RollingNumber value={trader.posts_count} /> posts</div>
                         </div>
                       </div>
                       <div className="text-right">
                         {user && user.id !== trader.user_id && (
-                          <Button 
-                            variant={isFollowing(trader.user_id) ? "outline" : "default"} 
-                            size="sm" 
+                          <Button
+                            variant={isFollowing(trader.user_id) ? "outline" : "default"}
+                            size="sm"
                             className="text-xs h-8 rounded-full"
                             onClick={() => handleFollow(trader.user_id)}
                           >

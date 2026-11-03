@@ -1,18 +1,25 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import type { PostPoll } from "./PostAttachments";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Image, BarChart3, DollarSign, TrendingUp, PieChart, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { readPostImage } from "@/lib/postImage";
+import {ImageViewer} from './ImageViewer';
 import { useToast } from "@/hooks/use-toast";
 
 interface PortfolioSnapshot {
   totalValue: number;
   totalGain: number;
   gainPercent: number;
-  holdings: { symbol: string; name: string; shares: number; avgCost: number; currentPrice: number; gain: number }[];
+  /** Today's move only (price vs previous close) — distinct from totalGain,
+   *  which is all-time unrealized P/L since purchase. */
+  todayGain: number;
+  todayPercent: number;
+  holdings: { symbol: string; name: string; shares: number; avgCost: number; currentPrice: number; gain: number; dayChangePct: number }[];
 }
 
 interface XComposeModalProps {
@@ -20,31 +27,76 @@ interface XComposeModalProps {
   onOpenChange: (open: boolean) => void;
   user: { id: string; email?: string } | null;
   profile: { avatar_url?: string | null; full_name?: string | null } | null;
-  onPost: (content: string, imageUrl?: string, quotedPostId?: string) => Promise<{ error?: any }>;
+  onPost: (content: string, imageUrl?: string[], quotedPostId?: string, poll?: PostPoll) => Promise<{ error?: any }>;
   portfolioSnapshot?: PortfolioSnapshot | null;
   prefillContent?: string;
   quotedPost?: { id: string; content: string; author?: { full_name: string | null; avatar_url: string | null } | null; created_at: string } | null;
+  /** Free: 500 chars, a quick take. Premium: 5000 chars, room for a proper
+   *  article-length post (Moomoo-style long-form). Enforced server-side too
+   *  — see enforce_post_length_by_plan() — this just keeps the compose UX honest. */
+  isPremium?: boolean;
+  /** Carries the toggle choices made in SharePortfolioDialog when compose is
+   *  opened via its "Post to TradersHub" action (deep-linked through
+   *  /tradershub?compose=true&attachPortfolio=true&...) so what gets posted
+   *  matches what was previewed there, not this modal's own defaults. */
+  sharePreset?: { hideAmounts: boolean; hideGains: boolean; topHoldingsOnly: boolean; showDayChange: boolean };
 }
 
-export function XComposeModal({ open, onOpenChange, user, profile, onPost, portfolioSnapshot, prefillContent, quotedPost }: XComposeModalProps) {
+const FREE_MAX_CHARS = 500;
+const PREMIUM_MAX_CHARS = 5000;
+
+export function XComposeModal({ open, onOpenChange, user, profile, onPost, portfolioSnapshot, prefillContent, quotedPost, isPremium = false, sharePreset }: XComposeModalProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState("");
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [readingImages,setReadingImages]=useState(false),[previewImage,setPreviewImage]=useState<number|null>(null);
+  useEffect(()=>{if(!open)setPreviewImage(null);},[open]);
+  const [pollOpen, setPollOpen] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollHours, setPollHours] = useState(24);
+  const [viewport, setViewport] = useState({ top: window.innerHeight / 2, height: window.innerHeight - 32 });
+  useEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const view = window.visualViewport;
+      setViewport({ top: (view?.offsetTop ?? 0) + (view?.height ?? window.innerHeight) / 2, height: Math.max(180, (view?.height ?? window.innerHeight) - 24) });
+    };
+    update();
+    window.visualViewport?.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('scroll', update);
+    return () => { window.visualViewport?.removeEventListener('resize', update); window.visualViewport?.removeEventListener('scroll', update); };
+  }, [open]);
+  const pollValid = !pollOpen || (pollQuestion.trim().length > 0 && pollOptions.every(o => o.trim()) && new Set(pollOptions.map(o => o.trim().toLowerCase())).size === pollOptions.length);
   const [attachedPL, setAttachedPL] = useState(false);
   const [attachedPortfolio, setAttachedPortfolio] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+
+  // The masked/filtered view of portfolioSnapshot actually used for the
+  // "Portfolio Snapshot" attach — respects sharePreset when compose was
+  // opened from Share Portfolio, otherwise shows everything (this modal's
+  // own default when attaching from the composer directly).
+  const displaySnapshot = (() => {
+    if (!portfolioSnapshot) return null;
+    const holdings = sharePreset?.topHoldingsOnly ? portfolioSnapshot.holdings.slice(0, 5) : portfolioSnapshot.holdings;
+    return { ...portfolioSnapshot, holdings, hideAmounts: !!sharePreset?.hideAmounts, hideGains: !!sharePreset?.hideGains, useDayChange: sharePreset?.showDayChange ?? true };
+  })();
 
   useEffect(() => {
     if (open) {
       if (prefillContent && !content) {
         setContent(prefillContent);
       }
+      if (sharePreset) {
+        setAttachedPortfolio(true);
+      }
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [open, prefillContent]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, prefillContent, sharePreset]);
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
@@ -56,54 +108,70 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const { dataUrl, error } = await readPostImage(file);
-    if (error) {
-      toast({ title: "Image too large", description: error, variant: "destructive" });
-      e.target.value = "";
-      return;
+    if(readingImages)return;
+    const files = [...(e.target.files ?? [])];
+    e.target.value = "";
+    if (selectedImages.length + files.length > 5) {
+      toast({ title: "Choose up to five images", variant: "destructive" }); return;
     }
-    setSelectedImage(dataUrl!);
+    setReadingImages(true);
+    try{const added:string[]=[];for(const file of files){const result=await readPostImage(file);if(result.error)throw Error(result.error);added.push(result.dataUrl!);}setSelectedImages(previous=>[...previous,...added].slice(0,5));}
+    catch(error){toast({title:'Could not add image',description:error instanceof Error?error.message:'Please choose another photo.',variant:'destructive'});}
+    finally{setReadingImages(false);}
   };
 
   const handlePost = async () => {
-    if (!content.trim() && !selectedImage && !attachedPL && !attachedPortfolio) return;
+    if (isPosting || readingImages || !pollValid || (!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen)) return;
     if (!user) { navigate("/auth"); return; }
 
     setIsPosting(true);
     let finalContent = content;
 
     if (attachedPL && portfolioSnapshot) {
-      const plText = `\n\n📊 Today's P/L: ${portfolioSnapshot.totalGain >= 0 ? "+" : ""}KES ${portfolioSnapshot.totalGain.toLocaleString()} (${portfolioSnapshot.totalGain >= 0 ? "+" : ""}${portfolioSnapshot.gainPercent.toFixed(1)}%)\nTop holdings: ${portfolioSnapshot.holdings.slice(0, 3).map(h => `$${h.symbol}`).join(", ")}`;
+      const plText = `\n\n📊 Today's P/L: ${portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES ${portfolioSnapshot.todayGain.toLocaleString()} (${portfolioSnapshot.todayGain >= 0 ? "+" : ""}${portfolioSnapshot.todayPercent.toFixed(2)}%)\nTop holdings: ${portfolioSnapshot.holdings.slice(0, 3).map(h => `$${h.symbol}`).join(", ")}`;
       finalContent += plText;
     }
 
-    if (attachedPortfolio && portfolioSnapshot) {
-      const pText = `\n\n💼 Portfolio Snapshot\nTotal Value: KES ${portfolioSnapshot.totalValue.toLocaleString()}\nP/L: ${portfolioSnapshot.totalGain >= 0 ? "+" : ""}KES ${portfolioSnapshot.totalGain.toLocaleString()} (${portfolioSnapshot.gainPercent.toFixed(1)}%)\n${portfolioSnapshot.holdings.slice(0, 5).map(h => `$${h.symbol}: ${h.shares} shares (${h.gain >= 0 ? "+" : ""}${h.gain.toFixed(1)}%)`).join("\n")}`;
+    if (attachedPortfolio && displaySnapshot) {
+      const gainLine = displaySnapshot.hideGains
+        ? ""
+        : displaySnapshot.useDayChange
+          ? `\nToday: ${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.todayGain.toLocaleString()} `}(${displaySnapshot.todayGain >= 0 ? "+" : ""}${displaySnapshot.todayPercent.toFixed(2)}%)`
+          : `\nAll-time: ${displaySnapshot.totalGain >= 0 ? "+" : ""}${displaySnapshot.hideAmounts ? "" : `KES ${displaySnapshot.totalGain.toLocaleString()} `}(${displaySnapshot.gainPercent.toFixed(2)}%)`;
+      const holdingsLines = displaySnapshot.holdings
+        .map(h => displaySnapshot.hideGains
+          ? `$${h.symbol}${displaySnapshot.hideAmounts ? "" : `: ${h.shares} shares`}`
+          : `$${h.symbol}${displaySnapshot.hideAmounts ? "" : `: ${h.shares} shares`} (${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}${(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)}%)`)
+        .join("\n");
+      const pText = `\n\n💼 Portfolio Snapshot\nTotal Value: ${displaySnapshot.hideAmounts ? "••••••" : `KES ${displaySnapshot.totalValue.toLocaleString()}`}${gainLine}\n${holdingsLines}`;
       finalContent += pText;
     }
 
-    const { error } = await onPost(finalContent, selectedImage || undefined, quotedPost?.id);
+    try {
+    const { error } = await onPost(finalContent, selectedImages, quotedPost?.id, pollOpen ? { question: pollQuestion.trim(), options: pollOptions.map(o => o.trim()), durationHours: pollHours } : undefined);
     if (!error) {
       setContent("");
-      setSelectedImage(null);
+      setSelectedImages([]);
+      setPollOpen(false); setPollQuestion(""); setPollOptions(["",""]);
       setAttachedPL(false);
       setAttachedPortfolio(false);
       onOpenChange(false);
     }
-    setIsPosting(false);
+    } catch { toast({ title: "Could not publish. Your draft is kept.", variant: "destructive" }); }
+    finally { setIsPosting(false); }
   };
 
   const charCount = content.length;
-  const maxChars = 500;
+  const maxChars = isPremium ? PREMIUM_MAX_CHARS : FREE_MAX_CHARS;
   const charPercent = (charCount / maxChars) * 100;
+  const atFreeLimit = !isPremium && charCount >= FREE_MAX_CHARS;
 
   if (!user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 gap-0 rounded-2xl overflow-hidden border-border">
+    <><Dialog open={open} onOpenChange={next=>{if(!readingImages&&!isPosting)onOpenChange(next);}}>
+      <DialogContent centered style={{ '--composer-top': `${viewport.top}px`, '--composer-height': `${viewport.height}px` } as React.CSSProperties} className="max-w-lg p-0 gap-0 rounded-2xl border-border">
+        <DialogTitle className="sr-only">Compose post</DialogTitle>
         {/* Header — Radix DialogContent renders its own close X, so we don't add one here */}
         <div className="h-3" />
 
@@ -119,23 +187,44 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             <div className="relative">
               <textarea
                 ref={textareaRef}
-                placeholder="What's happening in the markets?"
+                placeholder={isPremium ? "What's happening in the markets? (Premium: write a full article)" : "What's happening in the markets?"}
                 value={content}
                 onChange={handleContentChange}
-                className="w-full bg-transparent border-0 outline-none resize-none text-[17px] leading-[1.4] placeholder:text-muted-foreground/50 min-h-[120px]"
-                maxLength={maxChars + 50}
+                className={`w-full bg-transparent border-0 outline-none resize-none text-[1.0625rem] leading-[1.4] placeholder:text-muted-foreground/50 ${isPremium ? "min-h-[220px]" : "min-h-[120px]"}`}
+                maxLength={maxChars}
               />
             </div>
 
-            {/* Preview image */}
-            {selectedImage && (
-              <div className="relative mt-2 rounded-2xl overflow-hidden border border-border">
-                <img src={selectedImage} alt="Selected" className="w-full max-h-60 object-cover" />
-                <Button variant="secondary" size="icon" className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 hover:bg-background" onClick={() => setSelectedImage(null)} data-small-target>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+            {!isPremium && atFreeLimit && (
+              <button
+                type="button"
+                data-small-target
+                onClick={() => { onOpenChange(false); navigate("/upgrade"); }}
+                className="mt-2 w-full flex items-center justify-between gap-2 p-2.5 rounded-xl border border-primary/25 bg-primary/5 text-left"
+              >
+                <span className="text-[0.6875rem] font-medium">Free posts stop at <RollingNumber value={FREE_MAX_CHARS} /> characters. Go Premium for <RollingNumber value={PREMIUM_MAX_CHARS.toLocaleString()} />-character, article-length posts.</span>
+                <span className="text-[0.6875rem] font-bold text-primary shrink-0 whitespace-nowrap">Upgrade →</span>
+              </button>
             )}
+
+            {readingImages&&<p role="status" className="mt-2 text-xs text-muted-foreground">Preparing images…</p>}
+            {/* Preview image */}
+            {!!selectedImages.length && <div className="grid grid-cols-2 gap-2 mt-2">
+              {selectedImages.map((image,index) => <div key={index} className="relative">
+                <button type="button" aria-label={`Preview selected image ${index+1}`} className="w-full" onClick={()=>setPreviewImage(index)}><img src={image} alt={`Selected image ${index + 1}`} className="w-full h-28 object-cover rounded-lg" /></button>
+                <button aria-label={`Remove image ${index + 1}`} className="absolute top-1 right-1 bg-background rounded-full p-2" onClick={() => setSelectedImages(images => images.filter((_,i) => i !== index))}><X className="h-4 w-4" /></button>
+                {selectedImages.length>1&&<div className="absolute bottom-1 left-1 flex gap-1"><button type="button" aria-label={`Move image ${index+1} left`} disabled={index===0} onClick={()=>setSelectedImages(previous=>{const next=[...previous];[next[index-1],next[index]]=[next[index],next[index-1]];return next;})} className="rounded-full bg-background/90 px-2 text-xs disabled:opacity-40">←</button><button type="button" aria-label={`Move image ${index+1} right`} disabled={index===selectedImages.length-1} onClick={()=>setSelectedImages(previous=>{const next=[...previous];[next[index+1],next[index]]=[next[index],next[index+1]];return next;})} className="rounded-full bg-background/90 px-2 text-xs disabled:opacity-40">→</button></div>}
+              </div>)}
+            </div>}
+            {pollOpen && <div className="space-y-2 mt-3" aria-label="Create poll">
+              <input aria-label="Poll question" placeholder="Ask a question" maxLength={180} value={pollQuestion} onChange={e=>setPollQuestion(e.target.value)} className="w-full border rounded-md bg-transparent p-2 text-sm" />
+              {pollOptions.map((option,index) => <input key={index} aria-label={`Poll option ${index+1}`} placeholder={`Option ${index+1}`} maxLength={80} value={option} onChange={e=>setPollOptions(options=>options.map((o,i)=>i===index?e.target.value:o))} className="w-full border rounded-md bg-transparent p-2 text-sm" />)}
+              <div className="flex justify-between items-center text-xs">
+                {pollOptions.length < 4 && <button onClick={()=>setPollOptions(options=>[...options,""])}>Add option</button>}
+                <select aria-label="Poll duration" value={pollHours} onChange={e=>setPollHours(Number(e.target.value))} className="bg-background border rounded p-2">{[1,24,72,168].map(h=><option key={h} value={h}>{h === 1 ? '1 hour' : `${h/24} days`}</option>)}</select>
+                <button onClick={()=>setPollOpen(false)}>Remove poll</button>
+              </div>
+            </div>}
 
             {/* P/L Card preview */}
             {attachedPL && portfolioSnapshot && (
@@ -147,17 +236,17 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <TrendingUp className="h-4 w-4 text-primary" />
                   <span className="text-xs font-semibold">Today's P/L</span>
                 </div>
-                <div className={`text-xl font-bold ${portfolioSnapshot.totalGain >= 0 ? "text-bull" : "text-bear"}`}>
-                  {portfolioSnapshot.totalGain >= 0 ? "+" : ""}KES {portfolioSnapshot.totalGain.toLocaleString()}
+                <div className={`text-xl font-bold ${portfolioSnapshot.todayGain >= 0 ? "text-bull" : "text-bear"}`}>
+                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}KES <RollingNumber value={portfolioSnapshot.todayGain.toLocaleString()} />
                 </div>
-                <div className={`text-sm ${portfolioSnapshot.totalGain >= 0 ? "text-bull" : "text-bear"}`}>
-                  {portfolioSnapshot.totalGain >= 0 ? "+" : ""}{portfolioSnapshot.gainPercent.toFixed(1)}%
+                <div className={`text-sm ${portfolioSnapshot.todayGain >= 0 ? "text-bull" : "text-bear"}`}>
+                  {portfolioSnapshot.todayGain >= 0 ? "+" : ""}<RollingNumber value={portfolioSnapshot.todayPercent.toFixed(2)} />%
                 </div>
               </div>
             )}
 
             {/* Portfolio snapshot preview */}
-            {attachedPortfolio && portfolioSnapshot && (
+            {attachedPortfolio && displaySnapshot && (
               <div className="mt-3 p-3 rounded-xl border border-border bg-muted/30 relative">
                 <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 rounded-full" onClick={() => setAttachedPortfolio(false)} data-small-target>
                   <X className="h-3 w-3" />
@@ -166,14 +255,22 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <PieChart className="h-4 w-4 text-primary" />
                   <span className="text-xs font-semibold">Portfolio Snapshot</span>
                 </div>
-                <div className="text-lg font-bold">KES {portfolioSnapshot.totalValue.toLocaleString()}</div>
+                <div className="text-lg font-bold"><RollingNumber value={displaySnapshot.hideAmounts ? "KES ••••••" : `KES ${displaySnapshot.totalValue.toLocaleString()}`} /></div>
+                {!displaySnapshot.hideGains && (
+                  <div className={`text-xs font-semibold mt-0.5 ${(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "text-bull" : "text-bear"}`}>
+                    {displaySnapshot.useDayChange ? "Today" : "All-time"} {(displaySnapshot.useDayChange ? displaySnapshot.todayGain : displaySnapshot.totalGain) >= 0 ? "+" : ""}
+                    <RollingNumber value={(displaySnapshot.useDayChange ? displaySnapshot.todayPercent : displaySnapshot.gainPercent).toFixed(2)} />%
+                  </div>
+                )}
                 <div className="mt-2 space-y-1">
-                  {portfolioSnapshot.holdings.slice(0, 3).map(h => (
+                  {displaySnapshot.holdings.slice(0, 3).map(h => (
                     <div key={h.symbol} className="flex items-center justify-between text-xs">
                       <span className="font-medium">${h.symbol}</span>
-                      <span className={h.gain >= 0 ? "text-bull" : "text-bear"}>
-                        {h.gain >= 0 ? "+" : ""}{h.gain.toFixed(1)}%
-                      </span>
+                      {!displaySnapshot.hideGains && (
+                        <span className={(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "text-bull" : "text-bear"}>
+                          {(displaySnapshot.useDayChange ? h.dayChangePct : h.gain) >= 0 ? "+" : ""}<RollingNumber value={(displaySnapshot.useDayChange ? h.dayChangePct : h.gain).toFixed(2)} />%
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -183,11 +280,11 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             {/* Quoted post preview */}
             {quotedPost && (
               <div className="mt-3 p-3 rounded-2xl border border-border bg-muted/20">
-                <div className="flex items-center gap-1.5 text-[12px]">
-                  <Avatar className="h-5 w-5"><AvatarImage src={quotedPost.author?.avatar_url || ""} /><AvatarFallback className="text-[9px]">{getInitials(quotedPost.author?.full_name)}</AvatarFallback></Avatar>
+                <div className="flex items-center gap-1.5 text-[0.75rem]">
+                  <Avatar className="h-5 w-5"><AvatarImage src={quotedPost.author?.avatar_url || ""} /><AvatarFallback className="text-[0.5625rem]">{getInitials(quotedPost.author?.full_name)}</AvatarFallback></Avatar>
                   <span className="font-bold truncate">{quotedPost.author?.full_name || "User"}</span>
                 </div>
-                <p className="text-[13px] mt-1 line-clamp-4 whitespace-pre-wrap">{quotedPost.content}</p>
+                <p className="text-[0.8125rem] mt-1 line-clamp-4 whitespace-pre-wrap">{quotedPost.content}</p>
               </div>
             )}
           </div>
@@ -204,16 +301,14 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
         {/* Toolbar */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-border ml-[52px]">
           <div className="flex items-center gap-0.5">
-            <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} data-small-target>
+            <input type="file" multiple ref={fileInputRef} onChange={handleImageSelect} accept="image/*" disabled={readingImages||isPosting} className="hidden" />
+            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" onClick={() => fileInputRef.current?.click()} aria-label="Add images" disabled={readingImages||isPosting||selectedImages.length >= 5} data-small-target>
               <Image className="h-5 w-5" />
             </button>
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" data-small-target>
+            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" aria-label="Add poll" onClick={() => setPollOpen(v => !v)} data-small-target>
               <BarChart3 className="h-5 w-5" />
             </button>
-            <button className="p-2 rounded-full text-primary hover:bg-primary/10 transition-colors" data-small-target>
-              <DollarSign className="h-5 w-5" />
-            </button>
+
             {portfolioSnapshot && (
               <>
                 <button
@@ -244,13 +339,13 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
                   <circle cx="10" cy="10" r="9" fill="none" strokeWidth="2" stroke="hsl(var(--border))" />
                   <circle
                     cx="10" cy="10" r="9" fill="none" strokeWidth="2"
-                    stroke={charPercent > 100 ? "hsl(var(--destructive))" : charPercent > 90 ? "hsl(var(--accent))" : "hsl(var(--primary))"}
+                    stroke={charPercent > 100 ? "hsl(var(--destructive))" : charPercent > 90 ? "hsl(var(--chart-2))" : "hsl(var(--primary))"}
                     strokeDasharray={`${Math.min(charPercent, 100) * 0.565} 100`}
                   />
                 </svg>
                 {charCount > maxChars * 0.9 && (
-                  <span className={`absolute inset-0 flex items-center justify-center text-[9px] font-bold ${charCount > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
-                    {maxChars - charCount}
+                  <span className={`absolute inset-0 flex items-center justify-center text-[0.5625rem] font-bold ${charCount > maxChars ? "text-destructive" : "text-muted-foreground"}`}>
+                    <RollingNumber value={maxChars - charCount} />
                   </span>
                 )}
               </div>
@@ -258,7 +353,7 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
             <Button
               size="sm"
               className="rounded-full px-5 h-9 font-bold bg-primary text-primary-foreground hover:bg-primary/90"
-              disabled={(!content.trim() && !selectedImage && !attachedPL && !attachedPortfolio) || isPosting || charCount > maxChars}
+              disabled={(!content.trim() && !selectedImages.length && !attachedPL && !attachedPortfolio && !pollOpen) || !pollValid || isPosting || readingImages || charCount > maxChars}
               onClick={handlePost}
             >
               {isPosting ? <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : "Post"}
@@ -266,6 +361,6 @@ export function XComposeModal({ open, onOpenChange, user, profile, onPost, portf
           </div>
         </div>
       </DialogContent>
-    </Dialog>
+    </Dialog>{previewImage!==null&&selectedImages.length>0&&<ImageViewer open onOpenChange={next=>{if(!next)setPreviewImage(null);}} images={selectedImages} initialIndex={previewImage}/>}</>
   );
 }

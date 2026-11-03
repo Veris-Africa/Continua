@@ -586,11 +586,18 @@ export type Database = {
           followers_count: number | null
           following_count: number | null
           full_name: string | null
+          gender: string | null
           handle: string | null
           id: string
+          interests: string[]
+          portfolio_followers_only: boolean | null
+          portfolio_hide_amounts: boolean | null
+          portfolio_hide_gains: boolean | null
           portfolio_public: boolean | null
+          portfolio_top_holdings_only: boolean | null
           subscription_plan: string | null
           tradershub_onboarded: boolean
+          trading_experience: string | null
           updated_at: string
           user_id: string
         }
@@ -603,11 +610,18 @@ export type Database = {
           followers_count?: number | null
           following_count?: number | null
           full_name?: string | null
+          gender?: string | null
           handle?: string | null
           id?: string
+          interests?: string[]
+          portfolio_followers_only?: boolean | null
+          portfolio_hide_amounts?: boolean | null
+          portfolio_hide_gains?: boolean | null
           portfolio_public?: boolean | null
+          portfolio_top_holdings_only?: boolean | null
           subscription_plan?: string | null
           tradershub_onboarded?: boolean
+          trading_experience?: string | null
           updated_at?: string
           user_id: string
         }
@@ -620,12 +634,43 @@ export type Database = {
           followers_count?: number | null
           following_count?: number | null
           full_name?: string | null
+          gender?: string | null
           handle?: string | null
           id?: string
+          interests?: string[]
+          portfolio_followers_only?: boolean | null
+          portfolio_hide_amounts?: boolean | null
+          portfolio_hide_gains?: boolean | null
           portfolio_public?: boolean | null
+          portfolio_top_holdings_only?: boolean | null
           subscription_plan?: string | null
           tradershub_onboarded?: boolean
+          trading_experience?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      research_usage: {
+        Row: {
+          first_viewed_at: string
+          id: string
+          month_key: string
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          first_viewed_at?: string
+          id?: string
+          month_key: string
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          first_viewed_at?: string
+          id?: string
+          month_key?: string
+          symbol?: string
           user_id?: string
         }
         Relationships: []
@@ -802,9 +847,40 @@ export type Database = {
         }
         Relationships: []
       }
+      watchlist_folders: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       watchlists: {
         Row: {
           created_at: string
+          folder_id: string
           id: string
           name: string
           symbol: string
@@ -812,6 +888,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          folder_id: string
           id?: string
           name: string
           symbol: string
@@ -819,12 +896,21 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          folder_id?: string
           id?: string
           name?: string
           symbol?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "watchlists_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "watchlist_folders"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
@@ -839,8 +925,14 @@ export type Database = {
           full_name: string | null
           handle: string | null
           id: string | null
+          portfolio_followers_only: boolean | null
+          portfolio_hide_amounts: boolean | null
+          portfolio_hide_gains: boolean | null
           portfolio_public: boolean | null
+          portfolio_top_holdings_only: boolean | null
           subscription_plan: string | null
+          tradershub_onboarded: boolean | null
+          trading_experience: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -854,8 +946,14 @@ export type Database = {
           full_name?: string | null
           handle?: string | null
           id?: string | null
+          portfolio_followers_only?: boolean | null
+          portfolio_hide_amounts?: boolean | null
+          portfolio_hide_gains?: boolean | null
           portfolio_public?: boolean | null
+          portfolio_top_holdings_only?: boolean | null
           subscription_plan?: string | null
+          tradershub_onboarded?: boolean | null
+          trading_experience?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -869,8 +967,14 @@ export type Database = {
           full_name?: string | null
           handle?: string | null
           id?: string | null
+          portfolio_followers_only?: boolean | null
+          portfolio_hide_amounts?: boolean | null
+          portfolio_hide_gains?: boolean | null
           portfolio_public?: boolean | null
+          portfolio_top_holdings_only?: boolean | null
           subscription_plan?: string | null
+          tradershub_onboarded?: boolean | null
+          trading_experience?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -878,6 +982,10 @@ export type Database = {
       }
     }
     Functions: {
+      get_research_quota: {
+        Args: { p_symbol: string }
+        Returns: Json
+      }
       is_room_member: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
@@ -885,6 +993,10 @@ export type Database = {
       is_room_visible: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
+      }
+      record_research_view: {
+        Args: { p_symbol: string }
+        Returns: Json
       }
     }
     Enums: {

@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +32,7 @@ const sectors = [
 ];
 
 const allStocks = [
-  { symbol: "SAFCOM", name: "Safaricom PLC", price: 12.85, change: 2.4, volume: "12.5M", marketCap: "1.2T", pe: 14.2, sector: "Telecommunications" },
+  { symbol: "SCOM", name: "Safaricom PLC", price: 12.85, change: 2.4, volume: "12.5M", marketCap: "1.2T", pe: 14.2, sector: "Telecommunications" },
   { symbol: "EQTY", name: "Equity Group Holdings", price: 62.50, change: 3.8, volume: "8.2M", marketCap: "285B", pe: 8.5, sector: "Banking" },
   { symbol: "SCBK", name: "Standard Chartered Bank", price: 185.00, change: 1.1, volume: "1.5M", marketCap: "125B", pe: 11.2, sector: "Banking" },
   { symbol: "KCB", name: "KCB Group PLC", price: 45.30, change: -0.8, volume: "6.8M", marketCap: "145B", pe: 7.8, sector: "Banking" },
@@ -177,7 +178,7 @@ export function StockScreener() {
 
           <div>
             <label className="text-xs text-muted-foreground mb-2 block">
-              Change Range: {filters.minChange}% to {filters.maxChange}%
+              Change Range: <RollingNumber value={filters.minChange} />% to <RollingNumber value={filters.maxChange} />%
             </label>
             <div className="flex items-center gap-3">
               <Slider
@@ -197,7 +198,7 @@ export function StockScreener() {
               Reset
             </Button>
             <Badge variant="outline" className="text-xs">
-              {filteredStocks.length} stocks
+              <RollingNumber value={filteredStocks.length} /> stocks
             </Badge>
           </div>
         </div>
@@ -214,24 +215,24 @@ export function StockScreener() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm">{stock.symbol}</span>
-                  <Badge variant="outline" className="text-[9px] py-0 px-1 hidden sm:inline-flex">
+                  <Badge variant="outline" className="text-[0.5625rem] py-0 px-1 hidden sm:inline-flex">
                     {stock.sector}
                   </Badge>
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{stock.name}</div>
                 <div className="flex gap-3 mt-1">
-                  <span className="text-[10px] text-muted-foreground">Vol: {stock.volume}</span>
-                  <span className="text-[10px] text-muted-foreground">P/E: {stock.pe}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">Vol: {stock.volume}</span>
+                  <span className="text-[0.625rem] text-muted-foreground">P/E: <RollingNumber value={stock.pe} /></span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2">
                 <SparklineChart isPositive={stock.change >= 0} width={40} height={18} />
                 <div className="text-right min-w-[65px]">
-                  <div className="font-semibold text-sm">KES {stock.price}</div>
+                  <div className="font-semibold text-sm">KES <RollingNumber value={stock.price} /></div>
                   <div className={`text-xs flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
                     {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {stock.change >= 0 ? '+' : ''}{stock.change}%
+                    {stock.change >= 0 ? '+' : ''}<RollingNumber value={stock.change} />%
                   </div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -1,0 +1,45 @@
+name: Automatic full-registry Engine and Cloudflare reconciliation
+on:
+  schedule:
+    - cron: '11 0,6,12,18 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: continua-scheduled-collector
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.event_name == 'workflow_dispatch' || vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: scraper-python/requirements-lock.txt
+      - run: python -m pip install -r scraper-python/requirements-lock.txt
+      - name: Process every pending issuer and verify separate private objects
+        env:
+          DATABASE_URL: ${{ secrets.COLLECTOR_DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.COLLECTOR_R2_ACCOUNT_ID }}
+          R2_BUCKET: continua-financial-documents
+          R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
+          RAW_STORAGE_DRIVER: r2
+          R2_DUAL_WRITE: 'false'
+          # Durable migration checkpoints retry later. One SDK attempt avoids
+          # reserving three unused duplicate uploads within the same run.
+          R2_UPLOAD_ATTEMPTS: '1'
+          PROCESSED_PAYLOAD_MODE: r2
+          PYTHONPATH: engine-python
+          COLLECTOR_RUN_TRANSFER_BYTES: '16777216'
+          COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
+          COLLECTOR_RUN_SECONDS: '600'
+          # These are source/R2 logical-byte limits, not Neon egress limits.
+          # Normal reconciliation never enables the separate raw migration.
+        run: python scraper-python/reconcile_cloud.py --apply

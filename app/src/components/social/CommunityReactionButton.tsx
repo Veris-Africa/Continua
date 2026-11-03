@@ -1,7 +1,9 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
-import { ThumbsUp } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { ReactionIcon } from './ReactionIcon';
 
 /**
  * Continua reaction palette — finance-first, deliberately not a like button.
@@ -9,26 +11,55 @@ import { cn } from "@/lib/utils";
  */
 export type CommunityReaction =
   | "bullish" | "bearish" | "strong_hold" | "insightful" | "watch" | "fire" | "laugh" | "love"
+  | "thumbs_up" | "thumbs_down" | "rocket" | "diamond_hands" | "agree" | "question" | "warning" | "thank_you" | "sad" | "angry"
+  | "celebrate" | "trophy" | "heartbreak" | "shocked" | "thinking" | "cant_look" | "hopeful" | "mind_blown" | "cool" | "shark"
   // legacy
   | "cautious" | "support" | "disagree";
 
-export interface ReactionMeta { id: CommunityReaction; emoji: string; label: string }
+export interface ReactionMeta { id: CommunityReaction; label: string }
 
 export const COMMUNITY_REACTIONS: ReactionMeta[] = [
-  { id: "bullish", emoji: "🐂", label: "Bullish" },
-  { id: "bearish", emoji: "🐻", label: "Bearish" },
-  { id: "strong_hold", emoji: "🤲", label: "Strong Hold" },
-  { id: "insightful", emoji: "💡", label: "Insightful" },
-  { id: "watch", emoji: "👀", label: "Watch" },
-  { id: "fire", emoji: "🔥", label: "Fire" },
-  { id: "laugh", emoji: "😂", label: "Laugh" },
-  { id: "love", emoji: "❤️", label: "Love" },
+  { id: "rocket", label: "To the moon" },
+  { id: "diamond_hands", label: "Diamond hands" },
+  { id: "agree", label: "Agree" },
+  { id: "question", label: "Question" },
+  { id: "warning", label: "Warning" },
+  { id: "thank_you", label: "Thank you" },
+  { id: "sad", label: "Sad" },
+  { id: "angry", label: "Angry" },
+  { id: "bullish", label: "Bullish" },
+  { id: "bearish", label: "Bearish" },
+  { id: "fire", label: "Fire" },
+  { id: "love", label: "Love" },
+  { id: "thumbs_up", label: "Thumbs up" },
+  { id: "thumbs_down", label: "Thumbs down" },
+  { id: "strong_hold", label: "Strong hold" },
+  { id: "insightful", label: "Insightful" },
+  { id: "watch", label: "Watch" },
+  { id: "laugh", label: "Laugh" },
+  // Finance-relatable additions
+  { id: "celebrate", label: "Celebrate" },
+  { id: "trophy", label: "Big win" },
+  { id: "heartbreak", label: "Heartbreak" },
+  { id: "shocked", label: "Shocked" },
+  { id: "thinking", label: "Thinking" },
+  { id: "cant_look", label: "Can't look" },
+  { id: "hopeful", label: "Hopeful" },
+  { id: "mind_blown", label: "Mind blown" },
+  { id: "cool", label: "Nailed it" },
+  { id: "shark", label: "Shark" },
 ];
 
+// The compact, always-visible row on a post — the six reactions people
+// reach for most on a finance feed. The rest live behind the "+" expander.
+const QUICK_REACTION_IDS: CommunityReaction[] = ["bullish", "bearish", "fire", "love", "thumbs_up", "thumbs_down"];
+const QUICK_REACTIONS = COMMUNITY_REACTIONS.filter(r => QUICK_REACTION_IDS.includes(r.id));
+const PICKER_REACTIONS=COMMUNITY_REACTIONS.filter(r=>r.id!=='shark'&&r.id!=='diamond_hands');
+
 const LEGACY: ReactionMeta[] = [
-  { id: "cautious", emoji: "🛡️", label: "Cautious" },
-  { id: "support", emoji: "🤝", label: "Support" },
-  { id: "disagree", emoji: "👎", label: "Disagree" },
+  { id: "cautious", label: "Cautious" },
+  { id: "support", label: "Support" },
+  { id: "disagree", label: "Disagree" },
 ];
 
 export const ALL_REACTIONS = [...COMMUNITY_REACTIONS, ...LEGACY];
@@ -58,6 +89,7 @@ interface TrayProps {
 /** Reaction control: shows top reactions + total, opens the tray on tap. */
 export function CommunityReactionButton({ counts, selected, onSelect, compact, hideTotal }: TrayProps) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const ranked = sortedReactions(counts);
   const total = ranked.reduce((sum, r) => sum + r.count, 0);
   // Only the single most-used reaction is shown in the collapsed view — whichever
@@ -66,7 +98,7 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
   const active = reactionMeta(selected);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setExpanded(false); }}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -80,39 +112,65 @@ export function CommunityReactionButton({ counts, selected, onSelect, compact, h
           data-small-target
         >
           {winner ? (
-            <span className="text-[15px] leading-none">{winner.meta.emoji}</span>
+            <ReactionIcon id={winner.meta.id} size={22}/>
           ) : active ? (
-            <span className="text-[15px] leading-none">{active.emoji}</span>
+            <ReactionIcon id={active.id} size={22}/>
           ) : (
-            <ThumbsUp className="h-[15px] w-[15px]" strokeWidth={2} />
+            <ReactionIcon id="watch" size={22}/>
           )}
-          {!hideTotal && <span className="text-[11px] font-medium tabular-nums">{total > 0 ? total : "React"}</span>}
+          {!hideTotal && <span className="text-[0.6875rem] font-medium tabular-nums">{total > 0 ? total : ""}</span>}
         </button>
       </PopoverTrigger>
       <PopoverContent
         side="top"
         align="start"
-        className="w-[264px] p-2.5 rounded-2xl"
+        className={cn("p-2 rounded-2xl transition-all", expanded ? "w-[260px]" : "w-auto")}
         onClick={e => e.stopPropagation()}
       >
-        <div className="grid grid-cols-4 gap-1">
-          {COMMUNITY_REACTIONS.map(item => (
+        {!expanded ? (
+          <div className="flex items-center gap-0.5">
+            {QUICK_REACTIONS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                onClick={() => { onSelect(item.id); setOpen(false); }}
+                className={cn(
+                  "flex items-center justify-center h-9 w-9 rounded-full transition-colors hover:bg-muted/60 active:scale-95",
+                  selected === item.id && "bg-primary/10"
+                )}
+              >
+                <ReactionIcon id={item.id} size={30}/>
+              </button>
+            ))}
             <button
-              key={item.id}
               type="button"
-              title={item.label}
-              aria-label={item.label}
-              onClick={() => { onSelect(item.id); setOpen(false); }}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-xl py-2 transition-colors hover:bg-muted/60 active:scale-95",
-                selected === item.id && "bg-primary/10"
-              )}
+              title="More reactions"
+              aria-label="More reactions"
+              onClick={() => setExpanded(true)}
+              className="flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:scale-95"
             >
-              <span className="text-[22px] leading-none">{item.emoji}</span>
-              <span className="text-[9.5px] text-muted-foreground leading-none">{item.label}</span>
+              <Plus className="h-4 w-4" strokeWidth={2.5} />
             </button>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-5 gap-1">
+            {PICKER_REACTIONS.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                aria-label={item.label}
+                onClick={() => { onSelect(item.id); setOpen(false); }}
+                className={cn(
+                  "flex items-center justify-center h-11 min-w-0 rounded-full transition-colors hover:bg-muted/60 active:scale-95",
+                  selected === item.id && "bg-primary/10"
+                )}
+              >
+                <ReactionIcon id={item.id} size={36}/>
+              </button>
+            ))}
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
@@ -130,15 +188,17 @@ export function ReactionChips({
         <button
           key={r.meta.id}
           type="button"
+          aria-label={`${r.meta.label}: ${r.count}`}
+          aria-pressed={selected===r.meta.id}
           onClick={e => { e.stopPropagation(); onSelect?.(r.meta.id); }}
           className={cn(
-            "flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[11px] font-medium tabular-nums transition-colors hover:bg-muted",
+            "flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-medium tabular-nums transition-colors hover:bg-muted",
             selected === r.meta.id && "bg-primary/15 text-foreground"
           )}
           data-small-target
         >
-          <span className="text-[13px] leading-none">{r.meta.emoji}</span>
-          <span className="text-muted-foreground">{r.count}</span>
+          <ReactionIcon id={r.meta.id} size={20}/>
+          <span className="text-muted-foreground"><RollingNumber value={r.count} /></span>
         </button>
       ))}
     </div>

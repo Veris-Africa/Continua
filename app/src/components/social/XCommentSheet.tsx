@@ -3,13 +3,17 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Verified, Send, ArrowLeft, SlidersHorizontal, ChevronDown, MessageCircle, X, ChevronRight } from "lucide-react";
+import { Verified, Send, ArrowLeft, SlidersHorizontal, ChevronDown, MessageCircle, X, ChevronRight, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Post, Comment, usePosts } from "@/hooks/usePosts";
 import { XPostCard } from "./XPostCard";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { CommunityReactionButton, CommunityReaction } from "./CommunityReactionButton";
 import { ReactionKind } from "@/hooks/usePosts";
@@ -29,6 +33,8 @@ interface XCommentSheetProps {
   onCommentsRefresh?: () => Promise<void>;
   onReact?: (postId: string, reaction: CommunityReaction) => void;
   onReactComment?: (commentId: string, reaction: ReactionKind, current?: ReactionKind | null) => Promise<any>;
+  onEditComment?: (commentId: string, content: string) => Promise<{ error?: any }>;
+  onDeleteComment?: (comment: Comment) => Promise<void>;
 }
 
 const getInitials = (name?: string | null) =>
@@ -43,7 +49,7 @@ const formatTimeAgo = (date: string) => {
 };
 
 function CommentNode({
-  comment, depth, onReply, onQuote, replyingTo, navigateTo, onRefresh, onReactComment,
+  comment, depth, onReply, onQuote, replyingTo, navigateTo, onRefresh, onReactComment, currentUserId, onEditComment, onDeleteComment,
 }: {
   comment: Comment;
   depth: number;
@@ -53,14 +59,24 @@ function CommentNode({
   navigateTo: (url: string) => void;
   onRefresh: () => Promise<void>;
   onReactComment?: (commentId: string, reaction: ReactionKind, current?: ReactionKind | null) => Promise<any>;
+  currentUserId?: string;
+  onEditComment?: (commentId: string, content: string) => Promise<{ error?: any }>;
+  onDeleteComment?: (comment: Comment) => Promise<void>;
 }) {
-  const { } = usePosts();
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [reaction, setReaction] = useState(comment.my_reaction || null);
   const [reactionCounts, setReactionCounts] = useState(comment.reaction_counts || {});
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState(comment.content);
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const hasReplies = !!comment.replies && comment.replies.length > 0;
   const replyCount = comment.replies?.length || 0;
+  const isOwn = !!currentUserId && currentUserId === comment.user_id;
+  const editWindowExpired = Date.now() - new Date(comment.created_at).getTime() > 30 * 60 * 1000;
 
   const handleReaction = async (next: CommunityReaction) => {
     const previous = reaction;
@@ -72,6 +88,27 @@ function CommentNode({
       return updated;
     });
     await onReactComment?.(comment.id, next, previous);
+  };
+
+  const saveEdit = async () => {
+    if (!onEditComment || !editDraft.trim() || editDraft === comment.content) { setIsEditing(false); setEditDraft(comment.content); return; }
+    setSaving(true);
+    const { error } = await onEditComment(comment.id, editDraft.trim());
+    setSaving(false);
+    if (error) {
+      toast({ title: "Couldn't save edit", description: error.message, variant: "destructive" });
+    } else {
+      setIsEditing(false);
+      toast({ title: "Reply updated" });
+    }
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!onDeleteComment) return;
+    setDeleting(true);
+    await onDeleteComment(comment);
+    setDeleting(false);
+    setConfirmDelete(false);
   };
 
   const renderContent = (content: string) =>
@@ -110,16 +147,61 @@ function CommentNode({
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="font-bold text-[13px]">{comment.author?.full_name || "User"}</span>
-            <Verified className="h-3 w-3 text-primary fill-primary" />
-            <span className="text-[11px] text-muted-foreground">· {formatTimeAgo(comment.created_at)}</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 flex-wrap min-w-0">
+              <span className="font-bold text-[0.8125rem] truncate">{comment.author?.full_name || "User"}</span>
+              <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
+              <span className="text-[0.6875rem] text-muted-foreground shrink-0">· {formatTimeAgo(comment.created_at)}{comment.edited_at ? " · edited" : ""}</span>
+            </div>
+            {isOwn && (onEditComment || onDeleteComment) && !isEditing && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" data-small-target className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0" aria-label="Reply options" onClick={e => e.stopPropagation()}>
+                    <MoreHorizontal className="h-3.5 w-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40 rounded-xl" onClick={e => e.stopPropagation()}>
+                  {onEditComment && (
+                    <DropdownMenuItem disabled={editWindowExpired} onClick={() => { setEditDraft(comment.content); setIsEditing(true); }}>
+                      <Pencil className="h-3.5 w-3.5 mr-2" />
+                      {editWindowExpired ? "Edit (expired)" : "Edit"}
+                    </DropdownMenuItem>
+                  )}
+                  {onDeleteComment && (
+                    <DropdownMenuItem className="text-destructive" onClick={() => setConfirmDelete(true)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-          <p className="text-[13px] mt-0.5 leading-relaxed break-words">{renderContent(comment.content)}</p>
+
+          {isEditing ? (
+            <div className="mt-1.5" onClick={e => e.stopPropagation()}>
+              <textarea
+                autoFocus
+                value={editDraft}
+                onChange={e => setEditDraft(e.target.value)}
+                maxLength={500}
+                className="w-full min-h-[64px] text-[0.8125rem] leading-relaxed bg-muted/40 rounded-lg p-2 outline-none resize-none border border-border/60 focus:border-primary/50"
+              />
+              <div className="flex items-center justify-end gap-2 mt-1.5">
+                <Button variant="ghost" size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" onClick={() => { setIsEditing(false); setEditDraft(comment.content); }}>
+                  Cancel
+                </Button>
+                <Button size="sm" className="h-7 rounded-full text-[0.6875rem] px-3" disabled={!editDraft.trim() || saving} onClick={saveEdit}>
+                  {saving ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[0.8125rem] mt-0.5 leading-relaxed break-words">{renderContent(comment.content)}</p>
+          )}
 
           <div className="flex items-center gap-3 mt-1.5 -ml-1.5">
             <CommunityReactionButton compact counts={reactionCounts} selected={reaction} onSelect={handleReaction} />
-            <button onClick={(e) => { e.stopPropagation(); onReply(comment); }} className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary p-1 rounded-full" data-small-target>
+            <button onClick={(e) => { e.stopPropagation(); onReply(comment); }} className="flex items-center gap-1 text-[0.6875rem] text-muted-foreground hover:text-primary p-1 rounded-full" data-small-target>
               <MessageCircle className="h-3.5 w-3.5" />
               <span>Reply</span>
             </button>
@@ -129,7 +211,7 @@ function CommentNode({
           {hasReplies && (
             <button
               onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-              className="relative mt-3 inline-flex items-center gap-1.5 text-[12px] font-bold text-primary hover:underline"
+              className="relative mt-3 inline-flex items-center gap-1.5 text-[0.75rem] font-bold text-primary hover:underline"
               data-small-target
             >
               {!expanded && (
@@ -159,6 +241,9 @@ function CommentNode({
               navigateTo={navigateTo}
               onRefresh={onRefresh}
               onReactComment={onReactComment}
+              currentUserId={currentUserId}
+              onEditComment={onEditComment}
+              onDeleteComment={onDeleteComment}
             />
           ))}
         </div>
@@ -166,6 +251,25 @@ function CommentNode({
 
       {/* Divider only at top-level between root comments */}
       {depth === 0 && <div className="border-b border-border/40" />}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent onClick={e => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this reply?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {replyCount > 0
+                ? `This will also delete ${replyCount === 1 ? "its 1 reply" : `its ${replyCount} replies`}. This can't be undone.`
+                : "This can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDeleteComment}>
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -173,6 +277,7 @@ function CommentNode({
 export function XCommentSheet({
   open, onOpenChange, post, currentUserId, comments, loadingComments,
   onAddComment, onBookmark, onShare, onDelete, onQuote, onCommentsRefresh, onReact, onReactComment,
+  onEditComment, onDeleteComment,
 }: XCommentSheetProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -278,6 +383,9 @@ export function XCommentSheet({
                   navigateTo={navigateTo}
                   onRefresh={async () => { if (onCommentsRefresh) await onCommentsRefresh(); }}
                   onReactComment={onReactComment}
+                  currentUserId={currentUserId}
+                  onEditComment={onEditComment}
+                  onDeleteComment={onDeleteComment}
                 />
               ))}
             </div>
@@ -288,7 +396,7 @@ export function XCommentSheet({
         {currentUserId && (
           <div className="border-t border-border/60 bg-card shrink-0">
             {replyingTo && (
-              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 text-[12px]">
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/40 text-[0.75rem]">
                 <span className="text-muted-foreground">
                   Replying to <span className="text-primary font-semibold">@{replyingTo.author?.full_name || "user"}</span>
                 </span>

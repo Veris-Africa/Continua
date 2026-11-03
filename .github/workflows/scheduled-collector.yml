@@ -1,0 +1,110 @@
+name: Bounded financial collection outside Render
+# Shared Python startup fails fast on unavailable/quota-limited Neon. Decoded
+# SQL result estimates appear in the bounded job logs, separately from R2 bytes.
+on:
+  schedule:
+    - cron: '17 */8 * * *'
+    - cron: '43 6,12,20 * * *'
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [documents, news, drain]
+        default: documents
+      source:
+        description: Optional exact registered source ID
+        type: string
+      issuer:
+        description: Optional exact KenyanStocks ticker for a Financials-only batch
+        type: string
+      history_issuers:
+        description: Up to twelve exact registered tickers for historical-price recollection
+        type: string
+      fresh:
+        description: Re-fetch the selected issuer financials without deleting evidence
+        type: boolean
+        default: false
+      maintenance:
+        description: Explicit additive schema setup or one tiny private storage verification
+        type: choice
+        options: [none, prepare, verify-storage, process-research, prepare-investment, prepare-institutional]
+        default: none
+      apply:
+        description: Run approved collection (otherwise offline plan only)
+        type: boolean
+        default: false
+      verify_one:
+        description: Diagnose one queued document within a 16MiB run reservation
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: continua-scheduled-collector
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.event_name == 'workflow_dispatch' || (github.event.schedule == '17 */8 * * *' && vars.CONTINUA_SCHEDULED_NEWS_ENABLED == 'true') || (github.event.schedule == '43 6,12,20 * * *' && vars.CONTINUA_SCHEDULED_DOCUMENTS_ENABLED == 'true')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: scraper-python/requirements-lock.txt
+      - run: python -m pip install -r scraper-python/requirements-lock.txt
+      - name: Install document and browser tools
+        if: (github.event_name == 'schedule' && github.event.schedule == '43 6,12,20 * * *') || (inputs.apply && inputs.kind != 'news' && inputs.maintenance == 'none')
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends poppler-utils tesseract-ocr
+          chrome=$(command -v google-chrome || command -v chromium)
+          driver=$(command -v chromedriver)
+          test -x "$chrome" && test -x "$driver"
+          echo "CHROMIUM_BIN=$chrome" >> "$GITHUB_ENV"
+          echo "CHROMEDRIVER_BIN=$driver" >> "$GITHUB_ENV"
+      - name: Collect directly to private R2 with database checkpoints
+        env:
+          DATABASE_URL: ${{ secrets.COLLECTOR_DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.COLLECTOR_R2_ACCOUNT_ID }}
+          R2_BUCKET: continua-financial-documents
+          R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
+          RAW_STORAGE_DRIVER: r2
+          PYTHONPATH: engine-python
+          COLLECTOR_PROCESS_RESEARCH: 'true'
+          PROCESSED_PAYLOAD_MODE: r2
+          R2_DUAL_WRITE: 'false'
+          # 3 news x16MiB + 3 document x48MiB = approved 192MiB/day.
+          COLLECTOR_RUN_TRANSFER_BYTES: ${{ (inputs.verify_one || github.event.schedule == '17 */8 * * *' || inputs.kind == 'news') && '16777216' || '50331648' }}
+          COLLECTOR_VERIFY_ONE: ${{ inputs.verify_one && 'true' || 'false' }}
+          COLLECTOR_DAILY_TRANSFER_BYTES: ${{ vars.CONTINUA_COLLECTOR_DAILY_TRANSFER_BYTES || '134217728' }}
+          COLLECTOR_SOURCE_LIMIT: '5'
+          COLLECTOR_PRIMARY_BATCH: ${{ vars.CONTINUA_COLLECTOR_PRIMARY_BATCH || '48' }}
+          COLLECTOR_FALLBACK_BATCH: ${{ vars.CONTINUA_COLLECTOR_FALLBACK_BATCH || '2' }}
+          COLLECTOR_RUN_SECONDS: '600'
+          EVENT_NAME: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_KIND: ${{ inputs.kind }}
+          INPUT_SOURCE: ${{ inputs.source }}
+          INPUT_ISSUER: ${{ inputs.issuer }}
+          INPUT_HISTORY_ISSUERS: ${{ inputs.history_issuers }}
+          INPUT_FRESH: ${{ inputs.fresh }}
+          INPUT_APPLY: ${{ inputs.apply }}
+          INPUT_MAINTENANCE: ${{ inputs.maintenance }}
+        run: |
+          args=(--kind "${INPUT_KIND:-documents}")
+          if [ "$EVENT_NAME" = schedule ]; then
+            args=(--kind documents --apply)
+            if [ "$SCHEDULE" = '17 */8 * * *' ]; then args=(--kind news --apply); fi
+          elif [ "$INPUT_APPLY" = true ]; then args+=(--apply); fi
+          if [ -n "$INPUT_SOURCE" ]; then args+=(--source "$INPUT_SOURCE"); fi
+          if [ -n "$INPUT_ISSUER" ]; then args+=(--issuer "$INPUT_ISSUER"); fi
+          if [ -n "$INPUT_HISTORY_ISSUERS" ]; then args+=(--history-issuers "$INPUT_HISTORY_ISSUERS"); fi
+          if [ "$INPUT_FRESH" = true ]; then args+=(--fresh); fi
+          if [ -n "$INPUT_MAINTENANCE" ] && [ "$INPUT_MAINTENANCE" != none ]; then args+=(--maintenance "$INPUT_MAINTENANCE"); fi
+          python scraper-python/scheduled_collect.py "${args[@]}"

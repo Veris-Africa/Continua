@@ -29,9 +29,9 @@ already called for:
 | File | Purpose |
 |---|---|
 | `client.ts` | Base fetch wrapper — API key header, base URL, typed `ContinuaApiError` |
-| `types.ts` | TS types mirroring the backend's standard schema (`backend/src/types/market.ts`) |
+| `types.ts` | TS types mirroring the backend's standard schema (`backend/src/types/market.js`) |
 | `quotesApi.ts`, `historicalApi.ts`, `companiesApi.ts`, `financialsApi.ts`, `corporateActionsApi.ts`, `moversApi.ts`, `sectorsApi.ts`, `researchApi.ts`, `screenerApi.ts`, `instrumentsApi.ts` | One thin module per backend resource |
-| `websocketClient.ts` | Single shared WebSocket connection with per-symbol ref-counted subscriptions — N components watching SAFCOM share one server subscription, matching `docs/architecture/DATA_FLOW.md`'s "shared real-time data layer" |
+| `websocketClient.ts` | Single shared WebSocket connection with per-symbol ref-counted subscriptions — N components watching SCOM share one server subscription, matching `docs/architecture/DATA_FLOW.md`'s "shared real-time data layer" |
 
 ### Frontend hooks (`app/src/hooks/`, new)
 - `useLiveQuotes` / `useLiveQuote` — the core hook: React Query for the REST
@@ -121,7 +121,7 @@ data:
 
 ## Known gap: symbol universe mismatch
 
-The backend's mock NSE adapter (`backend/src/adapters/nse/nseClient.ts`)
+The backend's mock NSE adapter (`backend/src/adapters/nse/nseClient.js`)
 currently generates data for **17 real NSE tickers**. The frontend's static
 reference list (`app/src/lib/stockPrices.ts`) has **~30**. The extra ~13
 (e.g. `ARM`, `NBK`, `UMEME`, `CIC`, `KENO`, `WTK`, `KAKZ`, `SASN`, `EGAD`,
@@ -219,8 +219,8 @@ precisely so the gap is visible rather than assumed away.
 - Headless-browser (Playwright) runs against the live dev server + live
   backend across every round, confirming the actual network calls fire and
   return `200`: `GET /instruments`, `GET /movers`, `GET /quotes` (batch, all
-  30 canonical symbols), `GET /companies/SAFCOM`, `GET /research/SAFCOM`,
-  `GET /dividends/SAFCOM`, `GET /ownership/SAFCOM`, `GET /historical/SAFCOM`
+  30 canonical symbols), `GET /companies/SCOM`, `GET /research/SCOM`,
+  `GET /dividends/SCOM`, `GET /ownership/SCOM`, `GET /historical/SCOM`
   (on switching the chart's "1Y" pill), and `GET /screener` (Screener page).
 - (Those Playwright runs temporarily bypassed the Supabase auth guard
   in-memory to reach routes without a login flow; the real
@@ -233,7 +233,7 @@ Added to `app/.env`:
 
 ```
 VITE_AFRIFINANCE_API_URL="http://localhost:4000/api/v1"
-VITE_AFRIFINANCE_WS_URL="ws://localhost:4001"
+VITE_AFRIFINANCE_WS_URL="ws://localhost:4000"
 VITE_AFRIFINANCE_API_KEY="dev-local-only-key"   # matches backend's DEV_API_KEY
 ```
 

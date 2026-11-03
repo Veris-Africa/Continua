@@ -1,9 +1,11 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { ArrowLeft, BookOpen, Play, Coffee, Award, Clock, GraduationCap, Trophy, Target, CheckCircle2, Lock, Star, Video, FileText, Headphones, ChevronRight, Flame, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TopBar } from "@/components/shared/TopBar";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
@@ -205,7 +207,7 @@ export default function Learn() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={() => navigateBack(navigate, "/")}
           className="mb-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -218,15 +220,15 @@ export default function Learn() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Flame className="h-5 w-5 text-orange-500" />
-                <span className="font-semibold text-sm">{dailyChallenge.streak} Day Streak!</span>
+                <span className="font-semibold text-sm"><RollingNumber value={dailyChallenge.streak} /> Day Streak!</span>
               </div>
               <Badge variant="secondary" className="text-xs">
-                +{dailyChallenge.xp} XP
+                +<RollingNumber value={dailyChallenge.xp} /> XP
               </Badge>
             </div>
             <p className="text-sm mb-2">{dailyChallenge.title}</p>
             <Progress value={(dailyChallenge.progress / dailyChallenge.total) * 100} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">{dailyChallenge.progress}/{dailyChallenge.total} completed</p>
+            <p className="text-xs text-muted-foreground mt-1"><RollingNumber value={dailyChallenge.progress} />/<RollingNumber value={dailyChallenge.total} /> completed</p>
           </CardContent>
         </Card>
 
@@ -236,28 +238,28 @@ export default function Learn() {
             <CardContent className="p-3 text-center">
               <GraduationCap className="h-5 w-5 mx-auto mb-1 text-primary" />
               <div className="text-lg font-bold">6</div>
-              <div className="text-[10px] text-muted-foreground">Courses</div>
+              <div className="text-[0.625rem] text-muted-foreground">Courses</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Clock className="h-5 w-5 mx-auto mb-1 text-accent" />
               <div className="text-lg font-bold">12h</div>
-              <div className="text-[10px] text-muted-foreground">Learned</div>
+              <div className="text-[0.625rem] text-muted-foreground">Learned</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Trophy className="h-5 w-5 mx-auto mb-1 text-yellow-500" />
               <div className="text-lg font-bold">2</div>
-              <div className="text-[10px] text-muted-foreground">Certificates</div>
+              <div className="text-[0.625rem] text-muted-foreground">Certificates</div>
             </CardContent>
           </Card>
           <Card className="card-gradient">
             <CardContent className="p-3 text-center">
               <Star className="h-5 w-5 mx-auto mb-1 text-orange-500" />
               <div className="text-lg font-bold">850</div>
-              <div className="text-[10px] text-muted-foreground">XP Points</div>
+              <div className="text-[0.625rem] text-muted-foreground">XP Points</div>
             </CardContent>
           </Card>
         </div>
@@ -278,11 +280,11 @@ export default function Learn() {
                     <h4 className="font-semibold text-sm">{path.title}</h4>
                     <p className="text-xs opacity-80 mb-2">{path.description}</p>
                     <div className="flex items-center justify-between text-xs opacity-80 mb-2">
-                      <span>{path.courses} courses</span>
+                      <span><RollingNumber value={path.courses} /> courses</span>
                       <span>{path.duration}</span>
                     </div>
                     <Progress value={path.progress} className="h-1.5 bg-white/30" />
-                    <p className="text-xs mt-1">{path.progress}% complete</p>
+                    <p className="text-xs mt-1"><RollingNumber value={path.progress} />% complete</p>
                   </CardContent>
                 </Card>
               );
@@ -307,7 +309,7 @@ export default function Learn() {
                       <Award className={`h-6 w-6 ${cert.badge === 'gold' ? 'text-yellow-500' : 'text-gray-400'}`} />
                     </div>
                     <p className="text-xs font-medium">{cert.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{cert.date}</p>
+                    <p className="text-[0.625rem] text-muted-foreground">{cert.date}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -361,7 +363,7 @@ export default function Learn() {
                           </div>
                           <div className="flex items-center gap-1 text-xs text-yellow-500">
                             <Star className="h-3 w-3 fill-current" />
-                            <span>{course.rating}</span>
+                            <span><RollingNumber value={course.rating} /></span>
                           </div>
                         </div>
                       </div>
@@ -369,8 +371,8 @@ export default function Learn() {
                     </div>
                     
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-muted-foreground">{course.lessons} lessons • {course.students.toLocaleString()} students</span>
-                      <span className="text-xs text-primary font-medium">{course.progress}%</span>
+                      <span className="text-xs text-muted-foreground"><RollingNumber value={course.lessons} /> lessons • <RollingNumber value={course.students.toLocaleString()} /> students</span>
+                      <span className="text-xs text-primary font-medium"><RollingNumber value={course.progress} />%</span>
                     </div>
                     <Progress value={course.progress} className="h-1.5 mt-2" />
                   </div>
@@ -386,7 +388,7 @@ export default function Learn() {
                         />
                         <div>
                           <p className="text-xs font-medium">{course.instructor}</p>
-                          <p className="text-[10px] text-muted-foreground">Instructor</p>
+                          <p className="text-[0.625rem] text-muted-foreground">Instructor</p>
                         </div>
                       </div>
                       
@@ -407,7 +409,7 @@ export default function Learn() {
                               )}
                               <div>
                                 <p className="text-xs font-medium">{module.title}</p>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
                                   {getTypeIcon(module.type)}
                                   <span>{module.duration}</span>
                                 </div>

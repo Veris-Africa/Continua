@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Bookmark, BookmarkCheck, Share2, MessageCircle, 
+import {
+  Bookmark, BookmarkCheck, Share2, MessageCircle,
   Clock, Eye, X, Send, User
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -47,28 +48,13 @@ interface NewsDetailDialogProps {
   onToggleSave: (id: number) => void;
 }
 
-// Mock comments for demo - in production, these would come from database
-const mockComments: Record<number, NewsComment[]> = {
-  1: [
-    { id: "1", user: "TraderKE", avatar: "TK", content: "This is great news for the banking sector! EQTY is looking strong.", time: "2h ago" },
-    { id: "2", user: "MarketWatch", avatar: "MW", content: "The foreign investors seem bullish on Kenyan equities.", time: "3h ago" },
-    { id: "3", user: "FinanceGuru", avatar: "FG", content: "I've been holding SAFCOM for months. Finally seeing some movement!", time: "4h ago" },
-  ],
-  2: [
-    { id: "1", user: "BankingFan", avatar: "BF", content: "Mobile banking disruption is real. $SAFCOM leading the way.", time: "1h ago" },
-  ],
-  3: [
-    { id: "1", user: "InvestorJane", avatar: "IJ", content: "Agricultural sector needs more attention from investors.", time: "5h ago" },
-    { id: "2", user: "NSEWatcher", avatar: "NW", content: "Tea exports are crucial for forex inflows.", time: "6h ago" },
-  ],
-};
 
-export function NewsDetailDialog({ 
-  article, 
-  open, 
-  onOpenChange, 
-  savedArticles, 
-  onToggleSave 
+export function NewsDetailDialog({
+  article,
+  open,
+  onOpenChange,
+  savedArticles,
+  onToggleSave
 }: NewsDetailDialogProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -79,8 +65,7 @@ export function NewsDetailDialog({
 
   if (!article) return null;
 
-  const articleComments = mockComments[article.id] || [];
-  const allComments = [...articleComments, ...comments];
+  const allComments = comments;
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -116,25 +101,11 @@ export function NewsDetailDialog({
 
     setComments(prev => [comment, ...prev]);
     setNewComment("");
-    toast({ title: "Comment added!" });
+    toast({ title: "Comment added for this session",description:'This legacy preview does not publish comments to the community.' });
   };
 
-  // Generate full article content based on summary
-  const fullContent = `
-${article.summary}
-
-The development marks a significant milestone in Kenya's financial sector, with analysts expecting widespread implications for both retail and institutional investors. Market observers have noted the timing of this announcement coincides with broader regional economic trends.
-
-"This is a pivotal moment for the market," said industry experts familiar with the matter. "We're seeing increased confidence from both local and international investors."
-
-The move comes amid growing interest in East African markets, with the Nairobi Securities Exchange recording increased trading volumes over the past quarter. Foreign investor participation has remained steady, with net inflows totaling approximately KES 2.3 billion in recent months.
-
-Key stakeholders have expressed optimism about the long-term prospects, citing improving macroeconomic indicators and supportive monetary policy from the Central Bank of Kenya.
-
-Looking ahead, market participants will be closely watching for further developments, particularly regarding regulatory approvals and implementation timelines. The next few weeks are expected to provide more clarity on the strategic direction.
-
-For investors, analysts recommend maintaining a diversified portfolio while keeping an eye on sector-specific opportunities that may arise from these developments.
-  `.trim();
+  // A summary cannot establish quotations, analyst views or market statistics.
+  const fullContent = `${article.summary}\n\nOnly the supplied summary is available here. No full article, expert quotes or additional market statistics have been inferred.`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -142,15 +113,15 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
         <ScrollArea className="max-h-[90vh]">
           {/* Hero Image */}
           <div className="relative">
-            <img 
-              src={article.imageUrl} 
+            <img
+              src={article.imageUrl}
               alt={article.title}
               className="w-full h-56 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="absolute top-3 right-3 bg-black/30 hover:bg-black/50 text-white"
               onClick={() => onOpenChange(false)}
             >
@@ -207,9 +178,9 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
             {article.stockMentions && article.stockMentions.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
                 {article.stockMentions.map((stock) => (
-                  <Badge 
-                    key={stock} 
-                    variant="outline" 
+                  <Badge
+                    key={stock}
+                    variant="outline"
                     className="cursor-pointer hover:bg-primary/10"
                     onClick={() => {
                       onOpenChange(false);
@@ -241,23 +212,23 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
                 {article.views && (
                   <span className="flex items-center gap-1">
                     <Eye className="h-4 w-4" />
-                    {(article.views / 1000).toFixed(1)}K views
+                    <RollingNumber value={(article.views / 1000).toFixed(2)} />K views
                   </span>
                 )}
-                <button 
+                <button
                   className="flex items-center gap-1 hover:text-primary transition-colors"
                   onClick={() => setShowComments(!showComments)}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {allComments.length} comments
+                  <RollingNumber value={allComments.length} /> comments
                 </button>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2 mb-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1"
                 onClick={() => onToggleSave(article.id)}
               >
@@ -277,13 +248,13 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
-              <Button 
-                variant={showComments ? "default" : "outline"} 
-                className="flex-1" 
+              <Button
+                variant={showComments ? "default" : "outline"}
+                className="flex-1"
                 onClick={() => setShowComments(!showComments)}
               >
                 <MessageCircle className="h-4 w-4 mr-2" />
-                {allComments.length}
+                <RollingNumber value={allComments.length} />
               </Button>
             </div>
 
@@ -292,7 +263,7 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
               <div className="border-t pt-4 space-y-4">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <MessageCircle className="h-4 w-4" />
-                  Comments ({allComments.length})
+                  Comments (<RollingNumber value={allComments.length} />)
                 </h3>
 
                 {/* Add Comment */}
@@ -303,15 +274,15 @@ For investors, analysts recommend maintaining a diversified portfolio while keep
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 flex gap-2">
-                    <Textarea 
+                    <Textarea
                       placeholder={user ? "Add a comment..." : "Sign in to comment"}
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       className="min-h-[60px] resize-none text-sm"
                       disabled={!user}
                     />
-                    <Button 
-                      size="icon" 
+                    <Button
+                      size="icon"
                       className="h-[60px]"
                       onClick={handleAddComment}
                       disabled={!newComment.trim() || !user}

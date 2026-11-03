@@ -1,5 +1,7 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation,Link } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,16 +11,22 @@ import {
   Loader2, Check, X, AtSign, Eye, Bell, MessageCircle, UserPlus, Shield, Lock,
   Mail, KeyRound, Trash2, Download, Type, Smartphone, ChevronRight, ArrowLeft,
   CreditCard, Fingerprint, HelpCircle, FileText, Plus, Star, MessageSquare, Users,
+  AlertTriangle, ShieldAlert,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { supabase } from "@/integrations/supabase/client";
-import { applyFontScale, getFontScale } from "@/lib/appearance";
+import { supabase } from "@/integrations/continua/browserClient";
+import { FontSizeControl } from "@/components/theme/FontSizeControl";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useToast } from "@/hooks/use-toast";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { useAppLock } from "@/hooks/useAppLock";
+import { PortfolioVisibilityToggles } from "@/components/portfolio/PortfolioVisibilityToggles";
+import {paymentLabel,SUPPORT_EMAIL} from '@/lib/legalPolicy';
+import {clearDeletedAccountStorage} from '@/lib/deletedAccountStorage';
+
+import {AccountSecurity} from '@/components/security/AccountSecurity';
 
 const HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
 
@@ -29,7 +37,7 @@ const HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
 type Section =
   | "menu" | "tradershub"
   | "account" | "payment" | "display" | "data" | "help" | "legal"
-  | "th-privacy" | "th-notifications" | "blocked" | "muted";
+  | "th-privacy" | "th-notifications" | "blocked" | "muted" | "delete-account";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -43,15 +51,28 @@ export default function Settings() {
   const [section, setSection] = useState<Section>((location.state as any)?.section || "menu");
   const [newMethodType, setNewMethodType] = useState<"mpesa" | "card">("mpesa");
   const [newMethodValue, setNewMethodValue] = useState("");
-  const [newMethodExpiry, setNewMethodExpiry] = useState("");
   const [addingMethod, setAddingMethod] = useState(false);
   const [handle, setHandle] = useState(profile?.handle || "");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
   const [portfolioOn, setPortfolioOn] = useState(!!profile?.portfolio_public);
-  const [fontScale, setFontScale] = useState(getFontScale());
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+      navigate('/auth', { replace: true });
+    } catch (error) {
+      toast({ title: "Couldn't sign out", description: error instanceof Error ? error.message : 'Please retry.', variant: 'destructive' });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const [prefs, setPrefs] = useState<any>({ notif_comments: true, notif_follows: true });
   const [blockedKeyword, setBlockedKeyword] = useState("");
@@ -129,69 +150,41 @@ export default function Settings() {
     } finally { setSaving(false); }
   };
 
-  const handleChangePassword = async () => {
-    if (!user?.email) return;
-    setChangingPassword(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
-      if (error) throw error;
-      toast({ title: "Password reset email sent", description: `Check ${user.email} for a link` });
-    } catch (e: any) {
-      toast({ title: "Couldn't send reset email", description: e?.message, variant: "destructive" });
-    } finally { setChangingPassword(false); }
-  };
-
   const addKeyword = async () => {
     if (!user || !blockedKeyword.trim()) return;
     const { data, error } = await supabase.from("muted_keywords" as any).insert({ user_id: user.id, keyword: blockedKeyword.trim() }).select().single();
     if (!error && data) { setMutedKeywords(prev => [...prev, data as any]); setBlockedKeyword(""); }
+    if(error)toast({title:"Couldn't mute keyword",variant:'destructive'});
+    else window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const removeKeyword = async (id: string) => {
-    await supabase.from("muted_keywords" as any).delete().eq("id", id);
+    const {error}=await supabase.from("muted_keywords" as any).delete().eq("id", id);
+    if(error){toast({title:"Couldn't remove keyword",variant:'destructive'});return;}
     setMutedKeywords(prev => prev.filter(k => k.id !== id));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const unblock = async (uid: string) => {
-    await supabase.from("blocked_users" as any).delete().eq("blocker_id", user!.id).eq("blocked_id", uid);
+    if(!user)return;
+    const {error}=await (supabase.rpc as any)('community_set_safety',{p_target:uid,p_kind:'block',p_enabled:false});
+    if(error){toast({title:"Couldn't unblock account",variant:'destructive'});return;}
     setBlockedUsers(prev => prev.filter((u: any) => u.user_id !== uid));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
   const unmute = async (uid: string) => {
-    await supabase.from("muted_users" as any).delete().eq("muter_id", user!.id).eq("muted_id", uid);
+    if(!user)return;
+    const {error}=await (supabase.rpc as any)('community_set_safety',{p_target:uid,p_kind:'mute',p_enabled:false});
+    if(error){toast({title:"Couldn't unmute account",variant:'destructive'});return;}
     setMutedUsers(prev => prev.filter((u: any) => u.user_id !== uid));
+    window.dispatchEvent(new Event('continua:community-safety-changed'));
   };
 
   const handleAddPaymentMethod = async () => {
     if (!user) return;
     setAddingMethod(true);
     try {
-      if (newMethodType === "mpesa") {
-        const digits = newMethodValue.replace(/\s+/g, "");
-        if (!/^(?:\+?254|0)[71]\d{8}$/.test(digits)) {
-          toast({ title: "Enter a valid M-Pesa number", description: "e.g. 0712345678", variant: "destructive" });
-          return;
-        }
-        const normalized = digits.replace(/^\+/, "").replace(/^0/, "254");
-        const masked = `${normalized.slice(0, 6)}••••${normalized.slice(-3)}`;
-        const res = await addPaymentMethod({ method_type: "mpesa", label: "M-Pesa", detail: masked });
-        if (res.error) throw res.error;
-      } else {
-        const digits = newMethodValue.replace(/\s+/g, "");
-        if (!/^\d{13,19}$/.test(digits)) {
-          toast({ title: "Enter a valid card number", variant: "destructive" });
-          return;
-        }
-        if (!/^\d{2}\/\d{2}$/.test(newMethodExpiry.trim())) {
-          toast({ title: "Enter expiry as MM/YY", variant: "destructive" });
-          return;
-        }
-        const brand = /^4/.test(digits) ? "Visa" : /^5[1-5]/.test(digits) ? "Mastercard" : "Card";
-        const masked = `•••• ${digits.slice(-4)} · ${newMethodExpiry.trim()}`;
-        const res = await addPaymentMethod({ method_type: "card", label: brand, detail: masked });
-        if (res.error) throw res.error;
-      }
+      const res=await addPaymentMethod(paymentLabel(newMethodType,newMethodValue));
+      if(res.error)throw res.error;
       setNewMethodValue("");
-      setNewMethodExpiry("");
       toast({ title: "Payment method added" });
     } catch (e: any) {
       toast({ title: "Couldn't add payment method", description: e?.message, variant: "destructive" });
@@ -207,21 +200,51 @@ export default function Settings() {
       supabase.from("user_follows").select("*").eq("follower_id", user.id),
       supabase.from("post_likes").select("*").eq("user_id", user.id),
     ]);
-    const blob = new Blob([JSON.stringify({ posts: posts.data, follows: follows.data, likes: likes.data }, null, 2)], { type: "application/json" });
+    if(posts.error||follows.error||likes.error){toast({title:'Export could not complete',description:'Some community records could not load. Please retry; no complete export has been created.',variant:'destructive'});return;}
+    const blob = new Blob([JSON.stringify({scope:'Community posts, followed accounts and post likes only. Contact support for other personal data.',exportedAt:new Date().toISOString(), posts: posts.data, follows: follows.data, likes: likes.data }, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `continua-data-${user.id}.json`; a.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Data exported" });
+    toast({ title: "Community data exported",description:'This download contains posts, follows and likes; it is not a full account export.' });
+  };
+
+  // Permanent, no undo — this is the real deletion path (see
+  // supabase/functions/delete-account), not a "deactivate" placeholder. The
+  // typed confirmation is the only thing standing between this button and
+  // wiping every table the account touches, plus the auth user itself.
+  const handleDeleteAccount = async () => {
+    if (!user || deleteConfirmText.trim().toUpperCase() !== "DELETE") return;
+    setDeletingAccount(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account",{body:{confirmation:"DELETE",accountId:user.id}});
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || "Deletion failed");
+      let cleared=false;try{cleared=clearDeletedAccountStorage(user.id,localStorage).complete;}catch{/* Browser may prohibit storage access. */}
+      toast({ title: "Account deleted", description: cleared?'Your local journal and app-lock records were cleared on this device.':'Account deletion completed. Browser storage could not be fully cleared; clear this site’s stored data on your device.' });
+      await signOut?.();
+      navigate("/auth");
+    } catch (e: any) {
+      toast({ title: "Couldn't delete account", description: e.message || `Please try again or contact ${SUPPORT_EMAIL}`, variant: "destructive" });
+    } finally {
+      setDeletingAccount(false);
+    }
   };
 
   const topSections: { id: Section; label: string; icon: any; desc: string }[] = [
     { id: "tradershub", label: "TradersHub", icon: Users, desc: "Privacy, notifications, blocked & muted accounts" },
     { id: "account", label: "Your account", icon: AtSign, desc: "Username, email, password, app lock" },
-    { id: "payment", label: "Payment methods", icon: CreditCard, desc: "M-Pesa & cards for Premium billing" },
+    { id: "payment", label: "Payment references", icon: CreditCard, desc: "Saved labels; checkout is managed by Paystack" },
     { id: "display", label: "Display", icon: Type, desc: "Theme, text size" },
     { id: "data", label: "Your data", icon: Download, desc: "Download or delete your data" },
     { id: "help", label: "Help & support", icon: HelpCircle, desc: "FAQs & contact us" },
     { id: "legal", label: "Terms & privacy", icon: FileText, desc: "Terms of service, privacy policy" },
+  ];
+
+  // Grouped like Moomoo's Settings — a handful of tight cards instead of one
+  // long flat list, so related settings read as a unit at a glance.
+  const menuGroups: { title?: string; ids: Section[] }[] = [
+    { ids: ["account", "tradershub", "payment"] },
+    { title: "Preferences", ids: ["display"] },
+    { title: "Support", ids: ["data", "help", "legal"] },
   ];
 
   const tradersHubSections: { id: Section; label: string; icon: any; desc: string }[] = [
@@ -240,7 +263,7 @@ export default function Settings() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(-1)} aria-label="Back">
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigateBack(navigate, "/account")} aria-label="Back">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">Settings</h1>
@@ -249,22 +272,50 @@ export default function Settings() {
 
       <div className="px-4 pt-4 max-w-lg mx-auto">
         {section === "menu" && (
-          <div className="space-y-1 pb-4">
-            {topSections.map(s => (
-              <button key={s.id} onClick={() => setSection(s.id)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition text-left">
-                <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground"><s.icon className="h-4 w-4" /></div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold">{s.label}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{s.desc}</div>
+          <div className="space-y-5 pb-4">
+            {menuGroups.map((group, gi) => (
+              <div key={gi}>
+                {group.title && <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted-foreground px-1 mb-1.5">{group.title}</p>}
+                <div className="flat-section rounded-2xl border border-border/60 bg-card overflow-hidden divide-y divide-border/50">
+                  {group.ids.map(id => {
+                    const s = topSections.find(t => t.id === id)!;
+                    return (
+                      <button key={s.id} onClick={() => setSection(s.id)} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/40 active:bg-muted/60 transition text-left">
+                        <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0"><s.icon className="h-4 w-4" /></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold">{s.label}</div>
+                          <div className="text-[0.6875rem] text-muted-foreground truncate">{s.desc}</div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    );
+                  })}
                 </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </div>
             ))}
-            <Separator className="my-2" />
-            <button onClick={async () => { await signOut?.(); navigate('/auth'); }} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-destructive/10 transition text-left text-destructive">
-              <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center"><KeyRound className="h-4 w-4" /></div>
-              <div className="flex-1 text-sm font-semibold">Log out</div>
-            </button>
+
+            <div>
+              <div className="flat-section rounded-2xl border border-border/60 bg-card overflow-hidden">
+                <button onClick={handleSignOut} disabled={signingOut} aria-busy={signingOut} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-muted/40 active:bg-muted/60 transition text-left disabled:opacity-60">
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">{signingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4 text-muted-foreground" />}</div>
+                  <div className="flex-1 text-sm font-semibold" role="status">{signingOut ? 'Signing out…' : 'Log out'}</div>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="rounded-2xl border border-destructive/30 bg-destructive/[0.03] overflow-hidden">
+                <button onClick={() => { setDeleteConfirmText(""); setSection("delete-account"); }} className="w-full flex items-center gap-3 px-3.5 py-3 hover:bg-destructive/10 active:bg-destructive/15 transition text-left text-destructive">
+                  <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0"><Trash2 className="h-4 w-4" /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold">Delete account</div>
+                    <div className="text-[0.6875rem] text-destructive/70">Permanently erase your Continua account</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[0.6875rem] text-muted-foreground text-center pt-1">Continua v1.0 · Nairobi, Kenya</p>
           </div>
         )}
 
@@ -272,11 +323,11 @@ export default function Settings() {
           <div className="space-y-1 pb-4">
             <Header title="TradersHub" />
             {tradersHubSections.map(s => (
-              <button key={s.id} onClick={() => setSection(s.id)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition text-left">
+              <button key={s.id} onClick={() => setSection(s.id)} className="flat-section w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition text-left">
                 <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground"><s.icon className="h-4 w-4" /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold">{s.label}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{s.desc}</div>
+                  <div className="text-[0.6875rem] text-muted-foreground truncate">{s.desc}</div>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -287,28 +338,38 @@ export default function Settings() {
         {section === "th-privacy" && (
           <div className="space-y-3 pb-4">
             <Header title="Privacy & safety" back="tradershub" />
-            <Row
-              icon={<Eye className="h-4 w-4" />}
-              title="Portfolio public"
-              desc="Allow others to view your holdings on your TradersHub profile"
-              checked={portfolioOn}
-              onChange={async (v: boolean) => {
-                setPortfolioOn(v);
-                if (user) await supabase.from("profiles").update({ portfolio_public: v }).eq("user_id", user.id);
-                refetchProfile?.();
-                toast({ title: v ? "Portfolio public" : "Portfolio private" });
+            <PortfolioVisibilityToggles
+              value={{
+                portfolioPublic: portfolioOn,
+                hideAmounts: !!profile?.portfolio_hide_amounts,
+                hideGains: !!profile?.portfolio_hide_gains,
+                topHoldingsOnly: !!profile?.portfolio_top_holdings_only,
+                followersOnly: !!profile?.portfolio_followers_only,
+              }}
+              onChange={async (next) => {
+                setPortfolioOn(next.portfolioPublic);
+                if (user) {
+                  await updateProfile({
+                    portfolio_public: next.portfolioPublic,
+                    portfolio_hide_amounts: next.hideAmounts,
+                    portfolio_hide_gains: next.hideGains,
+                    portfolio_top_holdings_only: next.topHoldingsOnly,
+                    portfolio_followers_only: next.followersOnly,
+                  });
+                }
+                toast({ title: next.portfolioPublic ? "Portfolio settings saved" : "Portfolio private" });
               }}
             />
             <Separator />
-            <button onClick={() => setSection("blocked")} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
+            <button onClick={() => setSection("blocked")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Blocked accounts</span>
-              <span className="text-xs text-muted-foreground">{blockedUsers.length} <ChevronRight className="h-4 w-4 inline" /></span>
+              <span className="text-xs text-muted-foreground"><RollingNumber value={blockedUsers.length} /> <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
-            <button onClick={() => setSection("muted")} className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
+            <button onClick={() => setSection("muted")} className="flat-section w-full flex items-center justify-between p-3 rounded-xl hover:bg-muted/50">
               <span className="flex items-center gap-3 text-sm font-medium">Muted accounts & words</span>
-              <span className="text-xs text-muted-foreground">{mutedUsers.length + mutedKeywords.length} <ChevronRight className="h-4 w-4 inline" /></span>
+              <span className="text-xs text-muted-foreground"><RollingNumber value={mutedUsers.length + mutedKeywords.length} /> <ChevronRight className="h-4 w-4 inline" /></span>
             </button>
-            <p className="text-[11px] text-muted-foreground pt-1">Blocking or muting someone hides their posts from your TradersHub feed.</p>
+            <p className="text-[0.6875rem] text-muted-foreground pt-1">Blocking or muting someone hides their posts from your TradersHub feed.</p>
           </div>
         )}
 
@@ -366,6 +427,7 @@ export default function Settings() {
         {section === "account" && (
           <div className="space-y-4 pb-4">
             <Header title="Your account" />
+            <AccountSecurity/>
             <div className="space-y-2">
               <Label className="text-xs font-semibold flex items-center gap-1.5"><AtSign className="h-3.5 w-3.5" />Username</Label>
               <div className="relative">
@@ -377,16 +439,12 @@ export default function Settings() {
                   {!checking && available === false && <X className="h-4 w-4 text-destructive" />}
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
+              <p className="text-[0.6875rem] text-muted-foreground">3–20 chars. Letters, numbers, underscores only.</p>
             </div>
             <div>
               <Label className="text-xs font-semibold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" />Email</Label>
               <Input value={user?.email || ""} disabled className="mt-1 h-10" />
             </div>
-            <Button variant="outline" className="w-full rounded-full" onClick={handleChangePassword} disabled={changingPassword}>
-              {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <KeyRound className="h-4 w-4 mr-2" />}
-              Email me a password reset link
-            </Button>
             <Button className="w-full rounded-full" onClick={handleSave} disabled={saving || (handle !== (profile?.handle || "") && available === false)}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
             </Button>
@@ -419,19 +477,7 @@ export default function Settings() {
               <ThemeToggle />
             </div>
             <div>
-              <div className="flex items-center gap-3 mb-3">
-                <Type className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">Text size</p>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[{ label: "S", val: "0.9" }, { label: "M", val: "1" }, { label: "L", val: "1.1" }, { label: "XL", val: "1.2" }].map(opt => (
-                  <button
-                    key={opt.val}
-                    onClick={() => { applyFontScale(opt.val); setFontScale(opt.val); }}
-                    className={`h-9 rounded-lg text-xs font-semibold transition-colors ${fontScale === opt.val ? "brand-active" : "bg-muted text-muted-foreground hover:text-foreground"}`}
-                  >{opt.label}</button>
-                ))}
-              </div>
+              <FontSizeControl />
             </div>
           </div>
         )}
@@ -439,15 +485,69 @@ export default function Settings() {
         {section === "data" && (
           <div className="space-y-3 pb-4">
             <Header title="Your data" />
-            <Button variant="outline" className="w-full rounded-full justify-start" onClick={exportData}><Download className="h-4 w-4 mr-2" />Download your data</Button>
-            <Button variant="outline" className="w-full rounded-full justify-start text-destructive" onClick={() => toast({ title: "Contact support", description: "Email support@continua.app to delete your account" })}><Trash2 className="h-4 w-4 mr-2" />Deactivate account</Button>
+            <Button variant="outline" className="w-full rounded-full justify-start" onClick={exportData}><Download className="h-4 w-4 mr-2" />Download community data</Button><p className="text-xs text-muted-foreground">Contains your posts, follows and likes. For other data or privacy requests, <a className="text-primary" href={`mailto:${SUPPORT_EMAIL}?subject=Continua%20privacy%20request`}>contact support</a>. Engine notebooks have their own export controls.</p>
+            <Button variant="outline" className="w-full rounded-full justify-start text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => { setDeleteConfirmText(""); setSection("delete-account"); }}>
+              <Trash2 className="h-4 w-4 mr-2" />Delete account
+            </Button>
+          </div>
+        )}
+
+        {section === "delete-account" && (
+          <div className="space-y-4 pb-4">
+            <Header title="Delete account" back="data" />
+            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-destructive/[0.06] border border-destructive/20">
+              <ShieldAlert className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <p className="text-[0.78125rem] text-destructive leading-relaxed">This permanently deletes your Continua account. There's no undo, and no grace period to recover it afterward.</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">This will remove:</p>
+              <ul className="space-y-1.5 text-[0.8125rem] text-muted-foreground">
+                {[
+                  "Your profile, handle, and TradersHub identity",
+                  "Every post, comment, like, and repost you've made",
+                  "Your followers, following, and blocked/muted lists",
+                  "Your portfolio, watchlists, and price alerts",
+                  "Your saved payment methods",
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-destructive/70 mt-0.5 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Type DELETE to confirm</Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder="DELETE"
+                className="h-11 rounded-xl font-semibold tracking-wide"
+                autoCapitalize="characters"
+              />
+            </div>
+
+            <Button
+              variant="destructive"
+              className="w-full h-12 rounded-full font-bold"
+              disabled={deletingAccount || deleteConfirmText.trim().toUpperCase() !== "DELETE"}
+              onClick={handleDeleteAccount}
+            >
+              {deletingAccount ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Permanently delete my account
+            </Button>
+            <p className="text-[0.6875rem] text-muted-foreground text-center">Changed your mind? Just go back — nothing happens until you tap the button above.</p>
           </div>
         )}
 
         {section === "payment" && (
           <div className="space-y-3 pb-4">
             <Header title="Payment methods" />
-            <p className="text-xs text-muted-foreground -mt-1">Used to bill your Premium subscription. We only ever store a masked reference — never your full card number or M-Pesa PIN.</p>
+            <p className="text-xs text-muted-foreground -mt-1">Saved labels only; these cannot charge or verify a payment method. Actual payments happen on Paystack’s hosted checkout. Never enter a full card/phone number, PIN or CVV here.</p>
             {paymentMethods.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No payment methods yet</p>
             ) : paymentMethods.map((m) => (
@@ -459,7 +559,7 @@ export default function Settings() {
                       {m.label}
                       {m.is_default && <Star className="h-3 w-3 fill-current text-foreground shrink-0" />}
                     </div>
-                    <div className="text-[11px] text-muted-foreground truncate">{m.detail}</div>
+                    <div className="text-[0.6875rem] text-muted-foreground truncate">{m.detail}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -485,11 +585,10 @@ export default function Settings() {
               <button onClick={() => setNewMethodType("card")} className={`text-xs font-semibold rounded-full px-3 py-1.5 transition-colors ${newMethodType === "card" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}>Card</button>
             </div>
             {newMethodType === "mpesa" ? (
-              <Input value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="0712 345 678" className="h-10" inputMode="tel" />
+              <Input aria-label="Last three digits of M-Pesa reference" value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Last 3 digits only" className="h-10" inputMode="numeric" maxLength={3} />
             ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Input value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Card number" className="h-10" inputMode="numeric" maxLength={19} />
-                <Input value={newMethodExpiry} onChange={(e) => setNewMethodExpiry(e.target.value)} placeholder="MM/YY" className="h-10" maxLength={5} />
+              <div>
+                <Input aria-label="Last four digits of card reference" value={newMethodValue} onChange={(e) => setNewMethodValue(e.target.value)} placeholder="Last 4 digits only" className="h-10" inputMode="numeric" maxLength={4} />
               </div>
             )}
             <Button className="w-full rounded-full" onClick={handleAddPaymentMethod} disabled={addingMethod || !newMethodValue.trim()}>
@@ -520,8 +619,8 @@ export default function Settings() {
               </AccordionItem>
             </Accordion>
             <Separator />
-            <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => { window.location.href = "mailto:support@continua.app"; }}>
-              <Mail className="h-4 w-4 mr-2" />Email support@continua.app
+            <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => { window.location.href = `mailto:${SUPPORT_EMAIL}`; }}>
+              <Mail className="h-4 w-4 mr-2" />Email {SUPPORT_EMAIL}
             </Button>
             <Button variant="outline" className="w-full rounded-full justify-start" onClick={() => window.open("https://wa.me/254700000000", "_blank", "noopener,noreferrer")}>
               <MessageSquare className="h-4 w-4 mr-2" />Chat on WhatsApp
@@ -534,14 +633,14 @@ export default function Settings() {
             <Header title="Terms & privacy" />
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">TERMS OF SERVICE</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">By using Continua you agree that market data, AI theses, and community content are for informational purposes only — nothing in the app is financial advice. You're responsible for your own trading decisions and for keeping your account credentials secure. We may suspend accounts that violate our community guidelines, including spam, harassment, or market-manipulation talk.</p>
+              <Link className="text-primary text-sm" to="/terms">Read the current Terms of service →</Link>
             </div>
             <Separator />
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1">PRIVACY POLICY</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">We collect your profile, portfolio, and activity data to run the app and personalize your feed. We never sell your data. Payment method details are stored as masked references only. You can download or delete your data anytime from Settings → Your data.</p>
+              <Link className="text-primary text-sm" to="/privacy">Read the current Privacy notice →</Link>
             </div>
-            <p className="text-[11px] text-muted-foreground">Last updated August 2026</p>
+            <Link className="block text-primary text-sm" to="/billing-policy">Billing and refund enquiries →</Link><Link className="block text-primary text-sm" to="/copyright">Copyright and content reports →</Link>
           </div>
         )}
       </div>
@@ -556,7 +655,7 @@ function Row({ icon, title, desc, checked, onChange, disabled }: any) {
         <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground shrink-0">{icon}</div>
         <div className="min-w-0">
           <div className="text-sm font-medium truncate">{title}</div>
-          <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+          <div className="text-[0.6875rem] text-muted-foreground truncate">{desc}</div>
         </div>
       </div>
       <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />

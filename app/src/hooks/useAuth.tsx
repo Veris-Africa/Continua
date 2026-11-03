@@ -1,15 +1,30 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { User, Session } from '@/integrations/continua/identityTypes';
+import { supabase,restoreBrowserSession,clearBrowserSessionCookie,observeSessionSecurity } from '@/integrations/continua/browserClient';
+import {queryClient} from '@/lib/queryClient';
+import {clearPrivateSessionCache} from '@/lib/privateSessionCache';
+import {signupAcknowledgement} from '@/lib/legalPolicy';
+import {isPublishedQuery} from '@/lib/researchCache';
+import {sessionRestoreMessage} from '@/lib/accountAccess';
+
+function clearAccountQueries(){
+ void queryClient.cancelQueries();
+ queryClient.removeQueries({predicate:query=>!isPublishedQuery(query.queryKey)});
+ queryClient.getMutationCache().clear();
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  recoveryMode: boolean;
+  mfaPending: boolean;
+  initializationError: string | null;
+  retrySession: () => void;
+  signUp: (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
+  signIn: (email: string, password: string,captchaToken?:string) => Promise<{ error: any; session: Session | null }>;
   signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (email: string,captchaToken?:string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,58 +33,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryMode,setRecoveryMode]=useState(false);
+  const [mfaPending,setMfaPending]=useState(false);
+  const [initializationError,setInitializationError]=useState<string|null>(null);
+  const [restoreAttempt,setRestoreAttempt]=useState(0);
+  const owner=useRef<string|null>(null);
 
   useEffect(() => {
+    let bootstrapping=true,active=true;
+    setLoading(true);setInitializationError(null);
+    const stopSecurity=observeSessionSecurity(state=>{if(active){setMfaPending(state.mfaPending);setRecoveryMode(state.recoveryMode);}});
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if(session||event==='SIGNED_OUT')setInitializationError(null);
+        const next=session?.user.id??null;
+        if((owner.current&&owner.current!==next)||event==='SIGNED_OUT'){
+          clearAccountQueries();
+          try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Storage may be unavailable. */}
+          window.dispatchEvent(new Event('continua:session-cleared'));
+        }
+        owner.current=next;
+        if(event==='PASSWORD_RECOVERY')setRecoveryMode(true);
+        if(event==='SIGNED_OUT')setRecoveryMode(false);
         setSession(session);
         setUser(session?.user ?? null);
-        setLoading(false);
+        if(!bootstrapping)setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    void restoreBrowserSession().then(()=>supabase.auth.getSession()).then(({data})=>{
+      if(!active)return;setSession(data.session);setUser(data.session?.user??null);owner.current=data.session?.user.id??null;
+    }).catch(error=>{if(active)setInitializationError(sessionRestoreMessage(error));}).finally(()=>{bootstrapping=false;if(active)setLoading(false);});
+    return () => {active=false;stopSecurity();subscription.unsubscribe();};
+  }, [restoreAttempt]);
 
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, acknowledgement:{adult:boolean;terms:boolean},captchaToken?:string) => {
+    const legal=signupAcknowledgement(acknowledgement.adult,acknowledgement.terms);
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
+        captchaToken,
         data: {
           full_name: fullName,
+          ...legal,
         }
       }
     });
-    return { error };
+    return { error, session: data.session };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+  const signIn = async (email: string, password: string,captchaToken?:string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options:{captchaToken},
     });
-    return { error };
+    if (data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+      setLoading(false);
+    }
+    return { error, session: data.session };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await clearBrowserSessionCookie();
+    const {error}=await supabase.auth.signOut({scope:'local'});
+    if(error)throw error;
+    clearAccountQueries();
+    try{clearPrivateSessionCache(localStorage);clearPrivateSessionCache(sessionStorage);}catch{/* Optional storage. */}
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (email: string,captchaToken?:string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth`,
+      captchaToken,
     });
     return { error };
   };
@@ -78,6 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    recoveryMode,
+    mfaPending,
+    initializationError,
+    retrySession:()=>{setLoading(true);setRestoreAttempt(value=>value+1);},
     signUp,
     signIn,
     signOut,

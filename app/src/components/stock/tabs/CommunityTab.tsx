@@ -1,8 +1,10 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
+import { classifyStockSentiment } from "@/lib/communitySentiment";
 import { useMemo } from "react";
 import { formatPostDate } from "@/lib/formatTimestamp";
 
@@ -18,22 +20,18 @@ export function CommunityTab({ symbol }: Props) {
     return (posts || []).filter(p =>
       (p.stock_mentions || []).map((s: string) => s.toUpperCase()).includes(sym) ||
       p.content?.toUpperCase().includes(`$${sym}`)
-    ).slice(0, 6);
+    );
   }, [posts, symbol]);
 
-  // crude sentiment: count bull vs bear words
   const sentiment = useMemo(() => {
-    const bullWords = ["bull", "buy", "long", "growth", "moon", "up", "strong"];
-    const bearWords = ["bear", "sell", "short", "drop", "down", "weak", "crash"];
-    let bull = 0, bear = 0;
-    relevant.forEach(p => {
-      const c = (p.content || "").toLowerCase();
-      bullWords.forEach(w => c.includes(w) && bull++);
-      bearWords.forEach(w => c.includes(w) && bear++);
-    });
-    const total = bull + bear || 1;
-    return { bullPct: Math.round((bull / total) * 100), bearPct: Math.round((bear / total) * 100) };
-  }, [relevant]);
+    const signals = relevant.map(p => classifyStockSentiment(p.content || '', symbol));
+    const bull = signals.filter(s => s === 'bullish').length;
+    const bear = signals.filter(s => s === 'bearish').length;
+    const total = bull + bear;
+    return { bullPct: total ? Math.round(bull / total * 100) : 0,
+      bearPct: total ? 100 - Math.round(bull / total * 100) : 0,
+      unclassified: signals.length - total };
+  }, [relevant, symbol]);
 
   return (
     <div className="space-y-3">
@@ -42,15 +40,15 @@ export function CommunityTab({ symbol }: Props) {
           <h4 className="text-xs font-bold mb-2">Community Sentiment</h4>
           <div className="flex items-center gap-2 text-xs">
             <TrendingUp className="h-3.5 w-3.5 text-bull" />
-            <span className="font-bold text-bull">{sentiment.bullPct}%</span>
+            <span className="font-bold text-bull"><RollingNumber value={sentiment.bullPct} />%</span>
             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden flex">
               <div className="h-full bg-bull" style={{ width: `${sentiment.bullPct}%` }} />
               <div className="h-full bg-bear" style={{ width: `${sentiment.bearPct}%` }} />
             </div>
-            <span className="font-bold text-bear">{sentiment.bearPct}%</span>
+            <span className="font-bold text-bear"><RollingNumber value={sentiment.bearPct} />%</span>
             <TrendingDown className="h-3.5 w-3.5 text-bear" />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">Based on {relevant.length} recent TradersHub posts mentioning ${symbol}</p>
+          <p className="text-[0.625rem] text-muted-foreground mt-1.5 text-center">Based on <RollingNumber value={relevant.length} /> recent TradersHub posts mentioning ${symbol}. <RollingNumber value={sentiment.unclassified} /> neutral or mixed; directional posts weighted equally.</p>
         </CardContent>
       </Card>
 
@@ -67,8 +65,8 @@ export function CommunityTab({ symbol }: Props) {
         </Card>
       ) : (
         <div className="space-y-2">
-          {relevant.map(p => (
-            <Card key={p.id} className="soft-card cursor-pointer active:scale-[0.99] transition-transform" onClick={() => navigate(`/traders-hub?post=${p.id}`)}>
+          {relevant.slice(0, 6).map(p => (
+            <Card key={p.id} className="soft-card cursor-pointer active:scale-[0.99] transition-transform" onClick={() => navigate(`/traders-hub/post/${p.id}`)}>
               <CardContent className="p-3">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <p className="text-xs font-bold truncate">
@@ -77,13 +75,13 @@ export function CommunityTab({ symbol }: Props) {
                       <span className="font-normal text-muted-foreground"> @{(p.author as any).handle}</span>
                     )}
                   </p>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{formatPostDate(p.created_at)}</span>
+                  <span className="text-[0.625rem] text-muted-foreground shrink-0">{formatPostDate(p.created_at)}</span>
                 </div>
                 <p className="text-xs line-clamp-3">{p.content}</p>
-                <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground">
-                  <span>♥ {p.likes_count || 0}</span>
-                  <span>💬 {p.comments_count || 0}</span>
-                  <span>↻ {p.reposts_count || 0}</span>
+                <div className="flex gap-3 mt-2 text-[0.625rem] text-muted-foreground">
+                  <span>♥ <RollingNumber value={p.likes_count || 0} /></span>
+                  <span>💬 <RollingNumber value={p.comments_count || 0} /></span>
+                  <span>↻ <RollingNumber value={p.reposts_count || 0} /></span>
                 </div>
               </CardContent>
             </Card>

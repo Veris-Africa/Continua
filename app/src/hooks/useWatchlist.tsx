@@ -1,68 +1,205 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import {createMutationIntent} from '../lib/mutationIntent.js';
+import {useRef} from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { readPrivateSnapshot, writePrivateSnapshot } from '@/lib/privateSnapshot';
+import type { SetStateAction } from 'react';
+import { usePageRefresh } from './usePageRefresh';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
+import { useProfile } from './useProfile';
+
+export interface WatchlistFolder {
+  id: string;
+  user_id: string;
+  name: string;
+  is_default: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface WatchlistItem {
   id: string;
   user_id: string;
+  folder_id: string;
   symbol: string;
   name: string;
   created_at: string;
 }
 
-export function useWatchlist() {
-  const { user } = useAuth();
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+// Moomoo-style tiering: free accounts get exactly one watchlist (they can
+// still rename it); Premium/Premium+ can create more. Keep this in sync with
+// enforce_watchlist_folder_limit() in the DB -- the server enforces the real
+// limit, this is just so the UI can show the upgrade prompt before hitting it.
+const FREE_FOLDER_LIMIT = 1;
+const PREMIUM_FOLDER_LIMIT = 20;
 
-  useEffect(() => {
-    if (user) {
-      fetchWatchlist();
-    } else {
-      setWatchlist([]);
-      setLoading(false);
+export function useWatchlist() {
+  const { user, loading: authLoading } = useAuth();
+  const folderIntent=useRef(createMutationIntent());
+  const { profile } = useProfile();
+  const [folders, setFolders] = useState<WatchlistFolder[]>([]);
+  const queryClient = useQueryClient();
+  const watchlistKey = ['continua', 'watchlist', user?.id];
+  const watchlistQuery = useQuery({
+    queryKey: watchlistKey,
+    initialData: () => user ? readPrivateSnapshot<WatchlistItem[]>('watchlist', user.id) : undefined,
+    initialDataUpdatedAt: 0,
+    enabled: !!user && !authLoading, staleTime: 60_000, retry: 1,
+    queryFn: async ({signal}) => {
+      const {data, error} = await supabase.from('watchlists').select('*').eq('user_id', user!.id).order('created_at', {ascending: false}).abortSignal(signal);
+      if (error) throw error;
+      if (signal.aborted) throw new Error("Watchlist request cancelled");
+      writePrivateSnapshot('watchlist', user!.id, data ?? []);
+      return (data ?? []) as WatchlistItem[];
+    },
+  });
+  const watchlist = watchlistQuery.data ?? [];
+  const loading = authLoading || (!!user && watchlistQuery.isPending);
+  const setWatchlist = (next: SetStateAction<WatchlistItem[]>) => queryClient.setQueryData<WatchlistItem[]>(watchlistKey, previous => { const result = typeof next === 'function' ? next(previous ?? []) : next; if (user) writePrivateSnapshot('watchlist', user.id, result); return result; });
+  const [foldersLoading, setFoldersLoading] = useState(true);
+
+  const isPremium = profile?.subscription_plan === 'premium' || profile?.subscription_plan === 'premium_plus';
+  const folderLimit = isPremium ? PREMIUM_FOLDER_LIMIT : FREE_FOLDER_LIMIT;
+  const canCreateFolder = folders.length < folderLimit;
+
+  const fetchFolders = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('watchlist_folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching watchlist folders:', error);
+        return;
+      }
+
+      let list = data || [];
+
+      // Lazily create the default folder for brand-new users so there's
+      // always at least one place to add a stock.
+      if (list.length === 0) {
+        const { data: created, error: createErr } = await supabase.rpc('continua_ensure_default_watchlist', {});
+        if (!createErr && created) list = [created];
+      }
+
+      setFolders(list);
+    } catch (error) {
+      console.error('Error fetching watchlist folders:', error);
+    } finally {
+      setFoldersLoading(false);
     }
   }, [user]);
 
-  const fetchWatchlist = async () => {
-    if (!user) return;
+  const fetchWatchlist = useCallback(async () => {
+    if (user) await watchlistQuery.refetch();
+  }, [user?.id, watchlistQuery.refetch]);
 
+  usePageRefresh(fetchWatchlist);
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      setFoldersLoading(true);
+      fetchFolders();
+    } else {
+      setFolders([]);
+      setFoldersLoading(false);
+    }
+  }, [user, authLoading, fetchFolders]);
+
+  const defaultFolderId = useMemo(
+    () => folders.find(f => f.is_default)?.id || folders[0]?.id,
+    [folders]
+  );
+
+  const createFolder = async (name: string) => {
+    if (!user) return { error: { message: 'Not signed in' } };
+    const intent=folderIntent.current.prepare({user_id:user.id,name:name.trim(),is_default:false,sort_order:folders.length},{user_id:user.id,name:name.trim()});
     try {
       const { data, error } = await supabase
-        .from('watchlists')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .from('watchlist_folders')
+        .insert(intent)
+        .select()
+        .single();
 
       if (error) {
-        console.error('Error fetching watchlist:', error);
-      } else {
-        setWatchlist(data || []);
+        console.error('Error creating watchlist folder:', error);
+        return { error };
       }
+
+      folderIntent.current.confirm(data.id);
+      setFolders(prev => prev.some(folder=>folder.id===data.id)?prev:[...prev, data]);
+      return { data };
     } catch (error) {
-      console.error('Error fetching watchlist:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error creating watchlist folder:', error);
+      return { error };
     }
   };
 
-  const addToWatchlist = async (symbol: string, name: string) => {
+  const renameFolder = async (folderId: string, name: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('watchlist_folders')
+        .update({ name: name.trim() })
+        .eq('id', folderId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error renaming watchlist folder:', error);
+        return { error };
+      }
+
+      setFolders(prev => prev.map(f => (f.id === folderId ? data : f)));
+      return { data };
+    } catch (error) {
+      console.error('Error renaming watchlist folder:', error);
+      return { error };
+    }
+  };
+
+  const deleteFolder = async (folderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('watchlist_folders')
+        .delete()
+        .eq('id', folderId);
+
+      if (error) {
+        console.error('Error deleting watchlist folder:', error);
+        return { error };
+      }
+
+      setFolders(prev => prev.filter(f => f.id !== folderId));
+      setWatchlist(prev => prev.filter(item => item.folder_id !== folderId));
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting watchlist folder:', error);
+      return { error };
+    }
+  };
+
+  /** Add a stock to a specific folder (defaults to the user's default folder). */
+  const addToWatchlist = async (symbol: string, name: string, folderId?: string) => {
     if (!user) return;
+    const targetFolder = folderId || defaultFolderId;
+    if (!targetFolder) return { error: { message: 'No watchlist to add to yet' } };
 
     try {
       const { data, error } = await supabase
         .from('watchlists')
-        .insert({
-          symbol,
-          name,
-          user_id: user.id,
-        })
+        .insert({ symbol, name, user_id: user.id, folder_id: targetFolder })
         .select()
         .single();
 
       if (error) {
         if (error.code === '23505') {
-          return { error: { message: 'Stock already in watchlist' } };
+          return { error: { message: 'Already in this watchlist' } };
         }
         console.error('Error adding to watchlist:', error);
         return { error };
@@ -76,22 +213,20 @@ export function useWatchlist() {
     }
   };
 
-  const removeFromWatchlist = async (symbol: string) => {
+  /** Remove a stock from one folder, or from every folder if folderId is omitted. */
+  const removeFromWatchlist = async (symbol: string, folderId?: string) => {
     if (!user) return;
-
     try {
-      const { error } = await supabase
-        .from('watchlists')
-        .delete()
-        .eq('symbol', symbol)
-        .eq('user_id', user.id);
+      let query = supabase.from('watchlists').delete().eq('symbol', symbol).eq('user_id', user.id);
+      if (folderId) query = query.eq('folder_id', folderId);
+      const { error } = await query;
 
       if (error) {
         console.error('Error removing from watchlist:', error);
         return { error };
       }
 
-      setWatchlist(prev => prev.filter(item => item.symbol !== symbol));
+      setWatchlist(prev => prev.filter(item => !(item.symbol === symbol && (!folderId || item.folder_id === folderId))));
       return { success: true };
     } catch (error) {
       console.error('Error removing from watchlist:', error);
@@ -99,16 +234,39 @@ export function useWatchlist() {
     }
   };
 
-  const isInWatchlist = (symbol: string) => {
-    return watchlist.some(item => item.symbol === symbol);
-  };
+  /** True if the stock is saved in ANY of the user's watchlists. */
+  const isInWatchlist = (symbol: string) => watchlist.some(item => item.symbol === symbol);
+
+  /** True if the stock is saved in this specific folder. */
+  const isInFolder = (symbol: string, folderId: string) =>
+    watchlist.some(item => item.symbol === symbol && item.folder_id === folderId);
+
+  /** All folder ids a given stock currently sits in. */
+  const foldersForSymbol = (symbol: string) =>
+    watchlist.filter(item => item.symbol === symbol).map(item => item.folder_id);
 
   return {
+    // Flat, cross-folder view -- unchanged shape for existing callers.
     watchlist,
     loading,
+    isError: watchlistQuery.isError,
     addToWatchlist,
     removeFromWatchlist,
     isInWatchlist,
     refetch: fetchWatchlist,
+
+    // Folder management.
+    folders,
+    foldersLoading,
+    defaultFolderId,
+    isPremium,
+    canCreateFolder,
+    folderLimit,
+    createFolder,
+    renameFolder,
+    deleteFolder,
+    isInFolder,
+    foldersForSymbol,
+    refetchFolders: fetchFolders,
   };
 }

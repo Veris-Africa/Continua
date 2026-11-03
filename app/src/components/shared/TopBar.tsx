@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { useNotifications } from "@/hooks/useNotifications";
+import { EngineLaunchButton } from "./EngineLaunchButton";
 
 interface TopBarProps {
   title: string;
@@ -12,6 +13,11 @@ interface TopBarProps {
   showSearch?: boolean;
   showWidgetSettings?: boolean;
   showNotifications?: boolean;
+  /** Shows the 🇰🇪 NSE ▾ market picker next to the title. Opt-in — only
+   *  screens that actually render exchange-specific data (Markets, Home,
+   *  Screener, ...) should turn this on; a stock detail page for a symbol
+   *  already tied to one exchange shouldn't invite switching mid-view. */
+  showExchangeSelector?: boolean;
   onWidgetSettingsClick?: () => void;
   onSearch?: (query: string) => void;
   initialSearchQuery?: string;
@@ -19,7 +25,7 @@ interface TopBarProps {
 
 export function TopBar({ 
   title, subtitle, showSearch = true, showWidgetSettings = false, 
-  showNotifications = true, onWidgetSettingsClick, onSearch, initialSearchQuery = ""
+  showNotifications = true, showExchangeSelector = false, onWidgetSettingsClick, onSearch, initialSearchQuery = ""
 }: TopBarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,23 +37,23 @@ export function TopBar({
     e?.preventDefault();
     if (searchQuery.trim()) {
       if (onSearch) onSearch(searchQuery.trim());
-      else if (location.pathname !== '/traders-hub') navigate(`/traders-hub?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border/60">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Logo size="sm" showText={false} />
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-foreground truncate">{title}</h1>
+            <h1 className="text-lg font-medium text-foreground truncate">{title}</h1>
             {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
           </div>
         </div>
         
         <div className="flex items-center gap-1">
-          {showSearch && (
+          {(location.pathname === "/" || location.pathname === "/markets") && <EngineLaunchButton />}
+          {showSearch && location.pathname === '/markets' && (
             <>
               {searchOpen ? (
                 <form onSubmit={handleSearchSubmit} className="flex items-center gap-1">
@@ -56,10 +62,10 @@ export function TopBar({
                     className="w-40 h-9 text-sm rounded-full bg-muted/50 border-0"
                     autoFocus
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => { setSearchQuery(e.target.value); onSearch?.(e.target.value); }}
                     onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
                   />
-                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Close search" onClick={() => { setSearchQuery(""); setSearchOpen(false); }}>
+                  <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label="Close search" onClick={() => { setSearchQuery(""); onSearch?.(""); setSearchOpen(false); }}>
                     <X className="h-4 w-4" />
                   </Button>
                 </form>
@@ -79,7 +85,7 @@ export function TopBar({
             <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full relative" aria-label="Open notifications" onClick={() => navigate('/notifications')}>
               <Bell className="h-[18px] w-[18px]" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1.5 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1.5 min-w-[16px] h-[16px] px-1 bg-primary text-primary-foreground text-[0.5625rem] font-bold rounded-full flex items-center justify-center">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}

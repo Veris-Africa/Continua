@@ -1,0 +1,283 @@
+# Continua investment intelligence: implementation and validation
+
+## Delivered behavior
+
+The existing Company / Analysis / My workspace structure now includes Macro,
+Factors, Optimization, Backtesting and Events. Events replaces the Ask Engine
+navigation entry. No paid generative API, always-on service, trade execution or
+native production cutover is enabled.
+
+Python contains the deterministic models shared by the deployed compatibility
+API and native Go candidate. SQL retains ownership, revision and permission
+guarantees. The language rationale and primary references are recorded in
+`architecture/FEATURE_LANGUAGE_DECISIONS.json`.
+
+- Macro evidence separates observation date, first available date and retrieval.
+  Historical queries select only revisions available at the cutoff. Missing
+  periods are not interpolated. Basic current Macro and Events are free;
+  detailed evidence requires Premium; model workspaces require Plus.
+- Factor descriptors use actual reported financial inputs and sourced prices.
+  Cross-sectional normalization requires sufficient comparable peers. Return
+  factor models use a chronological training/holdout split, ridge regression,
+  factor covariance and diagonal residual variance. Descriptors are not betas.
+- Allocation uses SciPy HiGHS feasibility and SLSQP for minimum variance, risk
+  parity and maximum diversification. It supports holding/sector limits,
+  exclusions, turnover and optional cash. Owned allocation inputs are loaded
+  server-side. Infeasible or unsuccessful solutions are withheld.
+- Basket replay uses strict common raw-price sessions, explicit corporate
+  actions, fractional shares, cash, dividends receivable, payment dates,
+  proportional costs and monthly/quarterly rebalancing. It exports equity,
+  drawdowns, annual observed returns, trades, holdings and reconciled P&L.
+  Benchmark/risk-free metrics require compatible explicit evidence. Private
+  named simulations never modify real holdings and are capped at 25/account.
+- Events provides company/type/date/held/watchlist filters, original sources
+  and separate announcement/effective dates. Notifications require explicit
+  opt-in, global notification permission and Plus; delivery is atomic and
+  deduplicated. Retrospective event summaries require sufficient non-overlapping
+  observations and make no causal or predictive claim.
+- Collection adds conditional HTTP validators, literal bounded CSV/XLSX
+  extraction, official macro discovery and review-only industry fields.
+  PDF/OCR, private R2 evidence, checkpoints, transfer budgets, source rights and
+  canonical financial review remain in force. Coverage includes all registered
+  securities, including suspended/delisted records; registration is not a claim
+  that every historical filing or action has been acquired.
+
+## Sources and publication boundaries
+
+World Bank WDI: annual Kenya GDP growth, consumer-price inflation, official
+exchange-rate average and reserves. Its API and published data terms permit the
+reviewed source configuration. A historical observation fetched today is a
+first-seen vintage today, not proof that this revision was known in its year.
+
+Primary references:
+
+- https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api
+- https://datahelpdesk.worldbank.org/knowledgebase/articles/898581-api-basic-call-structures
+- https://data.worldbank.org/summary-terms-of-use
+- https://www.centralbank.go.ke/monthly-economic-indicators/
+- https://www.centralbank.go.ke/inflation-rates/
+- https://www.centralbank.go.ke/monetary-policy/
+- https://www.centralbank.go.ke/releases/weekly-bulletin/
+- https://www.knbs.or.ke/reports_category/cpi-and-inflation-rates/
+- https://www.knbs.or.ke/reports_category/quarterly-gdp-reports/
+- https://annualreport.cma.or.ke/
+- https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+
+CBK and KNBS sources are private evidence collection configurations. Their
+publication permission is unknown, so they cannot silently enter public
+research. CBK literal dated rate extraction requires review. CMA's public
+company archive was investigated; public accessibility was not treated as a
+blanket commercial redistribution licence or authorization for mass crawling.
+No paid IMF/Treasury data licence is assumed.
+
+Industry/segment extraction preserves raw cells, units, currency, period,
+statement basis and provenance. Banking and insurance labels require explicit
+industry metadata. Conflicts and missing units are withheld for review. An
+extracted draft is never automatic canonical publication authorization.
+
+## Expanded panel repairs
+
+Shared expanded financial panels now show actual period inputs, provenance,
+availability dates and precise missing reasons. Financial statement Learn More
+uses the selected company/period rather than generic-only explanations.
+Company evidence, reliability, recommendations, portfolio and publisher tables
+now expose explicit unavailable states instead of disappearing. Earnings no
+longer displays a currency symbol before the report count.
+
+The generated `PHASE_2_PANEL_INVENTORY.md` lists expansion entrypoints for
+review. Existing chart/model components retain their financial evidence gates.
+
+## Database and rollout
+
+`supabase/migrations/20261021150000_investment_evidence.sql` is additive and
+idempotent. The explicit `prepare-investment` scheduled-collector maintenance
+action applies it and registers only missing source configurations, preserving
+operator disables and source permissions. API boot never applies this schema.
+Source revocation takes effect at read time. Revisions are append-only; only
+verification status can change. Simulations/preferences are owner scoped.
+
+The native Go service remains a candidate. This change does not satisfy or
+bypass the separate exhaustive production cutover requirements in AGENTS.md.
+
+## Scheduled collection repair
+
+The news failure was an article HTTP access failure despite usable public RSS
+summary evidence. Only actual summaries are retained for permitted 403/404/410
+article responses, with feed provenance; rate limits, server errors and missing
+summaries still fail. Successful verification: run 39612690078.
+
+The document failure was the collector's intentional run deadline being
+reported as a failure. Planned budget stops now preserve resumable checkpoints
+and partial counters; preceding real source failures still fail the run.
+Successful verification: run 39614765180. Source time slices prevent one source
+from consuming the whole run. No transfer budget was increased.
+
+Both cron expressions are preserved: `17 */8 * * *` and `43 6,12,20 * * *`
+(GitHub schedules use UTC). The workflow and both enable variables were active
+when inspected. Runner/action updates remove the reported Node 20 and moving
+Ubuntu runner warnings for this workflow.
+
+## Validation and practical limits
+
+The embedded PostgreSQL fixture applies the actual migrations twice and passed
+48 checks covering source revocation, vintages, reviewed report publication,
+owner isolation, RLS, quotas, immutable corrections and notification deduplication.
+Engine tests passed 140 cases. Final frontend, backend, native scraper and Go
+results are recorded in the release verification below.
+
+A synthetic 70-asset / 261-return local worker benchmark completed minimum
+variance in 1.262s, risk parity in 0.253s and maximum diversification in 0.353s.
+The Windows worker peak was about 73 MiB; the real secret-free worker round trip
+was 1.799s. This is local evidence, not a claim of production memory certification.
+
+Complete historical constituents, delisting proceeds, suspensions, adjusted
+total-return indexes and point-in-time fundamental strategy inputs are not
+invented. Unsupported strategy templates remain unavailable until those inputs
+are verified. Imported snapshots are structure/numerically validated, not
+independently authenticated. Cash scenarios are explicit direct exposures, not
+stock-price predictions. Old archived artifacts require explicit reprocessing
+if their original collection did not parse them.
+
+## Release verification
+
+Local final checks: production build and 26 edge security tests passed; browser
+artifact secret audit found zero findings across 171 files; frontend 131 tests
+passed; compatibility backend 462 passed with 18 opt-in/database skips, followed
+by all 12 opt-in Python worker parity tests passing; Engine 140 tests passed;
+native scraper 190 tests ran successfully with six external PostgreSQL fixture
+skips; native Go packages passed. The CI job exercises those PostgreSQL fixtures
+against its disposable service. Source audit inventoried 66 expansion entrypoints.
+An unauthenticated browser correctly redirected protected Engine navigation to
+sign-in; this is not an authenticated end-to-end UI certification.
+
+Security patches include Vite 8.3.5 in all three lockfiles, Pillow 13.0.0,
+certifi 2026.10.19, and Go 1.27.3. CI identified the newly published
+GO-2026-6809 in Go 1.27.2; both go.mod and the verified official Docker digest
+were updated. See https://go.dev/dl/ and
+https://pkg.go.dev/vuln/GO-2026-6809 . No alerts were dismissed or scanners disabled.
+
+The explicit additive setup succeeded in Actions run 39655954206, registering
+four missing sources while preserving existing disables. CodeQL and all three
+security release jobs passed at commit 3685828; GitHub reported zero open code
+scanning and zero open dependency alerts after refreshing its graph. The first
+macro attempt correctly paused at the daily reservation limit, before network
+collection. Explicit World Bank batches now reserve at most 1 MiB, fetch only
+four bounded responses and skip unrelated archive reprocessing/export; the daily
+ceiling is unchanged. This budget rule passed 11 collector regression tests.
+Focused compatibility API tests passed all 34 cases, including new plan, owner,
+consent, historical-cutoff and forged allocation-input checks. Sector limits and
+exclusions are available directly in the allocation view as well as imports.
+
+Live macro collection run 39656735867 fetched, privately archived and extracted
+all four WDI responses with zero failures (14,343 download bytes; 18,755 upload
+bytes). Its publication counters exposed a revision-identity defect: the initial
+unique key omitted observation date, retaining only one year per series/artifact.
+The additive `20261021200000_investment_history_identity.sql` corrects that key
+without deleting originals. Publisher completeness now compares stored rows with
+extracted observation counts so partial historical artifacts are backfilled from
+existing evidence, without another source download. A multi-year, same-artifact
+publisher regression fixture validates both idempotence and partial recovery.
+
+## Main implementation files
+
+| Area | Files |
+|---|---|
+| Shared numerical models | `backend/python/investment_intelligence.py`, `financial_extensions.py`, `continua_risk.py`; `engine-python/continua_engine/investment.py` |
+| Compatibility API | `backend/src/api/routes/engineWorkbench.routes.js`, `services/research/investmentResearch.js`, `services/research/stockRisk.js`, `workers/engineMonitorWorker.js` |
+| Native candidate | `backend-go/internal/httpapi/investment.go`, `internal/marketdata/investment.go`, `internal/engine/worker.go` and existing workbench/history handlers |
+| Research views | `app/src/components/engine/InvestmentResearch.tsx`, `EvidenceImportLab.tsx`, `MacroScenario.tsx`, `EventPreferences.tsx`, `SavedSimulations.tsx`, `InvestmentCoverage.tsx`; `app/src/pages/Engine.tsx` |
+| Expanded details | `app/src/components/stock/DetailEvidence.tsx`, `FundamentalDetail.tsx`, `FinancialStatementExplorer.tsx`, `PublisherFinancialTables.tsx`; evidence/reliability/portfolio desks |
+| Collection | `scraper-python/continua_scraper/investment.py`, `cbk_macro.py`, `tabular.py`, `download.py`, `adapter_io.py`, `crawler.py`, `runner.py`, `registry.py`, `default_sources.json`; `scraper-python/scheduled_collect.py` |
+| Schema and fixture | `supabase/migrations/20261021150000_investment_evidence.sql`, `20261021200000_investment_history_identity.sql`; `infra/migration/investment-evidence-fixture.mjs` |
+
+## Recommended next development phase
+
+Prioritize verified historical coverage and empirical validation: resolve official
+CBK/KNBS and issuer publication permissions; review industry/segment extractions;
+complete issuer/year/action and historical-constituent matrices; obtain compatible
+benchmark total-return histories and dated fundamental releases. Then measure
+factor stability and holdout errors across regimes, validate portfolio outcomes
+with independent reference implementations, and enable additional historical
+strategy templates only as their evidence gates pass. Native production cutover
+remains a separate release after the complete migration ledger and resource,
+recovery and behavioral gates pass.
+
+## Changed backend and frontend paths
+
+- `app/src/api/engineAdvancedApi.ts`
+- `app/src/api/riskIntelligence.ts`
+- `app/src/components/engine/CompanyEvidenceDesk.tsx`
+- `app/src/components/engine/CompanyFocus.tsx`
+- `app/src/components/engine/EngineReliabilityDesk.tsx`
+- `app/src/components/engine/EngineWorkspace.tsx`
+- `app/src/components/engine/EventPreferences.tsx`
+- `app/src/components/engine/EvidenceImportLab.tsx`
+- `app/src/components/engine/InvestmentCoverage.tsx`
+- `app/src/components/engine/InvestmentResearch.tsx`
+- `app/src/components/engine/LearningResearchDesk.tsx`
+- `app/src/components/engine/MacroScenario.tsx`
+- `app/src/components/engine/PortfolioReviewDesk.tsx`
+- `app/src/components/engine/SavedSimulations.tsx`
+- `app/src/components/stock/DetailEvidence.tsx`
+- `app/src/components/stock/EarningsDetail.tsx`
+- `app/src/components/stock/FinancialStatementExplorer.tsx`
+- `app/src/components/stock/FundamentalDetail.tsx`
+- `app/src/components/stock/PublisherFinancialTables.tsx`
+- `app/src/lib/financialPresentation.ts`
+- `app/src/lib/investmentConfiguration.ts`
+- `app/src/lib/subscription.ts`
+- `app/src/pages/Engine.tsx`
+- `app/tests/investmentConfiguration.test.ts`
+- `app/tests/subscription.test.ts`
+- `backend-go/Dockerfile`
+- `backend-go/go.mod`
+- `backend-go/internal/engine/monitor_worker.go`
+- `backend-go/internal/engine/worker.go`
+- `backend-go/internal/httpapi/investment.go`
+- `backend-go/internal/httpapi/investment_test.go`
+- `backend-go/internal/httpapi/server.go`
+- `backend-go/internal/httpapi/stock_risk.go`
+- `backend-go/internal/httpapi/workbench_reads.go`
+- `backend-go/internal/marketdata/investment.go`
+- `backend-go/internal/marketdata/market_research.go`
+- `backend/Dockerfile`
+- `backend/package-lock.json`
+- `backend/python/continua_risk.py`
+- `backend/python/engine_calculations.py`
+- `backend/python/financial_extensions.py`
+- `backend/python/investment_intelligence.py`
+- `backend/python/requirements.txt`
+- `backend/src/api/routes/engineWorkbench.routes.js`
+- `backend/src/services/research/investmentResearch.js`
+- `backend/src/services/research/pythonCalculations.d.ts`
+- `backend/src/services/research/pythonCalculations.js`
+- `backend/src/services/research/stockRisk.js`
+- `backend/src/workers/engineMonitorWorker.js`
+- `backend/tests/enginePortfolioAccess.test.ts`
+- `engine-python/continua_engine/investment.py`
+- `engine-python/tests/test_financial_extensions.py`
+- `engine-python/tests/test_investment_intelligence.py`
+- `engine-python/tests/test_risk_intelligence.py`
+- `engine-python/worker.py`
+
+## Live rollout outcome
+
+The corrected setup/backfill completed in [Actions run 39658884194](https://github.com/cypskip-create/Continua/actions/runs/39658884194).
+It published 254 additional historical WDI observations from the four existing
+private artifacts. Together with the original four rows, that is 258 sourced
+observations across GDP growth, CPI inflation, official annual-average FX and
+reserves. No additional source download was needed for this correction.
+
+The [bounded source run](https://github.com/cypskip-create/Continua/actions/runs/39656735867)
+and the earlier [news](https://github.com/cypskip-create/Continua/actions/runs/39612690078)
+and [document](https://github.com/cypskip-create/Continua/actions/runs/39614765180)
+verification runs succeeded. The workflow and both enable variables remain active.
+In Africa/Nairobi time, the preserved news schedule is 03:17, 11:17 and 19:17;
+documents run at 09:43, 15:43 and 23:43. GitHub schedule dispatch timing may vary.
+The existing daily allowance still applies, so a budget pause is resumable work,
+not permission to exceed the allowance.
+
+Final local source-publication fixture: 48 checks passed. Full native scraper
+suite: 190 tests ran successfully, six external PostgreSQL fixtures skipped
+locally; the CI candidate job runs those against disposable PostgreSQL. No
+production native cutover, paid AI service or trade execution was performed.

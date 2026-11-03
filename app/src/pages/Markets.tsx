@@ -1,706 +1,1302 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { TopBar } from "@/components/shared/TopBar";
-import { SparklineChart } from "@/components/shared/SparklineChart";
-import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
-import { AllStocksList } from "@/components/markets/AllStocksList";
-import { StockHeatmap } from "@/components/home/StockHeatmap";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange, relativeDate } from "@/lib/stockPrices";
-import { useMovers } from "@/hooks/useMovers";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { EconomicCalendar } from "@/components/home/EconomicCalendar";
-import { investmentThemes } from "@/data/investmentThemes";
-import { featuredLists } from "@/data/featuredLists";
+import {NseActivityCards} from '@/components/markets/NseActivityCards';
+import { useMemo, useState, type ReactNode } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
-  TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Search, Clock,
-  BarChart3, Globe, Calendar, Star, ChevronRight, Flame, Filter,
-  Building2, Zap, Award, DollarSign, Percent, Activity, Bell, Landmark,
-  Lightbulb, Volume2, BarChart2, Layers
+  ArrowLeft,
+  ArrowRight,
+  CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  GitCompare,
+  Landmark,
+  Layers,
+  RefreshCw,
 } from "lucide-react";
+import { TopBar } from "@/components/shared/TopBar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AllStocksList } from "@/components/markets/AllStocksList";
+import { MarketHeatmap } from "@/components/markets/MarketHeatmap";
+import { MarketStatusIndicator } from "@/components/shared/MarketStatusIndicator";
+import { ResearchChart } from "@/components/markets/ResearchChart";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useIndices } from "@/hooks/useIndices";
+import { usePageState } from "@/hooks/usePageState";
+import { useUpcomingDividends } from "@/hooks/useMarketCalendars";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import { investmentThemes } from "@/data/investmentThemes";
+import { industryChains } from "@/data/industryChains";
+import { useWatchlist } from "@/hooks/useWatchlist";
+import {
+  marketResearchApi,
+  type ResearchRecord,
+} from "@/api/marketResearchApi";
+import { screenerApi } from "@/api/screenerApi";
+import { marketQuoteSummary } from "@/lib/marketQuoteSummary";
+import { TrendResearch } from "@/components/markets/TrendResearch";
+import { InstrumentHistory } from "@/components/markets/InstrumentHistory";
+import { MarketStatisticsHistory } from "@/components/markets/MarketStatisticsHistory";
+import { BondHistory } from "@/components/markets/BondHistory";
+import "./markets.css";
 
-const tabs = ["Overview", "Discover", "Calendars", "Heatmap", "All Stocks"] as const;
-type Tab = typeof tabs[number];
-
-const indices = [
-  { name: "NSE 20", value: "1,847.23", change: 1.2, isUp: true, points: "+22.1" },
-  { name: "NSE 25", value: "3,542.87", change: 0.8, isUp: true, points: "+28.3" },
-  { name: "NASI", value: "112.45", change: -0.3, isUp: false, points: "-0.34" },
-  { name: "FTSE Kenya", value: "1,234.56", change: 2.1, isUp: true, points: "+25.9" },
-];
-
-const commodities = [
-  { name: "Tea (Mombasa)", value: "KES 312/kg", change: 2.1, isUp: true },
-  { name: "Coffee (Nairobi)", value: "KES 580/kg", change: 1.4, isUp: true },
-  { name: "Maize (90kg)", value: "KES 4,800", change: -0.6, isUp: false },
-  { name: "Avocado (export)", value: "KES 95/kg", change: 0.9, isUp: true },
-];
-
-// Static fallback (used only while live data is loading, or if the
-// Continua Data API is unreachable) — Overview normally renders live
-// topGainers/topLosers/sectors computed inside the component below from
-// useMovers()/useLiveQuotes(), which come straight from the Data Layer.
-const nseUniverse = CANONICAL_SYMBOLS.map(symbol => {
-  const { pct } = getDayChange(symbol);
-  return { symbol, name: STOCK_META[symbol].name, sector: STOCK_META[symbol].sector, price: getPrice(symbol), change: pct };
-});
-const staticTopGainers = [...nseUniverse].sort((a, b) => b.change - a.change).slice(0, 5);
-const staticTopLosers = [...nseUniverse].sort((a, b) => a.change - b.change).slice(0, 5);
-
-function computeSectors(universe: typeof nseUniverse) {
-  const map = new Map<string, { sum: number; count: number; topSymbol: string; topChange: number }>();
-  universe.forEach(s => {
-    const cur = map.get(s.sector) || { sum: 0, count: 0, topSymbol: s.symbol, topChange: -Infinity };
-    map.set(s.sector, {
-      sum: cur.sum + s.change,
-      count: cur.count + 1,
-      topSymbol: s.change > cur.topChange ? s.symbol : cur.topSymbol,
-      topChange: Math.max(cur.topChange, s.change),
-    });
+const sections = [
+  ["ipos", "IPOs"],
+  ["movers", "Market Movers"],
+  ["earnings", "Earnings"],
+  ["earnings-beat", "Earnings Beat"],
+  ["economic", "Economic Calendar"],
+  ["themes", "Investment Themes"],
+  ["dividends", "Dividend Rankings"],
+  ["dividend-calendar", "Dividend Calendar"],
+  ["heatmap", "Heat Map"],
+  ["trend", "Trend Projection"],
+  ["industry", "Industry Chain"],
+  ["monitor", "Market Monitor"],
+  ["macro", "Macroeconomic Data"],
+] as const;
+const fmt = (n: number | null | undefined, digits = 2) =>
+  n == null || !Number.isFinite(n)
+    ? "—"
+    : n.toLocaleString(undefined, { maximumFractionDigits: digits });
+const dateLabel = (value: string) =>
+  new Date(value).toLocaleDateString("en-KE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
-  return Array.from(map.entries())
-    .map(([name, v]) => ({ name, change: v.sum / v.count, isUp: v.sum >= 0, stocks: v.count, topStock: v.topSymbol }))
-    .sort((a, b) => b.change - a.change);
-}
-
-// allNseStocks removed — the "All Stocks" tab now renders <AllStocksList/>, which derives
-// its data from the shared stockPrices.ts source instead of a separate hardcoded array.
-
-// Calendar/IPO dates below are all expressed as offsets from "today" via fmtDate() rather
-// than fixed calendar strings, so Upcoming Earnings/Dividends/IPOs always read as genuinely
-// upcoming (and Recently Listed as genuinely recent) no matter when the app is opened.
-const fmtDate = (daysOffset: number) =>
-  relativeDate(daysOffset).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-
-const ipos = [
-  { name: "TechPay Africa", sector: "Fintech", issuePrice: 20.00, status: "Open", closeDate: fmtDate(10), subscriptionRate: "340%", minShares: 100 },
-  { name: "SafeInsure Ltd", sector: "Insurance", issuePrice: 15.50, status: "Upcoming", closeDate: fmtDate(25), subscriptionRate: "-", minShares: 200 },
-  { name: "AgroTech Kenya", sector: "Agriculture", issuePrice: 8.00, status: "Upcoming", closeDate: fmtDate(35), subscriptionRate: "-", minShares: 500 },
-];
-
-const recentIPOs = [
-  { name: "DigitalPay PLC", symbol: "DPAY", listingPrice: 12.00, currentPrice: 18.50, change: 54.2, listDate: fmtDate(-20) },
-  { name: "GreenEnergy Co", symbol: "GREN", listingPrice: 25.00, currentPrice: 22.30, change: -10.8, listDate: fmtDate(-45) },
-];
-
-const dividendCalendar = [
-  { symbol: "SAFCOM", name: "Safaricom", exDate: fmtDate(15), payDate: fmtDate(40), amount: 0.64, yield: 5.8, type: "Final" },
-  { symbol: "EQTY", name: "Equity Group", exDate: fmtDate(20), payDate: fmtDate(45), amount: 4.00, yield: 4.2, type: "Final" },
-  { symbol: "SCBK", name: "Std Chartered", exDate: fmtDate(25), payDate: fmtDate(50), amount: 17.00, yield: 6.2, type: "Final" },
-  { symbol: "EABL", name: "EABL", exDate: fmtDate(32), payDate: fmtDate(57), amount: 11.00, yield: 7.1, type: "Interim" },
-  { symbol: "KCB", name: "KCB Group", exDate: fmtDate(38), payDate: fmtDate(63), amount: 2.50, yield: 3.9, type: "Final" },
-];
-
-const highDividendStocks = [
-  { symbol: "EABL", name: "EABL", yield: 7.1, amount: 11.00, price: getPrice("EABL"), frequency: "Semi-annual" },
-  { symbol: "SCBK", name: "Std Chartered", yield: 6.2, amount: 17.00, price: getPrice("SCBK"), frequency: "Annual" },
-  { symbol: "SAFCOM", name: "Safaricom", yield: 5.8, amount: 0.64, price: getPrice("SAFCOM"), frequency: "Annual" },
-  { symbol: "ABSA", name: "ABSA Bank", yield: 5.1, amount: 1.10, price: getPrice("ABSA"), frequency: "Annual" },
-  { symbol: "COOP", name: "Co-op Bank", yield: 4.8, amount: 1.00, price: getPrice("COOP"), frequency: "Annual" },
-];
-
-// featuredLists now comes from the shared data/featuredLists.ts module (imported above) so
-// the Overview cards and the list's own detail page can't show different member stocks.
-// Icons are looked up here by slug since the shared data module stays icon-free/serializable.
-const FEATURED_LIST_ICONS: Record<string, typeof Star> = {
-  "blue-chip-nse": Star,
-  "high-dividend": DollarSign,
-  "undervalued": Award,
-};
-
-// Theme change % is computed live from its member stocks below (via themesWithChange),
-// instead of a hardcoded number that would drift from real prices.
-const priceMap = new Map(nseUniverse.map(s => [s.symbol, s]));
-const themesWithChange = investmentThemes.map(theme => {
-  const memberChanges = theme.stocks.map(s => priceMap.get(s)?.change ?? 0);
-  const change = memberChanges.length > 0 ? memberChanges.reduce((a, b) => a + b, 0) / memberChanges.length : 0;
-  return { ...theme, change };
-});
-
-const earningsCalendar = [
-  { symbol: "EABL", name: "EABL", date: fmtDate(5), time: "2:00 PM EAT", expected: "KES 9.80", impact: "high" as const },
-  { symbol: "SAFCOM", name: "Safaricom", date: fmtDate(12), time: "10:00 AM EAT", expected: "KES 1.08", impact: "high" as const },
-  { symbol: "KCB", name: "KCB Group", date: fmtDate(19), time: "11:00 AM EAT", expected: "KES 7.20", impact: "medium" as const },
-  { symbol: "BAMB", name: "Bamburi", date: fmtDate(30), time: "3:00 PM EAT", expected: "KES 2.30", impact: "low" as const },
-];
-
-const volumeLeaders = [
-  { symbol: "KPLC", name: "Kenya Power", volume: "15.2M", avgVolume: "8.5M", ratio: 1.79, price: getPrice("KPLC"), change: getDayChange("KPLC").pct },
-  { symbol: "SAFCOM", name: "Safaricom", volume: "8.1M", avgVolume: "6.2M", ratio: 1.31, price: getPrice("SAFCOM"), change: getDayChange("SAFCOM").pct },
-  { symbol: "EQTY", name: "Equity Group", volume: "2.4M", avgVolume: "1.8M", ratio: 1.33, price: getPrice("EQTY"), change: getDayChange("EQTY").pct },
-  { symbol: "BRIT", name: "Britam", volume: "1.8M", avgVolume: "950K", ratio: 1.89, price: getPrice("BRIT"), change: getDayChange("BRIT").pct },
-];
-
-const analystRatings = [
-  { symbol: "SAFCOM", rating: "Buy", target: 20.50, current: getPrice("SAFCOM"), firm: "Genghis Capital" },
-  { symbol: "EQTY", rating: "Strong Buy", target: 58.00, current: getPrice("EQTY"), firm: "SBG Securities" },
-  { symbol: "KCB", rating: "Hold", target: 42.00, current: getPrice("KCB"), firm: "Dyer & Blair" },
-  { symbol: "SCBK", rating: "Sell", target: 190.00, current: getPrice("SCBK"), firm: "Standard Investment" },
-].map(r => ({ ...r, upside: +(((r.target - r.current) / r.current) * 100).toFixed(1) }));
-
-function StockRow({ stock, onTap }: { stock: { symbol: string; name: string; price: number; change: number }; onTap: () => void }) {
+function Change({ value }: { value: number | null | undefined }) {
   return (
-    <div onClick={onTap} className="flex items-center justify-between py-3 px-1 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 active:scale-[0.99] transition-all duration-150">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-          {stock.symbol.slice(0, 2)}
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{stock.symbol}</p>
-          <p className="text-xs text-muted-foreground truncate">{stock.name}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <SparklineChart isPositive={stock.change >= 0} width={44} height={18} />
-        <div className="text-right min-w-[72px]">
-          <p className="text-sm font-bold">KES {stock.price.toFixed(2)}</p>
-          <p className={`text-xs font-semibold ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-            {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(1)}%
-          </p>
-        </div>
-      </div>
+    <span
+      className={
+        value == null
+          ? "text-muted-foreground"
+          : value < 0
+            ? "text-bear"
+            : "text-bull"
+      }
+    >
+      {value == null ? "—" : <RollingNumber value={`${value > 0 ? "+" : ""}${fmt(value)}%`} />}
+    </span>
+  );
+}
+function Choices({
+  values,
+  value,
+  onChange,
+}: {
+  values: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="market-choices" role="group">
+      {values.map((v) => (
+        <button
+          key={v}
+          aria-pressed={value === v}
+          className={`pill-tab ${value === v ? "contrast-active" : ""}`}
+          onClick={() => onChange(v)}
+        >
+          {v}
+        </button>
+      ))}
     </div>
+  );
+}
+function Empty({ children }: { children: ReactNode }) {
+  return <p className="market-empty">{children}</p>;
+}
+function DownloadReminder({ title, date }: { title: string; date: string }) {
+  const download = () => {
+    const day = date.slice(0, 10).replaceAll("-", "");
+    const escape = (s: string) =>
+      s
+        .replaceAll("\\", "\\\\")
+        .replaceAll("\n", "\\n")
+        .replaceAll(",", "\\,")
+        .replaceAll(";", "\\;");
+    const stamp =
+      new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const url = URL.createObjectURL(
+      new Blob(
+        [
+          `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Continua//Markets//EN\r\nBEGIN:VEVENT\r\nUID:${day}-${encodeURIComponent(title)}@continua\r\nDTSTAMP:${stamp}\r\nDTSTART;VALUE=DATE:${day}\r\nSUMMARY:${escape(title)}\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n`,
+        ],
+        { type: "text/calendar" },
+      ),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "continua-event.ics";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={`Add ${title} to calendar`}
+      onClick={download}
+    >
+      <CalendarPlus className="h-4 w-4" />
+    </Button>
   );
 }
 
 export default function Markets() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>("Overview");
-  const [nseFilter, setNseFilter] = useState<string>("All");
-  const [listFilter, setListFilter] = useState<{ label: string; symbols: string[] } | null>(null);
-  const [divSortBy, setDivSortBy] = useState<string>("yield");
-
-  // Live from the Continua Data Layer (backend/src/services/marketData/moversService.ts) —
-  // falls back to the static, client-derived list above only while loading or if unreachable.
-  const { gainers: liveGainers, losers: liveLosers, isLoading: moversLoading } = useMovers(5);
-  const { quotes: liveQuotes } = useLiveQuotes(CANONICAL_SYMBOLS);
-
-  const topGainers = liveGainers.length > 0
-    ? liveGainers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }))
-    : staticTopGainers;
-  const topLosers = liveLosers.length > 0
-    ? liveLosers.map(q => ({ symbol: q.symbol, name: STOCK_META[q.symbol]?.name ?? q.symbol, sector: STOCK_META[q.symbol]?.sector ?? "Other", price: q.lastPrice, change: q.changePercent }))
-    : staticTopLosers;
-
-  // Sector rollup, overlaying live quotes onto the static universe wherever the
-  // Data Layer has coverage for a symbol (see docs/api/API.md /instruments).
-  const liveUniverse = useMemo(
-    () => nseUniverse.map(s => {
-      const q = liveQuotes[s.symbol];
-      return q ? { ...s, price: q.lastPrice, change: q.changePercent } : s;
-    }),
-    [liveQuotes]
-  );
-  const sectors = useMemo(() => computeSectors(liveUniverse), [liveUniverse]);
-
-  const sortedDividendStocks = [...highDividendStocks].sort((a, b) => {
-    if (divSortBy === "amount") return b.amount - a.amount;
-    return b.yield - a.yield;
+  const navigate = useNavigate(),
+    { section } = useParams();
+  const { isInWatchlist } = useWatchlist();
+  const [monitorScope, setMonitorScope] = useState("NSE");
+  const [savedTab, setTab] = usePageState<string>("markets:desk-tab", "Overview");
+  const tab = ["Overview", "Bonds", "Derivatives", "USP", "All Stocks"].includes(savedTab)
+    ? savedTab
+    : "Overview";
+  const [search, setSearch] = useState(""),
+    [ranking, setRanking] = useState("Top Gainers"),
+    [ipoStatus, setIpoStatus] = useState("To be Listed");
+  const [divSort, setDivSort] = useState("High Dividend"),
+    [earningMetric, setEarningMetric] = useState("EPS"),
+    [themeSort, setThemeSort] = useState("Top");
+  const [selectedDate, setSelectedDate] = useState(""),
+    [week, setWeek] = useState(new Date()),
+    [macro, setMacro] = useState("");
+  const [earnSort, setEarnSort] = useState({ key: "date", ascending: false });
+  const [eventFilter, setEventFilter] = useState("All events");
+  const sortEarnings = (key: string) =>
+    setEarnSort((previous) => ({
+      key,
+      ascending: previous.key === key ? !previous.ascending : false,
+    }));
+  const {symbols, metadata} = useStockDirectory();
+  const { quotes } = useLiveQuotes(symbols, "NSE"),
+    { indices,refetch:refetchIndices } = useIndices();
+  const { dividends, isLoading: divLoading } = useUpcomingDividends("NSE", 200);
+  const needsIntelligence = (!section && tab === 'Overview') || ['heatmap','monitor'].includes(section ?? '');
+  const needsRecords = (!section && tab === 'Overview') || ['Bonds','Derivatives','USP'].includes(tab) || ['ipos','economic','macro'].includes(section ?? '');
+  const needsEarnings = ['earnings','earnings-beat'].includes(section ?? '');
+  const needsRatios = section === 'dividends';
+  const intelligence = useQuery({
+    queryKey: ["continua", "market-intelligence"],
+    queryFn: marketResearchApi.intelligence,
+    enabled: needsIntelligence,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    retry: 2,
+    refetchIntervalInBackground: false,
   });
-
-  return (
-    <div className="page-canvas min-h-screen bg-background pb-24">
-      <TopBar title="Markets" subtitle="Discover opportunities" showSearch showNotifications />
-
-      {/* Sticky editorial sub-nav */}
-      <div className="sub-nav">
-        <div className="flex overflow-x-auto scrollbar-hide px-4 gap-1 py-2">
-          {tabs.map(tab => (
-            <button
-              key={tab}
-              data-small-target
-              onClick={() => setActiveTab(tab)}
-              className={`pill-tab whitespace-nowrap ${activeTab === tab ? 'active' : ''}`}
-            >
-              {tab}
-            </button>
-          ))}
+  const marketSnapshot = marketQuoteSummary(Object.values(quotes), metadata) ?? intelligence.data;
+  const recordsQuery = useQuery({
+    queryKey: ["continua", "market-records"],
+    queryFn: marketResearchApi.records,
+    enabled: needsRecords,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
+  const earningsQuery = useQuery({
+    queryKey: ["continua", "market-earnings"],
+    queryFn: marketResearchApi.earnings,
+    enabled: needsEarnings,
+    staleTime: 600_000,
+    retry: 1,
+  });
+  const ratios = useQuery({
+    queryKey: ["continua", "market-screener"],
+    queryFn: () => screenerApi.run({ limit: 200 }),
+    enabled: needsRatios,
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const records = recordsQuery.data?.records ?? [],
+    earnings = earningsQuery.data ?? [];
+  const matches = (symbol: string, title: string) =>
+    `${symbol} ${title}`.toLowerCase().includes(search.toLowerCase());
+  const names = (symbol: string) => metadata[symbol]?.name ?? symbol;
+  const ranked = Object.values(quotes)
+    .filter((q) => q.lastPrice > 0 && matches(q.symbol, names(q.symbol)))
+    .sort((a, b) =>
+      ranking === "Most Active"
+        ? b.volume - a.volume
+        : ranking === "Top Losers"
+          ? a.changePercent - b.changePercent
+          : b.changePercent - a.changePercent,
+    );
+  const themes = investmentThemes
+    .map((t) => {
+      const changes = t.stocks
+        .map((s) => quotes[s]?.changePercent)
+        .filter((v): v is number => v != null && Number.isFinite(v));
+      return {
+        ...t,
+        change: changes.length
+          ? changes.reduce((s, v) => s + v, 0) / changes.length
+          : null,
+        coverage: changes.length,
+      };
+    })
+    .filter((t) => matches("", t.title))
+    .sort((a, b) =>
+      themeSort === "A–Z"
+        ? a.title.localeCompare(b.title)
+        : (b.change ?? -Infinity) - (a.change ?? -Infinity),
+    );
+  const macroRecords = records.filter(
+      (r) =>
+        r.kind === "macro" &&
+        matches("", r.title + " " + (r.payload.indicator ?? "")),
+    ),
+    indicators = [
+      ...new Set(macroRecords.map((r) => r.payload.indicator ?? r.title)),
+    ];
+  const activeMacro = indicators.includes(macro) ? macro : indicators[0];
+  const macroHistory = macroRecords
+    .filter((r) => (r.payload.indicator ?? r.title) === activeMacro)
+    .sort((a, b) => a.observedAt.localeCompare(b.observedAt));
+  const dividendRankings = [...(ratios.data ?? [])]
+    .filter(
+      (r) =>
+        r.dividendYield != null &&
+        r.dividendYield > 0 &&
+        matches(r.symbol, r.companyName),
+    )
+    .sort((a, b) => (b.dividendYield ?? 0) - (a.dividendYield ?? 0));
+  const start = new Date(week);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - start.getDay());
+  const localDay = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const dayMatches = (date: string) =>
+    !selectedDate || date.slice(0, 10) === selectedDate;
+  const calendar = (
+    <div className="market-calendar">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <strong>
+          {week.toLocaleDateString("en-KE", { month: "long", year: "numeric" })}
+        </strong>
+        <div className="flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Previous week"
+            onClick={() => {
+              const d = new Date(week);
+              d.setDate(d.getDate() - 7);
+              setWeek(d);
+              setSelectedDate("");
+            }}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setWeek(new Date());
+              setSelectedDate(localDay(new Date()));
+            }}
+          >
+            Today
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Next week"
+            onClick={() => {
+              const d = new Date(week);
+              d.setDate(d.getDate() + 7);
+              setWeek(d);
+              setSelectedDate("");
+            }}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-
-      <div className="px-4 pt-4 space-y-5 animate-fade-in">
-        {/* ── INTERACTIVE ANALYSIS TOOLS ── shown on every Markets tab */}
-        <div>
-          <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Filter className="h-4 w-4 text-primary" />
-            Analysis Tools
-          </h2>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { title: "Stock Screener", desc: "Filter by P/E, yield, sector", icon: Filter, color: "bg-primary/10 text-primary", action: () => navigate('/screener') },
-              { title: "Compare Stocks", desc: "Side-by-side metrics", icon: BarChart2, color: "bg-accent/10 text-accent", action: () => navigate('/compare') },
-              { title: "Sector Heatmap", desc: "See what's hot today", icon: Activity, color: "bg-bull/10 text-bull", action: () => navigate('/sector-heatmap') },
-              { title: "Sector Explorer", desc: "Browse every NSE sector", icon: Layers, color: "bg-chart-3/10 text-chart-3", action: () => setActiveTab("Heatmap") },
-              { title: "Investment Themes", desc: "Stocks by what's driving them", icon: Lightbulb, color: "bg-chart-4/10 text-chart-4", action: () => setActiveTab("Overview") },
-              { title: "My Watchlist", desc: "Track favourite stocks", icon: Star, color: "bg-chart-2/10 text-chart-2", action: () => navigate('/watchlist') },
-            ].map(tool => (
-              <Card key={tool.title} className="soft-card p-2 cursor-pointer active:scale-[0.97] transition-transform" onClick={tool.action}>
-                <div className={`w-7 h-7 rounded-lg ${tool.color} flex items-center justify-center mb-1.5`}>
-                  <tool.icon className="h-3.5 w-3.5" />
-                </div>
-                <p className="text-xs font-bold leading-tight">{tool.title}</p>
-                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">{tool.desc}</p>
-              </Card>
-            ))}
-          </div>
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((d) => (
+          <button
+            className={`py-3 rounded-full ${selectedDate === localDay(d) ? "bg-accent text-accent-foreground" : ""}`}
+            key={localDay(d)}
+            onClick={() => setSelectedDate(localDay(d))}
+          >
+            <span className="block text-xs text-muted-foreground">
+              {d.toLocaleDateString("en-KE", { weekday: "short" })}
+            </span>
+            <RollingNumber value={d.getDate()} />
+          </button>
+        ))}
+      </div>
+      {selectedDate && (
+        <Button variant="ghost" onClick={() => setSelectedDate("")}>
+          Show all dates
+        </Button>
+      )}
+    </div>
+  );
+  const source = (r: ResearchRecord) => (
+    <span className="text-xs text-muted-foreground">{new URL(r.sourceUrl).hostname.endsWith('centralbank.go.ke')?'CBK':new URL(r.sourceUrl).hostname.endsWith('nse.co.ke')?'NSE':new URL(r.sourceUrl).hostname.endsWith('cma.or.ke')?'CMA':'KNBS'} · {dateLabel(r.observedAt)}</span>
+  );
+  const indexStrip = (
+    <div className="market-index-strip">
+      {indices.map((i) => (
+        <div key={i.code}>
+          <p className="text-sm text-muted-foreground">{i.code}</p>
+          <p className="text-2xl my-2 tabular-nums"><RollingNumber value={fmt(i.value)} /></p>
+          <Change value={i.changePercent} />
+          <p className="text-xs text-muted-foreground mt-2">
+            Closing data · {dateLabel(i.timestamp)}
+          </p>
         </div>
-
-        {activeTab === "Overview" && (
-          <>
-            {/* Market Status */}
-            <div className="flex items-center justify-between">
-              <MarketStatusIndicator />
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>Live</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-bull animate-pulse" />
+      ))}
+      <NseActivityCards/>
+      {!indices.length && (
+        <Empty>Published NSE indices are not available yet.</Empty>
+      )}
+    </div>
+  );
+  function body(id: string, full = false): ReactNode {
+    const limit = full ? 200 : 3;
+    if (id === "ipos") {
+      const ipos = records.filter(
+        (r) =>
+          r.kind === "ipo" &&
+          matches(r.symbol ?? "", r.title) &&
+          r.payload.status === ipoStatus,
+      );
+      return (
+        <>
+          {full && (
+            <>
+              <div className="flex gap-3 mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIpoStatus("Listed")}
+                >
+                  History
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/learn")}>
+                  Learn about IPOs
+                </Button>
               </div>
+              <Choices
+                values={["Available", "To be Listed", "Listed"]}
+                value={ipoStatus}
+                onChange={setIpoStatus}
+              />
+            </>
+          )}
+          {ipos.slice(0, limit).map((r) => (
+            <div className="market-row block" key={r.id}>
+              <h3>{r.title}</h3>
+              <dl className="market-definition">
+                <dt>Initial price · KES</dt>
+                <dd><RollingNumber value={fmt(r.payload.price)} /></dd>
+                <dt>Shares offered</dt>
+                <dd><RollingNumber value={fmt(r.payload.shares, 0)} /></dd>
+                <dt>Listing date</dt>
+                <dd>
+                  {r.payload.date ? dateLabel(r.payload.date) : "Not announced"}
+                </dd>
+              </dl>
+              {source(r)}
             </div>
-
-            {/* NSE Indices */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-primary" />
-                NSE Indices
-              </h2>
-              <div className="grid grid-cols-2 gap-2.5">
-                {indices.map(idx => (
-                  <Card key={idx.name} className="soft-card p-3 active:scale-[0.98] transition-transform cursor-pointer" onClick={() => navigate('/markets')}>
-                    <p className="text-xs font-medium text-muted-foreground">{idx.name}</p>
-                    <p className="text-lg font-bold mt-0.5">{idx.value}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`text-xs font-semibold flex items-center gap-0.5 ${idx.isUp ? 'text-bull' : 'text-bear'}`}>
-                        {idx.isUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                        {idx.points}
-                      </span>
-                      <span className={`text-xs ${idx.isUp ? 'text-bull' : 'text-bear'}`}>
-                        ({idx.isUp ? '+' : ''}{idx.change.toFixed(1)}%)
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <SparklineChart isPositive={idx.isUp} width={120} height={28} />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Investment Themes */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-accent" />
-                Investment Themes
-              </h2>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
-                {themesWithChange.map(theme => (
-                  <div
-                    key={theme.slug}
-                    data-small-target
-                    onClick={() => navigate(`/theme/${theme.slug}`)}
-                    className="min-w-[210px] flex-shrink-0 border-l border-border/60 pl-3 cursor-pointer active:opacity-70 transition-opacity"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-2xl">{theme.icon}</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${theme.change >= 0 ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                        {theme.change >= 0 ? '+' : ''}{theme.change.toFixed(1)}%
-                      </span>
-                    </div>
-                    <p className="text-sm font-bold">{theme.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{theme.desc}</p>
-                    <div className="flex gap-1 mt-2">
-                      {theme.stocks.map(s => (
-                        <Badge key={s} variant="secondary" className="text-[10px] py-0 px-1.5 border-0">{s}</Badge>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-2 leading-snug">{theme.why}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Local Commodities */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-accent" />
-                Local Commodities
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {commodities.map(c => (
-                  <Card key={c.name} className="soft-card p-3">
-                    <p className="text-xs text-muted-foreground font-medium">{c.name}</p>
-                    <p className="text-sm font-bold mt-0.5">{c.value}</p>
-                    <p className={`text-xs font-semibold mt-0.5 ${c.isUp ? 'text-bull' : 'text-bear'}`}>
-                      {c.isUp ? '+' : ''}{c.change.toFixed(1)}%
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            {/* Featured Lists */}
-            <div>
-              <h2 className="text-sm font-bold mb-3">Featured Lists</h2>
-              <div className="grid grid-cols-2 gap-2.5">
-                {featuredLists.map(list => {
-                  const Icon = FEATURED_LIST_ICONS[list.slug] || Star;
-                  return (
-                    <Card
-                      key={list.slug}
-                      className="soft-card p-4 cursor-pointer active:scale-[0.97] transition-transform"
-                      onClick={() => navigate(`/featured/${list.slug}`)}
+          ))}
+          {!ipos.length && (
+            <Empty>
+              No verified {ipoStatus.toLowerCase()} NSE IPO announcements on
+              file. Rumoured listings are not treated as confirmed offers.
+            </Empty>
+          )}
+        </>
+      );
+    }
+    if (id === "movers")
+      return (
+        <>
+          <Choices
+            values={["Top Gainers", "Top Losers", "Most Active"]}
+            value={ranking}
+            onChange={setRanking}
+          />
+          <p className="market-note">
+            Latest published NSE session · KES. No unsupported pre-market data.
+          </p>
+          <div className="market-table-scroll">
+            <table className="market-table">
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>
+                    <button
+                      onClick={() =>
+                        setRanking(
+                          ranking === "Top Gainers"
+                            ? "Top Losers"
+                            : "Top Gainers",
+                        )
+                      }
                     >
-                      <div className={`w-10 h-10 rounded-2xl ${list.color} flex items-center justify-center mb-3`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-bold">{list.title}</p>
-                      <p className="text-xs text-muted-foreground">{list.desc}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{list.symbols.length} stocks</p>
-                    </Card>
+                      Change ↕
+                    </button>
+                  </th>
+                  <th>Price</th>
+                  <th>
+                    <button onClick={() => setRanking("Most Active")}>
+                      Volume ↓
+                    </button>
+                  </th>
+                  {full && <th>As of</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {ranked.slice(0, limit).map((q) => (
+                  <tr key={q.symbol}>
+                    <th>
+                      <button onClick={() => navigate(`/stock/${q.symbol}`)}>
+                        {q.symbol}
+                        <small>{names(q.symbol)}</small>
+                      </button>
+                    </th>
+                    <td>
+                      <Change value={q.changePercent} />
+                    </td>
+                    <td><RollingNumber value={fmt(q.lastPrice)} /></td>
+                    <td><RollingNumber value={fmt(q.volume, 0)} /></td>
+                    {full && <td>{dateLabel(q.timestamp)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!ranked.length && <Empty>No quoted stocks match this view.</Empty>}
+        </>
+      );
+    if (id === "earnings" || id === "earnings-beat") {
+      const beat = id === "earnings-beat",
+        revenue = earningMetric === "Revenue";
+      const rows = earnings
+        .filter(
+          (e) =>
+            matches(e.symbol, e.companyName) &&
+            (!full ||
+              !selectedDate ||
+              (e.reportedDate ?? e.expectedDate)?.slice(0, 10) ===
+                selectedDate),
+        )
+        .sort((a, b) => {
+          const numberFor = (e: typeof a) => {
+            const actual =
+              earningMetric === "EBIT"
+                ? null
+                : revenue
+                  ? e.revenueActual
+                  : e.epsActual;
+            const estimate =
+              earningMetric === "EBIT"
+                ? null
+                : revenue
+                  ? e.revenueEstimate
+                  : e.epsEstimate;
+            if (earnSort.key === "actual") return actual;
+            if (earnSort.key === "estimate") return estimate;
+            if (earnSort.key === "beat")
+              return actual != null && estimate != null && estimate !== 0
+                ? ((actual - estimate) / Math.abs(estimate)) * 100
+                : null;
+            if (earnSort.key === "eps") return e.epsActual;
+            if (earnSort.key === "revenue") return e.revenueActual;
+            return e.reportedDate || e.expectedDate
+              ? Date.parse((e.reportedDate ?? e.expectedDate)!)
+              : null;
+          };
+          const av = numberFor(a),
+            bv = numberFor(b);
+          if (av == null) return bv == null ? 0 : 1;
+          if (bv == null) return -1;
+          return (av - bv) * (earnSort.ascending ? 1 : -1);
+        });
+      return (
+        <>
+          {full && !beat && calendar}
+          {beat && (
+            <Choices
+              values={["EPS", "Revenue", "EBIT"]}
+              value={earningMetric}
+              onChange={setEarningMetric}
+            />
+          )}
+          <div className="market-table-scroll">
+            <table className="market-table">
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  {beat ? (
+                    <>
+                      <th>
+                        <button onClick={() => sortEarnings("beat")}>
+                          Beat % ↕
+                        </button>
+                      </th>
+                      <th>
+                        <button onClick={() => sortEarnings("actual")}>
+                          Actual {earningMetric} ↕
+                        </button>
+                      </th>
+                      <th>
+                        <button onClick={() => sortEarnings("estimate")}>
+                          Estimate {earningMetric} ↕
+                        </button>
+                      </th>
+                      <th>After earnings</th>
+                    </>
+                  ) : (
+                    <>
+                      <th>
+                        <button onClick={() => sortEarnings("eps")}>
+                          Actual EPS · KES ↕
+                        </button>
+                      </th>
+                      <th>
+                        <button onClick={() => sortEarnings("revenue")}>
+                          Revenue · KES ↕
+                        </button>
+                      </th>
+                    </>
+                  )}
+                  <th>
+                    <button onClick={() => sortEarnings("date")}>
+                      Report date ↕
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, limit).map((e) => {
+                  const actual =
+                      earningMetric === "EBIT"
+                        ? null
+                        : revenue
+                          ? e.revenueActual
+                          : e.epsActual,
+                    estimate =
+                      earningMetric === "EBIT"
+                        ? null
+                        : revenue
+                          ? e.revenueEstimate
+                          : e.epsEstimate;
+                  const percent =
+                    actual != null && estimate != null && estimate !== 0
+                      ? ((actual - estimate) / Math.abs(estimate)) * 100
+                      : null;
+                  return (
+                    <tr key={e.id}>
+                      <th>
+                        <button onClick={() => navigate(`/stock/${e.symbol}`)}>
+                          {e.symbol}
+                          <small>
+                            {e.companyName} · <RollingNumber value={e.fiscalYear} />
+                            {e.fiscalQuarter ? ` Q${e.fiscalQuarter}` : ""}
+                          </small>
+                        </button>
+                      </th>
+                      {beat ? (
+                        <>
+                          <td>
+                            <Change value={percent} />
+                          </td>
+                          <td><RollingNumber value={fmt(actual)} /></td>
+                          <td><RollingNumber value={fmt(estimate)} /></td>
+                          <td>—</td>
+                        </>
+                      ) : (
+                        <>
+                          <td><RollingNumber value={fmt(e.epsActual)} /></td>
+                          <td><RollingNumber value={fmt(e.revenueActual, 0)} /></td>
+                        </>
+                      )}
+                      <td>
+                        {e.reportedDate
+                          ? dateLabel(e.reportedDate)
+                          : e.expectedDate
+                            ? `Expected ${dateLabel(e.expectedDate)}`
+                            : "Not announced"}
+                      </td>
+                    </tr>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Earnings Calendar */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                Upcoming Earnings
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                {earningsCalendar.map(e => (
-                  <div key={e.symbol} onClick={() => navigate(`/stock/${e.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${e.impact === 'high' ? 'bg-bear' : e.impact === 'medium' ? 'bg-accent' : 'bg-muted-foreground'}`} />
-                      <div>
-                        <p className="text-sm font-semibold">{e.symbol} · {e.name}</p>
-                        <p className="text-xs text-muted-foreground">{e.date} · {e.time}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Est. EPS</p>
-                      <p className="text-sm font-bold">{e.expected}</p>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            </div>
-
-            {/* Volume Leaders */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Volume2 className="h-4 w-4 text-accent" />
-                Volume Leaders
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                {volumeLeaders.map(v => (
-                  <div key={v.symbol} onClick={() => navigate(`/stock/${v.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center text-xs font-bold text-accent shrink-0">
-                        {v.symbol.slice(0, 2)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{v.symbol}</p>
-                        <p className="text-xs text-muted-foreground">Vol: {v.volume}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{v.ratio.toFixed(1)}x</p>
-                      <p className={`text-xs font-semibold ${v.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {v.change >= 0 ? '+' : ''}{v.change.toFixed(1)}%
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            </div>
-
-            {/* Economic Calendar */}
-            <EconomicCalendar />
-
-            {/* Top Gainers & Losers */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-bull" />
-                Top Gainers
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                <div className="divide-y divide-border/40">
-                  {topGainers.slice(0, 5).map(s => (
-                    <StockRow key={s.symbol} stock={s} onTap={() => navigate(`/stock/${s.symbol}`)} />
-                  ))}
-                </div>
-              </Card>
-            </div>
-
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-bear" />
-                Top Losers
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                <div className="divide-y divide-border/40">
-                  {topLosers.slice(0, 5).map(s => (
-                    <StockRow key={s.symbol} stock={s} onTap={() => navigate(`/stock/${s.symbol}`)} />
-                  ))}
-                </div>
-              </Card>
-            </div>
-
-            {/* Analyst Ratings */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <Award className="h-4 w-4 text-accent" />
-                Analyst Ratings
-              </h2>
-              <Card className="soft-card overflow-hidden">
-                {analystRatings.map(r => (
-                  <div key={r.symbol} onClick={() => navigate(`/stock/${r.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold">{r.symbol}</span>
-                        <Badge className={`text-[10px] py-0 px-1.5 ${
-                          r.rating.includes('Buy') ? 'bg-bull/10 text-bull border-bull/20' :
-                          r.rating === 'Hold' ? 'bg-accent/10 text-accent border-accent/20' :
-                          'bg-bear/10 text-bear border-bear/20'
-                        }`}>{r.rating}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{r.firm}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">KES {r.target.toFixed(2)}</p>
-                      <p className={`text-xs font-semibold ${r.upside >= 0 ? 'text-bull' : 'text-bear'}`}>
-                        {r.upside >= 0 ? '+' : ''}{r.upside}% upside
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            </div>
-
-            {/* Sector Heat Map */}
-            <div>
-              <h2 className="text-sm font-bold mb-3 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                Sector Performance
-              </h2>
-              <div className="grid grid-cols-2 gap-2">
-                {sectors.map(s => (
-                  <Card key={s.name} className="soft-card p-3 cursor-pointer active:scale-[0.97] transition-transform" onClick={() => navigate(`/sector/${encodeURIComponent(s.name)}`)}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">{s.name}</p>
-                      <p className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                        {s.isUp ? '+' : ''}{s.change.toFixed(1)}%
-                      </p>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{s.stocks} stocks · Top: {s.topStock}</p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-          </>
-        )}
-
-        {/* ─── NSE TAB ─── */}
-        {activeTab === "All Stocks" && (
-          <>
-            {listFilter && (
-              <div className="flex items-center justify-between bg-primary/10 rounded-xl px-3 py-2">
-                <span className="text-xs font-semibold text-primary">Showing: {listFilter.label}</span>
-                <button data-small-target onClick={() => setListFilter(null)} className="text-xs font-semibold text-muted-foreground">Clear</button>
-              </div>
-            )}
-            <AllStocksList
-              initialSector={nseFilter === "All" ? undefined : nseFilter}
-              onlySymbols={listFilter?.symbols}
+              </tbody>
+            </table>
+          </div>
+          {!rows.length && (
+            <Empty>No verified earnings records match this view.</Empty>
+          )}
+          {beat && (
+            <p className="market-note">
+              Beat = (actual − estimate) / |estimate|. Unavailable estimates,
+              EBIT and post-release returns are left blank; current quote
+              changes are not earnings reactions.
+            </p>
+          )}
+        </>
+      );
+    }
+    if (id === "economic" || id === "dividend-calendar") {
+      const economic = id === "economic";
+      const events = economic
+        ? records
+            .filter(
+              (r) =>
+                r.kind === "economic" &&
+                (eventFilter === "All events" || r.payload.importance === 3) &&
+                matches("", r.title) &&
+                dayMatches(r.payload.date ?? r.observedAt),
+            )
+            .sort((a, b) =>
+              (a.payload.date ?? a.observedAt).localeCompare(
+                b.payload.date ?? b.observedAt,
+              ),
+            )
+        : [];
+      const divs = dividends.filter(
+        (d) =>
+          matches(d.symbol, d.companyName) &&
+          dayMatches(d.exDate ?? d.payDate ?? ""),
+      );
+      return (
+        <>
+          {full && calendar}
+          {full && economic && (
+            <Choices
+              values={["All events", "High importance"]}
+              value={eventFilter}
+              onChange={setEventFilter}
             />
-          </>
-        )}
-
-        {/* Global tab removed — focused on Kenyan market */}
-
-        {/* ─── IPOs TAB ─── */}
-        {activeTab === "Discover" && (
-          <>
-            {/* Quick jumps into curated slices of the market — same underlying live data as
-                Overview/All Stocks, just one tap away from here. */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
-              <Button variant="outline" size="sm" className="h-8 rounded-full text-xs shrink-0 gap-1.5" onClick={() => { setListFilter({ label: "Top Gainers", symbols: topGainers.map(s => s.symbol) }); setActiveTab("All Stocks"); }}>
-                <TrendingUp className="h-3.5 w-3.5 text-bull" /> Top Gainers
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 rounded-full text-xs shrink-0 gap-1.5" onClick={() => { setListFilter({ label: "Top Losers", symbols: topLosers.map(s => s.symbol) }); setActiveTab("All Stocks"); }}>
-                <TrendingDown className="h-3.5 w-3.5 text-bear" /> Top Losers
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 rounded-full text-xs shrink-0 gap-1.5" onClick={() => setActiveTab("Calendars")}>
-                <DollarSign className="h-3.5 w-3.5 text-bull" /> High Dividend
-              </Button>
-            </div>
-
-            <h2 className="text-sm font-bold flex items-center gap-2">
-              <Flame className="h-4 w-4 text-accent" />
-              Listing Soon
-            </h2>
-            <div className="space-y-3">
-              {ipos.map(ipo => (
-                <Card key={ipo.name} className="soft-card overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-bold">{ipo.name}</p>
-                        <p className="text-xs text-muted-foreground">{ipo.sector}</p>
-                      </div>
-                      <Badge className={`text-xs ${ipo.status === "Open" ? 'bg-bull/10 text-bull border-bull/20' : 'bg-accent/10 text-accent border-accent/20'}`}>
-                        {ipo.status}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 mb-3">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Issue Price</p>
-                        <p className="text-sm font-bold">KES {ipo.issuePrice.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Close Date</p>
-                        <p className="text-sm font-semibold">{ipo.closeDate}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Subscription</p>
-                        <p className="text-sm font-bold text-bull">{ipo.subscriptionRate}</p>
-                      </div>
-                    </div>
-                    {ipo.status === "Open" && (
-                      <Button className="w-full h-10 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm active:scale-[0.98] transition-transform">
-                        Subscribe Now
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <h2 className="text-sm font-bold flex items-center gap-2 mt-2">
-              <Activity className="h-4 w-4 text-primary" />
-              Recently Listed
-            </h2>
-            <Card className="soft-card overflow-hidden">
-              {recentIPOs.map(ipo => (
-                <div key={ipo.symbol} onClick={() => navigate(`/stock/${ipo.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
+          )}
+          {economic
+            ? events.slice(0, limit).map((r) => (
+                <div className="market-row" key={r.id}>
                   <div>
-                    <p className="text-sm font-bold">{ipo.name}</p>
-                    <p className="text-xs text-muted-foreground">${ipo.symbol} · Listed {ipo.listDate}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">KES {ipo.currentPrice.toFixed(2)}</p>
-                    <p className={`text-xs font-semibold ${ipo.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {ipo.change >= 0 ? '+' : ''}{ipo.change.toFixed(1)}% from IPO
+                    <p className="text-xs text-muted-foreground">
+                      {dateLabel(r.payload.date ?? r.observedAt)} · Kenya
                     </p>
+                    <h3>{r.title}</h3>
+                    <p className="market-note">
+                      Previous <RollingNumber value={fmt(r.payload.previous)} /> · Consensus{" "}
+                      <RollingNumber value={fmt(r.payload.consensus)} /> · Actual{" "}
+                      <RollingNumber value={fmt(r.payload.actual)} /> {r.payload.unit}
+                    </p>
+                    {source(r)}
                   </div>
+                  <DownloadReminder
+                    title={r.title}
+                    date={r.payload.date ?? r.observedAt}
+                  />
+                </div>
+              ))
+            : divs.slice(0, limit).map((d) => (
+                <div className="market-row" key={d.id}>
+                  <button
+                    className="text-left"
+                    onClick={() => navigate(`/stock/${d.symbol}`)}
+                  >
+                    <strong>{d.symbol}</strong>
+                    <small>{d.companyName}</small>
+                    <p className="market-note">
+                      KES{" "}
+                      <RollingNumber value={fmt(
+                        (d.details as { amountPerShare?: number })
+                          .amountPerShare,
+                      )} />{" "}
+                      per share · Ex-date{" "}
+                      {d.exDate ? dateLabel(d.exDate) : "Not announced"}
+                      {d.payDate ? ` · Payment ${dateLabel(d.payDate)}` : ""}
+                    </p>
+                  </button>
+                  {d.exDate && (
+                    <DownloadReminder
+                      title={`${d.symbol} dividend ex-date`}
+                      date={d.exDate}
+                    />
+                  )}
                 </div>
               ))}
-            </Card>
-          </>
-        )}
-
-        {/* ─── DIVIDENDS TAB ─── */}
-        {activeTab === "Calendars" && (
-          <>
-            <h2 className="text-sm font-bold flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              Upcoming Dividends
-            </h2>
-            <Card className="soft-card overflow-hidden">
-              {dividendCalendar.map(d => (
-                <div key={d.symbol} onClick={() => navigate(`/stock/${d.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-bull/8 flex items-center justify-center text-xs font-bold text-bull">
-                      {d.symbol.slice(0, 2)}
+          {(economic ? !events.length : !divs.length) && (
+            <Empty>
+              {!economic && divLoading
+                ? "Loading dividend announcements…"
+                : "No verified events for the selected dates."}
+            </Empty>
+          )}
+        </>
+      );
+    }
+    if (id === "industry")
+      return (
+        <>
+          <p className="market-note">
+            Explore economic exposure from inputs to end users. These links
+            describe industry roles, not verified supplier contracts.
+          </p>
+          {industryChains
+            .filter((c) => matches("", c.title))
+            .slice(0, full ? 200 : 2)
+            .map((chain) => (
+              <details key={chain.title} className="border-b py-5" open={full}>
+                <summary className="cursor-pointer text-lg">
+                  {chain.title}
+                </summary>
+                <p className="market-note">{chain.description}</p>
+                <div className="flex gap-6 overflow-x-auto py-3">
+                  {chain.stages.map((stage) => (
+                    <div
+                      key={stage.name}
+                      className="min-w-36 border-l-2 border-primary/25 pl-3"
+                    >
+                      <p className="text-xs text-muted-foreground mb-3">
+                        {stage.name}
+                      </p>
+                      {stage.symbols
+                        .filter((s) => symbols.includes(s))
+                        .map((symbol) => (
+                          <button
+                            className="block text-left py-2 w-full"
+                            key={symbol}
+                            onClick={() => navigate(`/stock/${symbol}`)}
+                          >
+                            {symbol}
+                            <small>{names(symbol)}</small>
+                            <Change value={quotes[symbol]?.changePercent} />
+                          </button>
+                        ))}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold">{d.symbol}</p>
-                      <p className="text-xs text-muted-foreground">Ex: {d.exDate}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-bull">KES {d.amount.toFixed(2)}</p>
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <Badge variant="secondary" className="text-[10px] py-0 px-1.5">{d.type}</Badge>
-                      <span className="text-xs text-muted-foreground">{d.yield}% yield</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </Card>
-
-            <div className="flex items-center justify-between mt-2">
-              <h2 className="text-sm font-bold flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-bull" />
-                High Dividend Stocks
-              </h2>
-              <div className="flex gap-1.5">
-                {["yield", "amount"].map(s => (
-                  <Button key={s} variant={divSortBy === s ? "default" : "outline"} size="sm" className={`text-xs rounded-full h-7 ${divSortBy === s ? 'bg-primary text-primary-foreground' : ''}`} onClick={() => setDivSortBy(s)}>
-                    {s === "yield" ? "By Yield" : "By Amount"}
-                  </Button>
-                ))}
+              </details>
+            ))}
+        </>
+      );
+    if (id === "themes")
+      return (
+        <>
+          {full && (
+            <Choices
+              values={["Top", "A–Z"]}
+              value={themeSort}
+              onChange={setThemeSort}
+            />
+          )}
+          <div className={id === "themes" ? "market-theme-grid" : ""}>
+            {themes.slice(0, full ? 200 : 2).map((t) => (
+              <button
+                className="market-theme"
+                key={t.slug}
+                onClick={() => navigate(`/theme/${t.slug}`)}
+              >
+                <span aria-hidden="true" className="market-theme-symbol">
+                  {t.icon}
+                </span>
+                <div>
+                  <h3>{t.title}</h3>
+                  <p className="text-sm text-muted-foreground">{t.desc}</p>
+                  <div className="mt-3">
+                    <Change value={t.change} />
+                    <span className="market-note">
+                      {" "}
+                      · <RollingNumber value={t.coverage} />/<RollingNumber value={t.stocks.length} /> quoted
+                    </span>
+                  </div>
+                  <p className="text-xs text-primary mt-2">
+                    {t.stocks.join(" → ")}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0" />
+              </button>
+            ))}
+          </div>
+          <p className="market-note">
+            Curated exposure groups, not contractual supplier relationships.
+            Returns are equal-weight averages of covered members.
+          </p>
+        </>
+      );
+    if (id === "dividends")
+      return (
+        <>
+          <Choices
+            values={["High Dividend", "Continuous Growth"]}
+            value={divSort}
+            onChange={setDivSort}
+          />
+          {divSort === "Continuous Growth" ? (
+            <Empty>
+              Consecutive dividend-growth years require a complete annual
+              distribution history. Incomplete records are not labelled as a
+              growth streak.
+            </Empty>
+          ) : (
+            <div className="market-table-scroll">
+              <table className="market-table">
+                <thead>
+                  <tr>
+                    <th>Company</th>
+                    <th>Dividend yield ↓</th>
+                    <th>Price · KES</th>
+                    <th>P/E</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dividendRankings.slice(0, limit).map((r, i) => (
+                    <tr key={r.symbol}>
+                      <th>
+                        <button onClick={() => navigate(`/stock/${r.symbol}`)}>
+                          <RollingNumber value={i + 1} />. {r.symbol}
+                          <small>{r.companyName}</small>
+                        </button>
+                      </th>
+                      <td><RollingNumber value={fmt(r.dividendYield! * 100)} />%</td>
+                      <td><RollingNumber value={fmt(r.lastPrice)} /></td>
+                      <td><RollingNumber value={fmt(r.pe)} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!dividendRankings.length && (
+                <Empty>No computed dividend yields available.</Empty>
+              )}
+            </div>
+          )}
+          <p className="market-note">
+            Engine-computed ratios; coverage follows available financial
+            statements. Yield is not a guaranteed return.
+          </p>
+        </>
+      );
+    if (id === "heatmap")
+      return (
+        <MarketHeatmap
+          sectors={marketSnapshot?.sectors ?? []}
+          quotes={Object.values(quotes)}
+          compact={!full}
+        />
+      );
+    if (id === "trend") return <TrendResearch compact={!full} />;
+    if (id === "monitor")
+      return (
+        <>
+          <Choices
+            values={["NSE", "Watchlist"]}
+            value={monitorScope}
+            onChange={setMonitorScope}
+          />
+          <p className="market-note">
+            Engine snapshot monitor · movements, not inferred block trades.
+          </p>
+          {marketSnapshot?.monitor
+            .filter(
+              (r) =>
+                matches(r.symbol, names(r.symbol)) &&
+                (monitorScope === "NSE" || isInWatchlist(r.symbol)),
+            )
+            .slice(0, limit)
+            .map((r) => (
+              <div className="market-monitor-row" key={r.symbol}>
+                <time>{dateLabel(r.timestamp)}</time>
+                <button onClick={() => navigate(`/stock/${r.symbol}`)}>
+                  <strong>{r.symbol}</strong>
+                  <small>{names(r.symbol)}</small>
+                </button>
+                <div className="text-right">
+                  <p>{r.signal}</p>
+                  <Change value={r.changePercent} />
+                  <small><RollingNumber value={fmt(r.volume, 0)} /> shares</small>
+                </div>
               </div>
-            </div>
-            <Card className="soft-card overflow-hidden">
-              {sortedDividendStocks.map((stock, i) => (
-                <div key={stock.symbol} onClick={() => navigate(`/stock/${stock.symbol}`)} className="flex items-center justify-between py-3 px-4 border-b border-border/40 last:border-0 cursor-pointer active:bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-muted-foreground w-5">{i + 1}</span>
-                    <div>
-                      <p className="text-sm font-bold">{stock.symbol}</p>
-                      <p className="text-xs text-muted-foreground">{stock.frequency}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-bull">{stock.yield}%</p>
-                    <p className="text-xs text-muted-foreground">KES {stock.amount.toFixed(2)}/share</p>
-                  </div>
-                </div>
-              ))}
-            </Card>
-          </>
-        )}
-
-        {/* ─── HEATMAP TAB — previously rendered nothing at all ─── */}
-        {activeTab === "Heatmap" && (
+            ))}
+          {!marketSnapshot?.monitor.filter(
+            (r) => monitorScope === "NSE" || isInWatchlist(r.symbol),
+          ).length && (
+            <Empty>
+              Market signals will appear when published quotes are available.
+            </Empty>
+          )}
+        </>
+      );
+    if (id === "macro")
+      return (
+        <>
+          {indicators.length > 0 && (
+            <Choices
+              values={indicators}
+              value={activeMacro ?? ""}
+              onChange={setMacro}
+            />
+          )}
+          <div className="flex flex-wrap justify-between gap-3 my-4">
+            {["actual", "consensus", "previous"].map((k) => (
+              <div key={k}>
+                <small className="capitalize text-muted-foreground">{k}</small>
+                <p className="text-xl">
+                  <RollingNumber value={fmt(macroHistory.at(-1)?.payload[k as "actual"])} />{" "}
+                  {macroHistory.at(-1)?.payload.unit}
+                </p>
+              </div>
+            ))}
+          </div>
+          <ResearchChart
+            data={macroHistory.map((r) => ({
+              date: r.observedAt.slice(0, 10),
+              actual: r.payload.actual,
+              consensus: r.payload.consensus,
+            }))}
+            lines={[
+              {
+                key: "actual",
+                label: activeMacro ?? "Actual",
+                color: "hsl(var(--primary))",
+              },
+              {
+                key: "consensus",
+                label: "Consensus",
+                color: "#0d9488",
+                dashed: true,
+              },
+            ]}
+          />
+          {macroHistory.at(-1) && source(macroHistory.at(-1)!)}
+          {!macroHistory.length && (
+            <Empty>
+              Verified KNBS/CBK indicator history is not loaded yet. No
+              synthetic macro series is displayed.
+            </Empty>
+          )}
+        </>
+      );
+    return null;
+  }
+  const title = sections.find(([id]) => id === section)?.[1];
+  return (
+    <div className="page-canvas market-desk pb-24">
+      {section ? (
+        <header className="market-detail-header">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back to markets"
+            onClick={() => navigate("/markets")}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1>{title ?? "Markets"}</h1>
+        </header>
+      ) : (
+        <>
+          <TopBar
+            title="Markets"
+            subtitle="Kenya · research that connects"
+            showSearch
+            showNotifications
+            onSearch={(q) => {
+              setSearch(q);
+              if (q.trim()) setTab("All Stocks");
+            }}
+          />
+          <div className="sub-nav">
+            <Choices
+              values={["Overview", "Bonds", "Derivatives", "USP", "Watchlist", "Heat Map", "Calendar", "All Stocks"]}
+              value={tab}
+              onChange={(value) => {
+                const routes: Record<string, string> = { "Watchlist": "/watchlist", "Heat Map": "/markets/heatmap", Calendar: "/markets/economic" };
+                if (routes[value]) navigate(routes[value]);
+                else setTab(value);
+              }}
+            />
+          </div>
+        </>
+      )}
+      <main className="px-4 md:px-8">
+        {section ? (
           <>
-            <h2 className="text-sm font-bold flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              Sector &amp; Stock Heatmap
-            </h2>
-            <p className="text-xs text-muted-foreground -mt-3">Box size reflects market cap, colour reflects today's move.</p>
-            <StockHeatmap />
-
-            <h2 className="text-sm font-bold flex items-center gap-2 mt-2">
-              <Landmark className="h-4 w-4 text-accent" />
-              By Sector
-            </h2>
-            <div className="grid grid-cols-2 gap-2">
-              {sectors.map(s => (
-                <Card
-                  key={s.name}
-                  className="soft-card p-3 cursor-pointer active:scale-[0.97] transition-transform"
-                  onClick={() => navigate(`/sector/${encodeURIComponent(s.name)}`)}
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold">{s.name}</p>
-                    <p className={`text-xs font-bold px-2 py-0.5 rounded-full ${s.isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-                      {s.isUp ? '+' : ''}{s.change.toFixed(1)}%
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{s.stocks} stocks · Top: {s.topStock}</p>
-                </Card>
-              ))}
+            <div className="my-5">
+              <Input
+                aria-label={`Search ${title}`}
+                placeholder={`Search ${title?.toLowerCase() ?? "markets"}…`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
+            {title ? (
+              body(section, true)
+            ) : (
+              <Empty>This research view does not exist.</Empty>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="flex justify-between items-center py-1">
+              <MarketStatusIndicator />
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Refresh market research"
+                onClick={() => {
+                  void refetchIndices();
+                  if (needsIntelligence) void intelligence.refetch();
+                  if (needsRecords) void recordsQuery.refetch();
+                  if (needsEarnings) void earningsQuery.refetch();
+                  if (needsRatios) void ratios.refetch();
+                }}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="market-tool-rail">
+              <Button variant="outline" onClick={() => navigate("/screener")}>
+                <Filter className="h-4 w-4 mr-2" />
+                Screener
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/compare")}>
+                <GitCompare className="h-4 w-4 mr-2" />
+                Compare
+              </Button>
+            </div>
+            {tab === "All Stocks" ? (
+              <AllStocksList search={search} />
+            ) : tab === "Derivatives" || tab === "USP" ? (
+              <InstrumentHistory records={records.filter(r => r.kind === (tab === "Derivatives" ? "derivative" : "usp"))} kind={tab} loading={recordsQuery.isLoading} failed={recordsQuery.isError} />
+            ) : tab === "Bonds" ? (
+              <Bonds
+                records={records.filter((r) => r.kind === "bond")}
+                source={source}
+              />
+            ) : (
+              <>
+                {indexStrip}
+                <MarketStatisticsHistory records={records.filter(r => r.kind === 'market_statistics')} />
+                {sections
+                    .filter(([id]) => id !== "dividend-calendar")
+                    .map(([id, label]) => (
+                      <section className="market-section" key={id}>
+                        <button
+                          className="market-section-heading"
+                          onClick={() => navigate(`/markets/${id}`)}
+                        >
+                          <h2>{label}</h2>
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                        {body(id)}
+                        {id === "dividends" && (
+                          <Button
+                            variant="ghost"
+                            className="mt-3"
+                            onClick={() =>
+                              navigate("/markets/dividend-calendar")
+                            }
+                          >
+                            Dividend Calendar{" "}
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        )}
+                      </section>
+                    ))}
+                {
+                  <>
+                    <section className="market-section">
+                      <h2 className="mb-2">Market breadth</h2>
+                      <div className="market-breadth">
+                        {marketSnapshot?.distribution.map((d, i) => (
+                          <div key={d.label}>
+                            <strong><RollingNumber value={d.count} /></strong>
+                            <div
+                              style={{
+                                height: Math.max(
+                                  2,
+                                  (d.count /
+                                    (Math.max(
+                                      ...marketSnapshot!.distribution.map(
+                                        (d) => d.count,
+                                      ),
+                                    ) || 1)) *
+                                    110,
+                                ),
+                                background:
+                                  i < 4
+                                    ? "hsl(var(--bear))"
+                                    : i === 4
+                                      ? "hsl(var(--muted-foreground))"
+                                      : "hsl(var(--bull))",
+                              }}
+                            />
+                            <small>{d.label}</small>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="market-note">
+                        {marketSnapshot ? `${marketSnapshot.coverage} covered issuers · ${marketSnapshot.advancing} advancing · ${marketSnapshot.declining} declining` : intelligence.isPending ? 'Loading the latest market snapshot…' : 'Market snapshot is temporarily unavailable. Quotes remain available above.'}
+                      </p>
+                      <p className="market-note">
+                        {marketSnapshot?.methodology}
+                      </p>
+                    </section>
+                    <section className="market-section">
+                      <h2>Kenyan sectors</h2>
+                      {marketSnapshot?.sectors.map((s) => (
+                        <button
+                          key={s.name}
+                          className="market-row w-full text-left"
+                          onClick={() =>
+                            navigate(`/sector/${encodeURIComponent(s.name)}`)
+                          }
+                        >
+                          <span>
+                            {s.name}
+                            <small><RollingNumber value={s.coverage} /> quoted issuers</small>
+                          </span>
+                          <Change value={s.changePercent} />
+                        </button>
+                      ))}
+                    </section>
+                  </>
+                }
+              </>
+            )}
           </>
         )}
-      </div>
+        {((needsIntelligence && intelligence.isError && !marketSnapshot) ||
+          (needsRecords && recordsQuery.isError && !recordsQuery.data) ||
+          (needsEarnings && earningsQuery.isError && !earningsQuery.data) ||
+          (needsRatios && ratios.isError && !ratios.data)) && (
+          <div className="market-error" role="status">
+            Some market research could not load. Existing quotes remain
+            available.{" "}
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (needsIntelligence) void intelligence.refetch();
+                if (needsRecords) void recordsQuery.refetch();
+                if (needsEarnings) void earningsQuery.refetch();
+                if (needsRatios) void ratios.refetch();
+              }}
+            >
+              Retry research
+            </Button>
+          </div>
+        )}
+      </main>
     </div>
+  );
+}
+
+function Bonds({
+  records,
+  source,
+}: {
+  records: ResearchRecord[];
+  source: (r: ResearchRecord) => ReactNode;
+}) {
+  const [view, setView] = useState("Yield Curve");
+  const latest = useMemo(() => {
+    const map = new Map<string, ResearchRecord>();
+    for (const r of [...records].sort((a, b) =>
+      b.observedAt.localeCompare(a.observedAt),
+    ))
+      if (!map.has(r.title)) map.set(r.title, r);
+    return [...map.values()];
+  }, [records]);
+  return (
+    <section className="market-section">
+      <h2 className="flex gap-2 items-center">
+        <Landmark className="h-5 w-5" />
+        Kenyan government debt
+      </h2>
+      <p className="market-note">
+        CBK auction results · KES · coupon and auction yield are different
+        measures.
+      </p>
+      <Choices
+        values={["Yield Curve", "Treasury Bonds", "Treasury Bills"]}
+        value={view}
+        onChange={setView}
+      />
+      {view === "Yield Curve" ? (
+        <ResearchChart
+          data={latest
+            .filter((r) => r.payload.tenor != null && r.payload.yield != null)
+            .sort((a, b) => a.payload.tenor! - b.payload.tenor!)
+            .map((r) => ({
+              date: `${r.payload.tenor}y`,
+              yield: r.payload.yield,
+            }))}
+          lines={[
+            {
+              key: "yield",
+              label: "Published auction yield (%)",
+              color: "hsl(var(--primary))",
+            },
+          ]}
+        />
+      ) : (
+        <div className="market-table-scroll">
+          <table className="market-table">
+            <thead>
+              <tr>
+                <th>Instrument</th>
+                <th>Yield %</th>
+                <th>Coupon %</th>
+                <th>Maturity</th>
+                <th>Source / report date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {latest
+                .filter((r) =>
+                  view === "Treasury Bills"
+                    ? (r.payload.tenor ?? Infinity) <= 1
+                    : (r.payload.tenor ?? 0) > 1,
+                )
+                .map((r) => (
+                  <tr key={r.id}>
+                    <th>{r.title}</th>
+                    <td><RollingNumber value={fmt(r.payload.yield)} /></td>
+                    <td><RollingNumber value={fmt(r.payload.coupon)} /></td>
+                    <td>
+                      {r.payload.maturity ? dateLabel(r.payload.maturity) : "—"}
+                    </td>
+                    <td>{source(r)}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {!latest.length && (
+        <Empty>
+          Verified CBK auction observations are not loaded yet. No foreign
+          bonds, ETFs or invented yields.
+        </Empty>
+      )}
+      <a
+        className="text-sm underline text-primary"
+        target="_blank"
+        rel="noopener noreferrer"
+        href="https://www.centralbank.go.ke/bills-bonds/treasury-bonds/"
+      >
+        CBK official auction notices and results
+      </a>
+      <p className="market-note">
+        Different auction dates are not a same-day secondary-market yield curve.
+        Check each observation's source date before comparing.
+      </p>
+      <BondHistory records={records}/>
+    </section>
   );
 }

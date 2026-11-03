@@ -1,0 +1,61 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/continua/browserClient';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { ImageViewer } from './ImageViewer';
+
+export interface PostPoll { question: string; options: string[]; endsAt?: string; durationHours?: number }
+export function PostAttachments({ post, priority = false }: { priority?: boolean; post: { id: string; image_url?: string | null; image_urls?: string[]; poll?: PostPoll | null } }) {
+  const images = post.image_urls?.length ? post.image_urls : post.image_url ? [post.image_url] : [];
+  const [viewer, setViewer] = useState(false);
+  const [selected, setSelected] = useState(0);
+  return <div onClick={event => event.stopPropagation()}>
+    {!!images.length && <div className={`grid gap-0.5 my-3 overflow-hidden rounded-2xl border border-border/60 bg-muted/20 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2 aspect-[4/3]'} ${images.length>=3?'grid-rows-2':''}`}>
+      {images.slice(0, 4).map((src,index) => <button type="button" key={src + index} aria-label={`Open image ${index + 1} of ${images.length}`} onClick={() => { setSelected(index); setViewer(true); }} className={`relative min-h-0 overflow-hidden ${images.length===3&&index===0?'row-span-2':''}`}>
+        <img src={src} alt={`Post image ${index + 1}`} loading={priority ? "eager" : "lazy"} decoding="async" {...{fetchpriority:priority && index === 0 ? "high" : "auto"}} className={`w-full ${images.length===1?'max-h-[min(75vh,640px)] object-contain':'h-full object-cover'}`} />
+        {index === 3 && images.length > 4 && <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-white text-3xl font-semibold">+<RollingNumber value={images.length - 4} /></span>}
+      </button>)}
+    </div>}
+    {viewer && <ImageViewer open={viewer} onOpenChange={setViewer} images={images} initialIndex={selected} />}
+    {post.poll && <PostPollView postId={post.id} poll={post.poll} />}
+  </div>;
+}
+
+function PostPollView({ postId, poll }: { postId: string; poll: PostPoll }) {
+  const { user } = useAuth();
+  const client = useQueryClient();
+  const key = ['continua','post-poll',user?.id,postId];
+  const [busy,setBusy] = useState(false);
+  const query = useQuery({ queryKey:key, enabled:!!user, staleTime:15000, queryFn:async () => {
+    const {data,error} = await supabase.rpc('post_poll_result' as never,{p_post_id:postId} as never);
+    if(error) throw error;
+    return data as unknown as {counts:number[];choice:number|null};
+  }});
+  const counts = query.data?.counts ?? poll.options.map(() => 0);
+  const total = counts.reduce((sum,n)=>sum+n,0);
+  const ended = !!poll.endsAt && Date.parse(poll.endsAt) <= Date.now();
+  const voted = query.data?.choice != null;
+  const vote = async (choice:number) => {
+    if(busy || voted || ended) return;
+    if(!user) { toast.error('Sign in to vote'); return; }
+    setBusy(true);
+    try {
+      const {data,error} = await supabase.rpc('post_poll_result' as never,{p_post_id:postId,p_choice:choice} as never);
+      if(error) throw error;
+      client.setQueryData(key,data);
+      toast.success('Vote recorded');
+    } catch { toast.error('Could not record your vote. Please retry.'); }
+    finally { setBusy(false); }
+  };
+  return <section className="my-3 space-y-2" aria-label="Post poll">
+    <h3 className="text-base font-semibold">{poll.question}</h3><p className="text-xs text-muted-foreground">Single answer</p>
+    {poll.options.map((option,index) => <button key={index} disabled={busy || voted || ended || query.isLoading || query.isError} onClick={()=>void vote(index)} className="relative flex w-full justify-between overflow-hidden rounded-md border px-3 py-3 text-left text-sm">
+      {(voted || ended) && <span className="absolute inset-y-0 left-0 bg-primary/15" style={{width:`${total ? counts[index]/total*100 : 0}%`}} />}
+      <span className="relative">{option}{query.data?.choice === index ? ' ✓' : ''}</span>
+      {(voted || ended) && <span className="relative"><RollingNumber value={total ? Math.round(counts[index]/total*100) : 0} />%</span>}
+    </button>)}
+    <p className="text-xs text-muted-foreground"><RollingNumber value={query.isError ? 'Poll unavailable. Pull to refresh.' : `${total} votes · ${ended ? 'Ended' : poll.endsAt ? `Closes ${new Date(poll.endsAt).toLocaleString()}` : 'Open'}`} /></p>
+  </section>;
+}

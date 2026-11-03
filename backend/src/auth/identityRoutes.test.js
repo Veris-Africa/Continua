@@ -1,0 +1,44 @@
+import {afterEach,describe,expect,it,vi} from 'vitest';
+import express from 'express';
+import {createIdentityRouter} from './identityRoutes.js';
+import {preAuthenticationRateLimit} from '../api/middleware/preAuthenticationRateLimit.js';
+const servers=[];afterEach(async()=>{await Promise.all(servers.splice(0).map(s=>new Promise(resolve=>s.close(resolve))));});
+async function fixture(handler=async()=>Response.json({})){
+ const auth={handler:vi.fn(handler),api:{getSession:vi.fn(async()=>null)}};const database={query:vi.fn()};const verifyAccess=vi.fn(async()=>{throw Error('revoked');});
+ const app=express();app.use('/identity',createIdentityRouter({auth,database,verifyAccess,publicOrigin:'https://continua.example'}));const server=app.listen(0,'127.0.0.1');servers.push(server);await new Promise(resolve=>server.once('listening',resolve));return {url:'http://127.0.0.1:'+server.address().port+'/identity',auth,database,verifyAccess};
+}
+const headers={'Content-Type':'application/json',Origin:'https://continua.example','X-Continua-Session':'1'};
+describe('owned identity browser boundary',()=>{
+ it('normal API traffic cannot exhaust sign-out admission, which remains rate limited',async()=>{
+  const app=express();app.use('/api/v1',preAuthenticationRateLimit(2));app.use('/api/v1',(_req,res)=>res.json({ok:true}));
+  const server=app.listen(0,'127.0.0.1');servers.push(server);await new Promise(resolve=>server.once('listening',resolve));const url='http://127.0.0.1:'+server.address().port+'/api/v1';
+  for(let i=0;i<2;i++)expect((await fetch(url+'/quotes')).status).toBe(200);
+  expect((await fetch(url+'/identity/session')).status).toBe(429);
+  for(let i=0;i<2;i++)expect((await fetch(url+'/identity/signout',{method:'POST'})).status).toBe(200);
+  expect((await fetch(url+'/identity/signout',{method:'POST'})).status).toBe(429);
+ });
+ it('exhausting identity reads does not prevent provider session revocation',async()=>{
+  const f=await fixture(async()=>Response.json({success:true}));
+  for(let i=0;i<120;i++)expect((await fetch(f.url+'/verify',{headers})).status).toBe(401);
+  expect((await fetch(f.url+'/verify',{headers})).status).toBe(429);
+  const response=await fetch(f.url+'/signout',{method:'POST',headers,body:'{}'});
+  expect(response.status).toBe(200);expect(await response.json()).toEqual({signedOut:true});
+  expect(f.auth.handler.mock.calls.at(-1)[0].url).toBe('https://continua.example/api/auth/sign-out');
+ });
+ it('starts independent envelope reads together and waits for token verification before returning',async()=>{
+  let releaseToken,readsStarted;const started=new Promise(resolve=>{readsStarted=resolve;});const tokenReady=new Promise(resolve=>{releaseToken=resolve;});
+  const token='header.'+Buffer.from(JSON.stringify({exp:Math.floor(Date.now()/1000)+300})).toString('base64url')+'.signature';
+  const f=await fixture(async request=>request.url.endsWith('/get-session')?Response.json({session:{id:'session'},user:{id:'owner',email:'fixture@example.invalid'}}):request.url.endsWith('/token')?tokenReady:Response.json({}));
+  let reads=0;f.database.query.mockImplementation(async sql=>{if(++reads===2)readsStarted();return {rows:sql.includes('raw_user_meta_data')?[{raw_user_meta_data:{}}]:[]};});
+  let completed=false;const pending=fetch(f.url+'/session',{headers}).then(response=>{completed=true;return response;});
+  await started;expect(reads).toBe(2);expect(completed).toBe(false);
+  releaseToken(Response.json({token}));const response=await pending;expect(response.status).toBe(200);expect((await response.json()).session.user.id).toBe('owner');
+ });
+ it('does not turn a database or provider outage into a signed-out session',async()=>{const f=await fixture(async()=>{throw Error('private database diagnostic');});const response=await fetch(f.url+'/session',{headers});expect(response.status).toBe(503);expect(response.headers.get('set-cookie')).toBe(null);expect(JSON.stringify(await response.json())).not.toContain('private database');});
+ it('requires an exact trusted origin and explicit session header before calling the provider',async()=>{const f=await fixture();for(const h of [{},{...headers,Origin:'https://attacker.example'},{Origin:headers.Origin}])expect((await fetch(f.url+'/signin',{method:'POST',headers:{'Content-Type':'application/json',...h},body:'{}'})).status).toBe(403);expect(f.auth.handler).not.toHaveBeenCalled();});
+ it('does not expose opaque password-signin tokens to browser JavaScript',async()=>{const f=await fixture(async request=>request.url.endsWith('/sign-in/email')?Response.json({token:'opaque-provider-token'}):Response.json(null));const response=await fetch(f.url+'/signin',{method:'POST',headers,body:JSON.stringify({email:'fixture@example.invalid',password:'fixture-password'})});expect(response.status).toBe(200);expect(await response.json()).toEqual({session:null});});
+ it('rejects authentication cookies that broaden their domain',async()=>{const f=await fixture(async()=>new Response('{}',{headers:{'Set-Cookie':'__Secure-continua.session_token=opaque; Domain=example; Path=/; HttpOnly; Secure'}}));const response=await fetch(f.url+'/signout',{method:'POST',headers,body:'{}'});expect(response.status).toBe(403);expect(response.headers.get('set-cookie')).toBe(null);});
+ it('never relaxes secure cookies for an insecure local fixture',async()=>{for(const cookie of ['continua.session_token=opaque; Path=/; HttpOnly','__Secure-continua.session_token=opaque; Path=/; HttpOnly','__Secure-continua.session_token=opaque; Path=/; Secure']){const f=await fixture(async()=>new Response('{}',{headers:{'Set-Cookie':cookie}}));const response=await fetch(f.url+'/signout',{method:'POST',headers,body:'{}'});expect(response.status).toBe(403);expect(response.headers.get('set-cookie')).toBe(null);}});
+ it('keeps pending two-factor signin separate from an authenticated session',async()=>{const f=await fixture(async()=>Response.json({twoFactorRedirect:true}));const response=await fetch(f.url+'/signin',{method:'POST',headers,body:JSON.stringify({email:'fixture@example.invalid',password:'fixture-password'})});expect(await response.json()).toEqual({session:null,mfaRequired:true});expect(f.database.query).not.toHaveBeenCalled();});
+ it('does not permit arbitrary provider callbacks or cross-origin redirects',async()=>{const f=await fixture(async()=>new Response(null,{status:302,headers:{Location:'https://attacker.example'}}));expect((await fetch(f.url+'/provider/arbitrary')).status).toBe(404);expect(f.auth.handler).not.toHaveBeenCalled();expect((await fetch(f.url+'/provider/verify-email?token=fixture')).status).toBe(400);});
+});

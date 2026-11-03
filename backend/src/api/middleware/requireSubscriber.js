@@ -1,0 +1,60 @@
+import {authenticationFailure,unavailableAuth} from '../../auth/authErrors.js';
+import {getIdentityRuntime} from '../../auth/runtime.js';
+import { env } from "../../config/index.js";
+import { query } from "../../storage/db.js";
+import { ApiError } from "./errorHandler.js";
+// Verify the session against this project's auth service; never trust a
+// client-provided user ID or subscription flag. The project key is public.
+export async function requireEngineUser(req, res, next) {
+    // Identity is reused only within this request, after server verification.
+    if (res.locals?.engineIdentityVerified === true)
+        return next();
+    try {
+        const token = req.header("x-user-token");
+        if(!token)throw new ApiError(401,"Sign in to use Continua Engine");
+        let user;
+        let identity;try{identity=getIdentityRuntime();}catch{throw unavailableAuth();}
+        if(!identity)throw new ApiError(503,"Account verification is temporarily unavailable.");
+        try{user=(await identity.verifyAccess(token)).user;}
+        catch(error){throw authenticationFailure(error);}
+        if(!user.id||!/^[0-9a-f-]{36}$/i.test(user.id))throw new ApiError(401,"Invalid user session");
+        let profile;try{profile=await query("SELECT public.effective_subscription_plan($1) AS subscription_plan", [user.id]);}catch{throw unavailableAuth();}
+        res.locals ??= {};
+        res.locals.engineUserId = user.id;
+        res.locals.engineUserEmail = user.email;
+        res.locals.enginePlan = profile.rows[0]?.subscription_plan ?? "free";
+
+        res.locals.engineIdentityVerified = true;
+        next();
+    }
+    catch (error) {
+        next(error);
+    }
+}
+/** Isolate verified Engine users from the public market-data key's bucket.
+ * Never derive a limiter identity from unverified JWT claims or user headers. */
+export function verifyEngineRateLimitIdentity(req, res, next) {
+    if (!/^\/(engine|billing)(?:\/|$)/.test(req.path))
+        return next();
+    return requireEngineUser(req, res, next);
+}
+export async function requireSubscriber(req, res, next) {
+    await requireEngineUser(req, res, error => {
+        if (error)
+            return next(error);
+        if (!["premium", "premium_plus"].includes(res.locals.enginePlan)) {
+            return next(new ApiError(403, "Continua Engine is included with Premium. Upgrade to unlock it."));
+        }
+        next();
+    });
+}
+/** Full workspace tools are Plus-only; expanded Fundamentals stays available on Premium. */
+export async function requirePremiumPlus(req, res, next) {
+    await requireEngineUser(req, res, error => {
+        if (error)
+            return next(error);
+        if (res.locals.enginePlan !== "premium_plus")
+            return next(new ApiError(403, "Upgrade to Premium Plus to use the full Continua Engine."));
+        next();
+    });
+}

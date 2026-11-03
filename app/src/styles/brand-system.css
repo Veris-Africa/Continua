@@ -1,0 +1,330 @@
+/* One visual identity for the public website and the product. These tokens
+   deliberately follow the utility layers so legacy palettes cannot win.
+   Market gains/losses, font scaling and functional motion remain untouched. */
+:root {
+  --continua-ink: #191827;
+  --continua-muted: #6c6a7c;
+  --continua-purple: #7865e9;
+  --continua-line: #e5e3ed;
+  --background: 0 0% 100%;
+  --foreground: 244 24% 12%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  /* Deeper violet keeps small text and chart labels readable on white. */
+  --primary: 249 54% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 250 26% 96%;
+  --secondary-foreground: var(--foreground);
+  --muted: 250 26% 96%;
+  --muted-foreground: 247 8% 43%;
+  --accent: 248 100% 88%;
+  --accent-foreground: var(--foreground);
+  --border: 252 22% 91%;
+  --input: 252 16% 85%;
+  --ring: var(--primary);
+  --radius: 14px;
+  --sidebar-background: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--secondary);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --shadow-card: none;
+}
+.dark {
+  --background: 244 14% 8%;
+  --foreground: 250 20% 94%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: 244 14% 11%;
+  --popover-foreground: var(--foreground);
+  --primary: 252 82% 76%;
+  --primary-foreground: 244 24% 12%;
+  --secondary: 246 15% 15%;
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: 250 12% 70%;
+  --accent: 251 28% 27%;
+  --accent-foreground: 250 30% 96%;
+  --border: 248 14% 22%;
+  --input: 248 14% 30%;
+  --ring: var(--primary);
+}
+.amoled {
+  --background: 0 0% 0%;
+  --foreground: 250 20% 96%;
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --popover: 0 0% 0%;
+  --popover-foreground: var(--foreground);
+  --primary: 252 82% 76%;
+  --primary-foreground: 244 24% 12%;
+  --secondary: 246 10% 10%;
+  --secondary-foreground: var(--foreground);
+  --muted: var(--secondary);
+  --muted-foreground: 250 12% 70%;
+  --accent: 251 28% 24%;
+  --accent-foreground: 250 30% 96%;
+  --border: 248 10% 18%;
+  --input: 248 10% 27%;
+  --ring: var(--primary);
+}
+
+/* Editorial typography at product scale, never marketing headline sizes. */
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell h4 {
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+}
+.app-shell .section-eyebrow {
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+.app-shell .research-flow > * {
+  margin-top: 0.5rem;
+}
+.app-shell .research-flow > *:first-child {
+  margin-top: 0;
+}
+.app-shell .content-surface,
+.app-shell .flat-section,
+.app-shell .grouped-card,
+.app-shell .soft-card,
+.app-shell .card-gradient {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.app-shell .upgrade-banner {
+  border: 0;
+  border-block: 1px solid hsl(var(--border));
+  border-radius: 0;
+  background: transparent;
+  padding-block: 1rem;
+}
+.app-shell .bottom-nav {
+  background: hsl(var(--background) / 0.96);
+}
+.app-shell .tab-item.active {
+  color: hsl(var(--primary));
+}
+.app-shell .tab-item.active > div {
+  background: hsl(var(--accent));
+  border-radius: 100px;
+  width: 3rem;
+  height: 1.875rem;
+}
+.app-shell .tab-item.active svg {
+  color: hsl(var(--accent-foreground));
+}
+.app-shell .tab-item.active > span {
+  color: hsl(var(--primary));
+}
+.btn-primary {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-radius: 100px;
+  box-shadow: none;
+}
+.btn-primary:hover {
+  background: hsl(var(--accent) / 0.85);
+}
+.btn-primary:active {
+  transform: none;
+}
+.pill-tab.active,
+.brand-active,
+.contrast-active,
+.adaptive-tab[data-state="active"] {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  box-shadow: none;
+}
+/* Legacy accent labels must not inherit the pale control fill as text. */
+.text-accent {
+  color: hsl(var(--primary));
+}
+.app-shell :is(button, a)[class~="bg-foreground"][class~="text-background"],
+.app-shell [role="tab"][data-state="active"] {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  box-shadow: none;
+}
+.app-shell .editorial-section {
+  border-top: 1px solid hsl(var(--border));
+  padding-block: 0.5rem;
+}
+
+/* Shared research-desk grammar: flat surfaces, quiet rules, readable density.
+   Dialogs and touch targets retain their native sizing. */
+.engine-launch {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.35rem 0.65rem;
+  border-radius: 100px;
+  color: hsl(var(--primary));
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.engine-launch:hover {
+  background: hsl(var(--accent) / 0.35);
+}
+.market-shortcuts {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0 0.75rem;
+  overflow-x: auto;
+  border-top: 1px solid hsl(var(--border));
+}
+.market-shortcuts button {
+  min-height: 44px;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: hsl(var(--muted-foreground));
+}
+.market-shortcuts button:hover {
+  color: hsl(var(--primary));
+}
+.app-shell .desk-content {
+  max-width: 1080px;
+  margin-inline: auto;
+}
+.app-shell .home-flow > div {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.5rem;
+}
+.app-shell .portfolio-desk .section-eyebrow {
+  color: hsl(var(--muted-foreground));
+}
+.app-shell .portfolio-desk [role="tabpanel"] {
+  padding-top: 0.5rem;
+}
+.app-shell .community-desk > header {
+  border-bottom: 1px solid hsl(var(--border));
+}
+.app-shell .desk-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.85rem 1rem;
+}
+.app-shell .desk-intro h2 {
+  font-size: 1.25rem;
+}
+.app-shell .desk-intro p {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.25rem;
+}
+.app-shell .review-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.8rem 0;
+  border-block: 1px solid hsl(var(--border));
+}
+.app-shell .review-metrics small {
+  font-size: 0.7rem;
+  color: hsl(var(--muted-foreground));
+  display: block;
+}
+.app-shell .review-metrics strong {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.app-shell .content-surface > .p-6 {
+  padding: 1rem;
+}
+.app-shell .tap-scale:active {
+  transform: none;
+}
+.app-shell .review-metrics > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.portfolio-workspace-anchor {
+  scroll-margin-top: calc(
+    var(--sticky-header-height, 64px) + var(--sticky-nav-height, 48px) + 1rem
+  );
+}
+/* Match compact two-line Home stock rows. Do not shrink chart canvases,
+   modal controls, bottom navigation, or marketing-page motion. */
+/* Preserve each component's type hierarchy. The root rem scale is controlled
+   by the user's slider, not a forced minimum size on all labels. Keep the
+   slider itself usable even when the rest of the app is at its smallest. */
+.font-size-control { font-size: 14px; line-height: 1.5; }
+.font-size-range { appearance: none; -webkit-appearance: none; flex: 1; min-width: 0; height: 44px; background-color: transparent; border-radius: 999px; cursor: pointer; touch-action: pan-y; }
+.font-size-range::-webkit-slider-runnable-track { height: 6px; }
+.font-size-range::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; margin-top: -9px; width: 24px; height: 24px; border-radius: 50%; background: hsl(var(--background)); border: 2px solid hsl(var(--primary)); box-shadow: 0 1px 3px hsl(var(--foreground) / 0.15); }
+.font-size-range::-moz-range-track { height: 6px; background: transparent; }
+.font-size-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--background)); border: 2px solid hsl(var(--primary)); }
+.font-size-range:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 6px; }
+.app-shell .engine-tool-context { padding-block: 0.5rem; border-bottom: 1px solid hsl(var(--border)); }
+.app-shell .engine-evidence-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.5rem; padding-block: 0.5rem; border-block: 1px solid hsl(var(--border)); }
+.app-shell .engine-evidence-summary strong { display: block; font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.app-shell .engine-evidence-summary span { color: hsl(var(--muted-foreground)); }
+.app-shell .engine-briefing details { padding-block: 0.5rem; border-top: 1px solid hsl(var(--border)); }
+.app-shell .engine-briefing summary { cursor: pointer; font-weight: 600; }
+.app-shell .page-canvas :is(.space-y-3,.space-y-4,.space-y-5,.space-y-6,.space-y-8) > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
+.app-shell .page-canvas :is(section,article,div)[class~="py-4"],
+.app-shell .page-canvas :is(section,article,div)[class~="py-5"],
+.app-shell .page-canvas :is(section,article,div)[class~="py-6"],
+.app-shell .page-canvas :is(section,article,div)[class~="py-8"] { padding-block: 0.5rem; }
+.app-shell .page-canvas :is(.pt-4,.pt-5,.pt-6) { padding-top: 0.5rem; }
+.app-shell .page-canvas :is(.mb-4,.mb-5,.mb-6) { margin-bottom: 0.5rem; }
+.app-shell .page-canvas :is(.mt-4,.mt-5,.mt-6) { margin-top: 0.5rem; }
+.app-shell .page-canvas :is(.my-4,.my-5,.my-6) { margin-block: 0.5rem; }
+.app-shell .page-canvas p:is(.py-6,.py-8) { padding-block: 0.5rem; }
+.app-shell .page-canvas .gap-4 { gap: 0.5rem; }
+.app-shell .page-canvas .gap-6 { gap: 0.75rem; }
+.app-shell .comparison-table { table-layout: auto; overflow-wrap: normal; }
+.app-shell .comparison-table :is(th,td) { white-space: nowrap; word-break: normal; }
+.app-shell .comparison-table :is(th,td):first-child { min-width: 160px; }
+.app-shell .comparison-table :is(th,td):not(:first-child) { min-width: 140px; }
+.app-shell .market-desk .sub-nav .market-choices { flex-wrap: nowrap; }
+@media (min-width: 820px) {
+  .app-shell .portfolio-desk > .desk-content {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+    align-items: start;
+  }
+  .app-shell .portfolio-desk > .desk-content > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .app-shell .portfolio-desk > .desk-content > div:nth-child(1) {
+    grid-column: 1;
+  }
+  .app-shell .portfolio-desk > .desk-content > div:nth-child(2) {
+    grid-column: 2;
+    margin-top: 0;
+  }
+  .app-shell .home-flow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem 2rem;
+    align-items: start;
+  }
+  .app-shell .home-flow > * {
+    margin-top: 0 !important;
+    min-width: 0;
+  }
+  .app-shell .community-desk {
+    max-width: 880px;
+    margin-inline: auto;
+    border-inline: 1px solid hsl(var(--border));
+  }
+}

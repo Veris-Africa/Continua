@@ -43,3 +43,49 @@ export async function shareLink(url: string, opts?: { title?: string; text?: str
 
   return { ok: false, method: "failed" };
 }
+
+export type ImageShareResult = { ok: boolean; method: "share" | "clipboard" | "download" | "cancelled" | "failed" };
+
+/**
+ * Shares an image (e.g. a rendered portfolio card) via the native share
+ * sheet when the platform supports sharing files, falling back to copying
+ * the image to the clipboard, and finally to a plain download — so there's
+ * always SOME way to get the image out of the browser, even on a desktop
+ * browser with no share sheet and no image clipboard support.
+ */
+export async function shareImageBlob(blob: Blob, filename: string, opts?: { title?: string; text?: string }): Promise<ImageShareResult> {
+  const file = new File([blob], filename, { type: blob.type || "image/png" });
+
+  if (typeof navigator !== "undefined" && (navigator as any).canShare?.({ files: [file] })) {
+    try {
+      await (navigator as any).share({ title: opts?.title, text: opts?.text, files: [file] });
+      return { ok: true, method: "share" };
+    } catch (err: any) {
+      if (err?.name === "AbortError") return { ok: false, method: "cancelled" };
+      // fall through to the next option below
+    }
+  }
+
+  try {
+    if (navigator?.clipboard && (window as any).ClipboardItem) {
+      await navigator.clipboard.write([new (window as any).ClipboardItem({ [blob.type || "image/png"]: blob })]);
+      return { ok: true, method: "clipboard" };
+    }
+  } catch {
+    // fall through to download below
+  }
+
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { ok: true, method: "download" };
+  } catch {
+    return { ok: false, method: "failed" };
+  }
+}

@@ -1,0 +1,93 @@
+import {paymentOperationsStatus} from '../monitoring/paymentOperationsStatus.js';
+import {query as operationsQuery} from '../storage/db.js';
+import express from "express";
+import {getIdentityRuntime} from '../auth/runtime.js';
+import {createIdentityRouter} from '../auth/identityRoutes.js';
+import {createManagedIdentityRouter} from '../auth/managedRoutes.js';
+import {createBrowserDataRouter} from '../data/browserDataRoutes.js';
+import {createOwnedFunctionRouter} from '../data/functionRoutes.js';
+import {createMaintenanceRouter} from '../data/maintenanceRoutes.js';
+import {runOwnedApplicationJobs} from '../workers/ownedApplicationWorker.js';
+import {migrationFreeze} from './middleware/migrationFreeze.js';
+import cors from "cors";
+import helmet from "helmet";
+import {rateLimit, ipKeyGenerator} from 'express-rate-limit';
+import {protectionStore} from './middleware/sharedRateStore.js';
+import {adminRateLimit, workloadRateLimit} from './middleware/workloadRateLimit.js';
+import { apiRouter } from "./routes/index.js";
+import { healthRoutes } from "./routes/health.routes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { requestLogger } from "./middleware/requestLogger.js";
+import { apiKeyAuth } from "./middleware/apiKeyAuth.js";
+import { requireAdminKey } from "./middleware/requireAdminKey.js";
+import { adminFinancialsRoutes } from "./routes/admin.routes.js";
+import { apiRateLimit } from "./middleware/rateLimit.js";
+import { env } from "../config/index.js";
+import { logger } from "../monitoring/logger.js";
+import { isAllowedBrowserOrigin } from "./corsPolicy.js";
+import { ApiError } from "./middleware/errorHandler.js";
+import { verifyEngineRateLimitIdentity } from "./middleware/requireSubscriber.js";
+import { paystackWebhook } from "./routes/billing.routes.js";
+import { preAuthenticationRateLimit } from './middleware/preAuthenticationRateLimit.js';
+import {edgeClientIdentity, rateLimitClientIP} from './middleware/edgeClientIdentity.js';
+// Requests are already gated behind an API key (see apiKeyAuth below), so an
+// open CORS policy was never a data-access hole — but leaving `cors()` with
+// no origin option means ANY website can drive this API straight from a
+// visitor's browser using their own key. Locking Access-Control-Allow-Origin
+// to our own frontend(s) closes that off. Non-browser callers (curl, the
+// mobile app, server-to-server) don't send an Origin header at all and are
+// unaffected — CORS is a browser-only mechanism.
+const allowedOrigins = new Set(env.ALLOWED_ORIGINS);
+// Every Vercel deployment of this project — production or preview — gets its
+// own unique URL like https://continua-<hash>-cypskip-creates-projects.vercel.app,
+// on top of the one stable alias (https://continua-cypskip-creates-projects.vercel.app).
+// Chasing each new hash by hand in ALLOWED_ORIGINS doesn't scale with how often
+// this ships, so recognize the whole family by pattern instead of exact string.
+// Update the slug below if the Vercel project/team is ever renamed.
+const corsOptions = {
+    exposedHeaders: ["Retry-After", "RateLimit-Limit", "RateLimit-Remaining", "RateLimit-Reset", "cf-mitigated"],
+    origin(origin, callback) {
+        if (isAllowedBrowserOrigin(origin, [...allowedOrigins])) {
+            callback(null, true);
+            return;
+        }
+        logger.warn({ origin }, "Blocked CORS request from disallowed origin");
+        callback(new ApiError(403, "Not allowed by CORS"));
+    },
+};
+export function createServer() {
+    const app = express();
+    // Render terminates TLS at its reverse proxy. Trust only the configured
+    // number of hops so per-client rate limits use the actual visitor address.
+    app.set("trust proxy", env.NODE_ENV === "production" ? env.TRUST_PROXY_HOPS : 0);
+    app.use(requestLogger);
+    app.use(helmet());
+    app.use(migrationFreeze(env.MIGRATION_WRITE_FREEZE));
+    app.use(cors(corsOptions));
+    app.use(edgeClientIdentity());
+    app.use('/api/v1', preAuthenticationRateLimit());
+    app.post("/api/v1/billing/paystack/webhook", rateLimit({ store: protectionStore('webhook'), passOnStoreError: false, windowMs: 60_000, limit: 120,
+        keyGenerator: (req, res) => ipKeyGenerator(rateLimitClientIP(req, res)),
+        standardHeaders: true, legacyHeaders: false,
+    }), express.raw({ type: "application/json", limit: "64kb" }), paystackWebhook);
+    const identity=getIdentityRuntime();
+    if(identity){
+        app.use('/api/v1/internal',createMaintenanceRouter({secret:env.AUTH_MAINTENANCE_SECRET,run:runOwnedApplicationJobs,database:identity.database,paymentStatus:env.PAYMENT_DURABILITY_ENABLED===true?()=>paymentOperationsStatus({query:operationsQuery}):undefined}));
+        // The early logger records fixed route categories, never callback URLs.
+        // Expose only the owned bridge, never raw auth.handler.
+        app.use('/api/v1/identity',apiKeyAuth(),(identity.provider==='neon-managed'?createManagedIdentityRouter:createIdentityRouter)({...identity,publicOrigin:env.AUTH_PUBLIC_ORIGIN}));
+        app.use('/api/v1/data',apiKeyAuth(),express.json({limit:'64kb'}),createBrowserDataRouter(identity));
+        app.use('/api/v1/functions',apiKeyAuth(),express.json({limit:'64kb'}),createOwnedFunctionRouter(identity));
+    }
+    app.use(express.json({ limit: '512kb' }));
+    // Health stays open and unmetered — infra probes shouldn't need a key or
+    // count against anyone's rate limit.
+    app.use("/api/v1", healthRoutes);
+    // Own auth and pre-verification admission. Registered before the general apiKeyAuth+apiRouter mount so
+    // a matched admin route never falls through to public-key auth.
+    app.use("/api/v1/admin", adminRateLimit(), requireAdminKey(), adminFinancialsRoutes);
+    app.use("/api/v1", apiKeyAuth(), verifyEngineRateLimitIdentity, apiRateLimit(), workloadRateLimit(), apiRouter);
+    app.use((_req, res) => res.status(404).json({ error: "Not found" }));
+    app.use(errorHandler);
+    return app;
+}

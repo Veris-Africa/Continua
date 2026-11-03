@@ -1,13 +1,22 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 
 export interface PriceAlert {
   id: string;
   user_id: string;
   symbol: string;
-  alert_type: 'price_above' | 'price_below' | 'volume_spike' | 'dividend' | 'news';
+  exchange: string;
+  currency: string;
+  alert_type: 'price_above' | 'price_below' | 'volume_spike' | 'dividend' | 'news' | 'rsi_above' | 'rsi_below';
   target_value: number | null;
+  /** Set only for indicator alerts (RSI/SMA_CROSS/EMA_CROSS). null for
+   *  plain price alerts — see supabase/migrations/033_alerts_multi_exchange_and_indicators.sql */
+  indicator: 'RSI' | 'SMA_CROSS' | 'EMA_CROSS' | null;
+  /** Shape depends on `indicator`:
+   *   RSI: { period, threshold }
+   *   SMA_CROSS/EMA_CROSS: { fastPeriod, slowPeriod, direction: 1 | -1 } (1 = bullish, -1 = bearish) */
+  indicator_params: Record<string, number> | null;
   is_active: boolean;
   triggered_at: string | null;
   created_at: string;
@@ -16,38 +25,23 @@ export interface PriceAlert {
 
 export function usePriceAlerts() {
   const { user } = useAuth();
-  const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchAlerts();
-    } else {
-      setAlerts([]);
-      setLoading(false);
-    }
-  }, [user]);
-
-  const fetchAlerts = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('price_alerts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching alerts:', error);
-      } else {
-        setAlerts((data || []) as PriceAlert[]);
-      }
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
-    } finally {
-      setLoading(false);
-    }
+  const queryClient = useQueryClient();
+  const queryKey = ['continua', 'price-alerts', user?.id];
+  const result = useQuery({
+    queryKey, enabled: !!user, staleTime: 15000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('price_alerts').select('*')
+        .eq('user_id', user!.id).order('created_at', { ascending: false }).abortSignal(signal);
+      if (error) throw error;
+      return (data ?? []) as PriceAlert[];
+    },
+  });
+  const alerts = user ? result.data ?? [] : [];
+  const loading = !!user && result.isLoading;
+  const fetchAlerts = () => result.refetch();
+  const setAlerts = (update: (previous: PriceAlert[]) => PriceAlert[]) => {
+    queryClient.setQueryData<PriceAlert[]>(queryKey, previous => update(previous ?? []));
+    void queryClient.invalidateQueries({ queryKey });
   };
 
   const createAlert = async (alertData: Omit<PriceAlert, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'triggered_at'>) => {
@@ -59,7 +53,7 @@ export function usePriceAlerts() {
         .insert({
           ...alertData,
           user_id: user.id,
-        })
+        } as any)
         .select()
         .single();
 
@@ -99,13 +93,13 @@ export function usePriceAlerts() {
     }
   };
 
-  const updateAlert = async (id: string, changes: Partial<Pick<PriceAlert, 'alert_type' | 'target_value' | 'is_active'>>) => {
+  const updateAlert = async (id: string, changes: Partial<Pick<PriceAlert, 'alert_type' | 'target_value' | 'is_active' | 'indicator' | 'indicator_params'>>) => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
       const { data, error } = await supabase
         .from('price_alerts')
-        .update(changes)
+        .update(changes as any)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()

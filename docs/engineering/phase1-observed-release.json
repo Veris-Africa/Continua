@@ -1,0 +1,67 @@
+{
+  "observedDate": "2026-11-02",
+  "productionModified": false,
+  "frontend": {
+    "sha": "ff99c350e080b369ecf4f9a3ffeed9911c407f8c",
+    "evidence": "Successful Cloudflare production build 42f8c8c9-acdb-4dc2-9e78-adad16a4d8d0; audit HTTP 200",
+    "runtimeRevisionAttestation": false
+  },
+  "cloudflareWorker": {
+    "sha": "ff99c350e080b369ecf4f9a3ffeed9911c407f8c",
+    "evidence": "Cloudflare active deployment 4240418c at 100% traffic; deployment row maps to ff99c350e080b369ecf4f9a3ffeed9911c407f8c and successful build 42f8c8c9-acdb-4dc2-9e78-adad16a4d8d0, rechecked read-only during Phase 1",
+    "activeVersionId": null,
+    "activeVersionShortId": "4240418c",
+    "trafficPercent": 100,
+    "runtimeRevisionAttestation": "provider active-deployment/source mapping verified; no independent HTTP runtime SHA endpoint"
+  },
+  "renderBackend": {
+    "sha": "8a5b3509d353d06f1b1cc82218dee57bfccfc885",
+    "service": "srv-daim9a7qj5pc73an1bog",
+    "deployment": "dep-dbf1b734qb4c73a3kgug",
+    "evidence": "Live deployment and event history rechecked in Render during Phase 1",
+    "rootDirectory": "backend",
+    "automaticDeploy": "After CI Checks Pass",
+    "additionalBuildFilters": []
+  },
+  "githubActions": {
+    "sha": "ff99c350e080b369ecf4f9a3ffeed9911c407f8c",
+    "observedAt": "2026-11-02T16:05:28.746Z",
+    "reconciliationRun": 41473813615,
+    "reconciliationJob": 125374010133,
+    "reconciliationConclusion": "success",
+    "securityRun": 41469273387,
+    "nativeCandidateRun": 41469273762,
+    "scheduledDocumentsEnabled": true,
+    "scheduledNewsEnabled": true,
+    "dailySourceR2TransferBudgetBytes": 201326592
+  },
+  "database": {
+    "observedAt": "2026-11-02T16:09:48.325Z",
+    "project": "orange-bird-13151544",
+    "branch": "br-noisy-block-b4z5yxup",
+    "database": "neondb",
+    "serverVersion": "18.6 (4e5fd08)",
+    "latestLegacyMigrationLedgerVersion": "20261022010000",
+    "canonicalFinancialHistoryPresent": true,
+    "processedCloudArchivePresent": true,
+    "canonicalIdentityTablePresent": true,
+    "caveat": "Legacy migration ledger does not inventory separately applied infra/neon SQL. This is not a complete schema digest."
+  },
+  "configuration": {
+    "inventoryVersion": "phase1-observed-20261102",
+    "CACHE_DRIVER": "memory",
+    "AUTH_PROVIDER": "neon-managed",
+    "NEON_AUTH_PRODUCTION_ENABLED": true,
+    "NEON_AUTH_BRANCH_ID": "br-noisy-block-b4z5yxup",
+    "WORKERS_ENABLED": true,
+    "source": "Allowlisted non-secret Render environment fields from the engineering audit; no secret values retained"
+  },
+  "upstash": {
+    "databaseCount": 0,
+    "commands": 0,
+    "storageBytes": 0,
+    "displayedCostUsd": 0,
+    "evidence": "Authenticated Personal workspace Redis page: No database has been created yet",
+    "activated": false
+  }
+}

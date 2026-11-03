@@ -1,5 +1,7 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import { useIndices } from "@/hooks/useIndices";
 import { useState } from "react";
-import { 
+import {
   Newspaper, Clock, TrendingUp, Bookmark, BookmarkCheck,
   Play, Share2, MessageCircle, Bell, ChevronRight,
   Flame, Globe, BarChart3, Zap, Eye, Search
@@ -23,6 +25,7 @@ interface NewsArticle {
 }
 
 export default function News() {
+  const { indices } = useIndices();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [savedArticles, setSavedArticles] = useState<number[]>([]);
@@ -52,7 +55,7 @@ export default function News() {
   };
 
   const newsItems: NewsArticle[] = [
-    { id: 1, title: "Safaricom Reports Strong Q3 Results, M-Pesa Revenue Surges 23%", summary: "Kenya's largest telco posts 12% growth in revenue driven by M-Pesa expansion", source: "Business Daily", time: "2h ago", category: "earnings", imageUrl: "https://images.unsplash.com/photo-1556155092-490a1ba16284?w=400&h=250&fit=crop", readTime: "5 min", views: 8920, comments: 56, hasVideo: true, stockMentions: ["SAFCOM"], sentiment: "bullish" },
+    { id: 1, title: "Safaricom Reports Strong Q3 Results, M-Pesa Revenue Surges 23%", summary: "Kenya's largest telco posts 12% growth in revenue driven by M-Pesa expansion", source: "Business Daily", time: "2h ago", category: "earnings", imageUrl: "https://images.unsplash.com/photo-1556155092-490a1ba16284?w=400&h=250&fit=crop", readTime: "5 min", views: 8920, comments: 56, hasVideo: true, stockMentions: ["SCOM"], sentiment: "bullish" },
     { id: 2, title: "NSE 20 Index Hits New Monthly High on Banking Rally", summary: "Banking and telecom sectors lead market rally amid positive investor sentiment", source: "Capital FM", time: "4h ago", category: "trending", imageUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop", readTime: "4 min", views: 6540, comments: 42, stockMentions: ["EQTY", "KCB", "COOP"], sentiment: "bullish" },
     { id: 3, title: "Central Bank Maintains Rates at 12.5% Amid Stable Inflation", summary: "CBK keeps policy rate unchanged citing stable inflation outlook", source: "The Star", time: "6h ago", category: "economy", imageUrl: "https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=400&h=250&fit=crop", readTime: "6 min", views: 4320, comments: 78, sentiment: "neutral" },
     { id: 4, title: "Equity Bank Expands to South Sudan in Regional Push", summary: "Regional banking group opens new subsidiary as part of aggressive expansion strategy", source: "Standard", time: "8h ago", category: "stocks", imageUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop", readTime: "4 min", views: 3890, comments: 34, stockMentions: ["EQTY"], sentiment: "bullish" },
@@ -109,8 +112,8 @@ export default function News() {
             >
               {showBookmarks ? <BookmarkCheck className="h-[18px] w-[18px] text-primary" /> : <Bookmark className="h-[18px] w-[18px]" />}
               {savedArticles.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-[10px] flex items-center justify-center text-primary-foreground font-bold">
-                  {savedArticles.length}
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-[0.625rem] flex items-center justify-center text-primary-foreground font-bold">
+                  <RollingNumber value={savedArticles.length} />
                 </span>
               )}
             </Button>
@@ -137,7 +140,7 @@ export default function News() {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold flex items-center gap-2">
                 <BookmarkCheck className="h-4 w-4 text-primary" />
-                Saved Articles ({savedArticles.length})
+                Saved Articles (<RollingNumber value={savedArticles.length} />)
               </h2>
               <Button variant="ghost" size="sm" className="text-xs h-7 rounded-full" onClick={() => setShowBookmarks(false)}>
                 Back to Feed
@@ -161,14 +164,14 @@ export default function News() {
                     <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[11px] font-semibold text-primary">{article.source}</span>
-                          <span className="text-[11px] text-muted-foreground">{article.time}</span>
+                          <span className="text-[0.6875rem] font-semibold text-primary">{article.source}</span>
+                          <span className="text-[0.6875rem] text-muted-foreground">{article.time}</span>
                         </div>
                         <h2 className="font-bold text-xs leading-snug line-clamp-2">{article.title}</h2>
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(1)}K</span>
+                        <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
+                          <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>
                           <BookmarkCheck className="h-3.5 w-3.5 text-primary" />
@@ -187,14 +190,14 @@ export default function News() {
               <Card className="bg-gradient-to-r from-destructive/8 to-transparent border-destructive/20 animate-fade-in">
                 <CardContent className="p-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <Badge className="bg-destructive text-destructive-foreground text-[10px] px-2 py-0.5 rounded-full shrink-0">
+                    <Badge className="bg-destructive text-destructive-foreground text-[0.625rem] px-2 py-0.5 rounded-full shrink-0">
                       <span className="w-1.5 h-1.5 bg-destructive-foreground rounded-full animate-pulse mr-1 inline-block" />
                       LIVE
                     </Badge>
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{liveNews.title}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        {liveNews.source} · <Eye className="h-3 w-3" />{liveNews.viewers.toLocaleString()}
+                        {liveNews.source} · <Eye className="h-3 w-3" /><RollingNumber value={liveNews.viewers.toLocaleString()} />
                       </p>
                     </div>
                   </div>
@@ -208,7 +211,7 @@ export default function News() {
             <LiveConferencePlayer conference={liveNews} open={livePlayerOpen} onClose={() => setLivePlayerOpen(false)} />
 
             {/* Breaking News */}
-            <Card 
+            <Card
               className="soft-card border-0 overflow-hidden cursor-pointer animate-fade-in"
               onClick={() => { setSelectedArticle(breakingNews); setDetailDialogOpen(true); }}
             >
@@ -216,9 +219,9 @@ export default function News() {
                 <img src={breakingNews.imageUrl} alt={breakingNews.title} className="w-full h-44 object-cover rounded-t-2xl" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent rounded-t-2xl" />
                 <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge className="bg-destructive text-destructive-foreground text-[10px] px-2.5 py-0.5 rounded-full">BREAKING</Badge>
+                  <Badge className="bg-destructive text-destructive-foreground text-[0.625rem] px-2.5 py-0.5 rounded-full">BREAKING</Badge>
                   {breakingNews.sentiment && (
-                    <Badge className={`text-[10px] px-2 py-0.5 rounded-full border-0 ${getSentimentColor(breakingNews.sentiment)}`}>
+                    <Badge className={`text-[0.625rem] px-2 py-0.5 rounded-full border-0 ${getSentimentColor(breakingNews.sentiment)}`}>
                       {breakingNews.sentiment === "bullish" ? "↑ Bullish" : breakingNews.sentiment === "bearish" ? "↓ Bearish" : "Neutral"}
                     </Badge>
                   )}
@@ -241,19 +244,15 @@ export default function News() {
               <div className="flex items-center gap-2 mb-2">
                 <Zap className="h-4 w-4 text-primary" />
                 <h2 className="text-sm font-bold">Market Pulse</h2>
-                <span className="text-[10px] text-muted-foreground ml-auto">Live</span>
+                <span className="text-[0.625rem] text-muted-foreground ml-auto">Published indices</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "NSE 20", value: "1,847.32", change: "+1.24%", up: true },
-                  { label: "NASI", value: "118.45", change: "+0.82%", up: true },
-                  { label: "USD/KES", value: "129.20", change: "-0.15%", up: false },
-                ].map(m => (
+                {indices.map(index => ({ label: index.code, value: index.value.toFixed(2), change: `${index.changePercent.toFixed(2)}%`, up: index.changePercent >= 0 })).map(m => (
                   <Card key={m.label} className="soft-card">
                     <CardContent className="p-2.5">
-                      <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                      <p className="text-[0.625rem] text-muted-foreground">{m.label}</p>
                       <p className="text-sm font-bold tabular-nums leading-tight mt-0.5">{m.value}</p>
-                      <p className={`text-[10px] font-semibold ${m.up ? 'text-bull' : 'text-bear'}`}>{m.change}</p>
+                      <p className={`text-[0.625rem] font-semibold ${m.up ? 'text-bull' : 'text-bear'}`}>{m.change}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -285,7 +284,7 @@ export default function News() {
                   <MessageCircle className="h-4 w-4 text-primary" />
                   Most Discussed
                 </h2>
-                <button className="text-[11px] text-primary font-medium" onClick={() => navigate('/traders-hub')}>See all</button>
+                <button className="text-[0.6875rem] text-primary font-medium" onClick={() => navigate('/traders-hub')}>See all</button>
               </div>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                 {newsItems.slice(0, 4).map(article => (
@@ -293,11 +292,11 @@ export default function News() {
                         onClick={() => { setSelectedArticle(article); setDetailDialogOpen(true); }}>
                     <img src={article.imageUrl} alt="" className="w-full h-20 object-cover" />
                     <div className="p-2">
-                      <p className="text-[10px] text-primary font-semibold">{article.source}</p>
-                      <h4 className="text-[11px] font-bold leading-snug line-clamp-2 mt-0.5">{article.title}</h4>
-                      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" />{article.comments}</span>
-                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{((article.views || 0) / 1000).toFixed(1)}K</span>
+                      <p className="text-[0.625rem] text-primary font-semibold">{article.source}</p>
+                      <h4 className="text-[0.6875rem] font-bold leading-snug line-clamp-2 mt-0.5">{article.title}</h4>
+                      <div className="flex items-center gap-2 mt-1.5 text-[0.625rem] text-muted-foreground">
+                        <span className="flex items-center gap-0.5"><MessageCircle className="h-2.5 w-2.5" /><RollingNumber value={article.comments} /></span>
+                        <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
                       </div>
                     </div>
                   </Card>
@@ -353,33 +352,33 @@ export default function News() {
                               </div>
                             )}
                             {article.isPremium && (
-                              <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[9px] px-1.5 py-0 rounded-full">PRO</Badge>
+                              <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground text-[0.5625rem] px-1.5 py-0 rounded-full">PRO</Badge>
                             )}
                           </div>
                           <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
                             <div>
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-[11px] font-semibold text-primary">{article.source}</span>
-                                <span className="text-[11px] text-muted-foreground">{article.time}</span>
+                                <span className="text-[0.6875rem] font-semibold text-primary">{article.source}</span>
+                                <span className="text-[0.6875rem] text-muted-foreground">{article.time}</span>
                               </div>
                               <h2 className="font-bold text-xs leading-snug line-clamp-2 mb-1.5">{article.title}</h2>
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {article.sentiment && (
-                                  <Badge className={`text-[9px] px-1.5 py-0 rounded-full border-0 ${getSentimentColor(article.sentiment)}`}>
+                                  <Badge className={`text-[0.5625rem] px-1.5 py-0 rounded-full border-0 ${getSentimentColor(article.sentiment)}`}>
                                     {article.sentiment === "bullish" ? "↑ Bullish" : article.sentiment === "bearish" ? "↓ Bearish" : "—"}
                                   </Badge>
                                 )}
                                 {article.stockMentions?.slice(0, 2).map((stock) => (
-                                  <Badge key={stock} variant="outline" className="text-[9px] px-1.5 py-0 rounded-full cursor-pointer hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
+                                  <Badge key={stock} variant="outline" className="text-[0.5625rem] px-1.5 py-0 rounded-full cursor-pointer hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                                     ${stock}
                                   </Badge>
                                 ))}
                               </div>
                             </div>
                             <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" />{((article.views || 0) / 1000).toFixed(1)}K</span>
-                                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{article.comments}</span>
+                              <div className="flex items-center gap-2 text-[0.625rem] text-muted-foreground">
+                                <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /><RollingNumber value={((article.views || 0) / 1000).toFixed(2)} />K</span>
+                                <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /><RollingNumber value={article.comments} /></span>
                               </div>
                               <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={(e) => { e.stopPropagation(); toggleSave(article.id); }}>
                                 {savedArticles.includes(article.id) ? <BookmarkCheck className="h-3.5 w-3.5 text-primary" /> : <Bookmark className="h-3.5 w-3.5" />}
@@ -404,7 +403,7 @@ export default function News() {
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-bold text-sm">Personalized News</h4>
-                      <p className="text-[11px] text-muted-foreground truncate">Follow topics you care about</p>
+                      <p className="text-[0.6875rem] text-muted-foreground truncate">Follow topics you care about</p>
                     </div>
                   </div>
                   <Button size="sm" variant="outline" className="h-8 px-3 text-xs shrink-0 rounded-full">Customize</Button>

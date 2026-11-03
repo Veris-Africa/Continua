@@ -4,7 +4,9 @@
 // through this same manager instead of each opening its own connection.
 //
 // Protocol (docs/api/API.md):
-//   → { action: "subscribe",   symbols: ["SAFCOM", "EQTY"] }
+//   → { action: "authenticate", apiKey: "..." }
+//   ← { type: "authenticated" }
+//   → { action: "subscribe",   symbols: ["SCOM", "EQTY"] }
 //   → { action: "unsubscribe", symbols: ["EQTY"] }
 //   ← { type: "quote", payload: Quote }
 //   ← { type: "corporate_action", payload: CorporateAction }
@@ -23,6 +25,8 @@ class ContinuaRealtimeClient {
   private connecting = false;
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private authorized = false;
+  private rejected = false;
 
   /** symbol -> set of listeners currently interested in it */
   private quoteListeners = new Map<string, Set<QuoteListener>>();
@@ -34,27 +38,27 @@ class ContinuaRealtimeClient {
   }
 
   private getApiKey(): string {
-    return (import.meta.env.VITE_AFRIFINANCE_API_KEY as string | undefined) ?? "dev-local-only-key";
+    return (import.meta.env.VITE_CONTINUA_API_KEY as string | undefined) ??
+      (import.meta.env.VITE_AFRIFINANCE_API_KEY as string | undefined) ??
+      "dev-local-only-key";
   }
 
   private ensureConnected() {
+    // Hosted pages use the server-key HTTP gateway and existing quote polling.
+    // Never authenticate production sockets with a development placeholder.
+    if (import.meta.env.PROD || this.rejected) return;
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
     if (this.connecting) return;
     this.connecting = true;
 
-    const url = `${AFRIFINANCE_WS_URL}?apiKey=${encodeURIComponent(this.getApiKey())}`;
-    const socket = new WebSocket(url);
+    const socket = new WebSocket(AFRIFINANCE_WS_URL);
     this.socket = socket;
 
     socket.onopen = () => {
       this.connecting = false;
-      this.reconnectAttempt = 0;
-      this.notifyConnection(true);
-      // Re-subscribe to everything listeners currently care about — this
-      // covers both first connect and any reconnect after a drop.
-      if (this.subscribedSymbols.length > 0) {
-        this.send({ action: "subscribe", symbols: this.subscribedSymbols });
-      }
+      // Authenticate inside the encrypted WebSocket stream. Credentials in
+      // query strings are routinely captured by access logs and monitoring.
+      socket.send(JSON.stringify({ action: "authenticate", apiKey: this.getApiKey() }));
     };
 
     socket.onmessage = (event) => {
@@ -65,7 +69,14 @@ class ContinuaRealtimeClient {
         return;
       }
       if (!parsed || typeof parsed !== "object") return;
-      if (parsed.type === "quote") {
+      if ((parsed as { type?: string }).type === "authenticated") {
+        this.authorized = true;
+        this.reconnectAttempt = 0;
+        this.notifyConnection(true);
+        if (this.subscribedSymbols.length > 0) {
+          this.send({ action: "subscribe", symbols: this.subscribedSymbols });
+        }
+      } else if (parsed.type === "quote") {
         const listeners = this.quoteListeners.get(parsed.payload.symbol.toUpperCase());
         listeners?.forEach((l) => l(parsed!.payload as Quote));
       } else if (parsed.type === "corporate_action") {
@@ -73,12 +84,15 @@ class ContinuaRealtimeClient {
       }
     };
 
-    socket.onclose = () => {
+    socket.onclose = (event) => {
+      if (this.socket !== socket) return;
       this.connecting = false;
+      this.authorized = false;
       this.socket = null;
+      if (event.code === 1008) this.rejected = true;
       this.notifyConnection(false);
       // Only keep trying to reconnect while someone still wants data.
-      if (this.subscribedSymbols.length > 0 || this.corporateActionListeners.size > 0) {
+      if (!this.rejected && (this.subscribedSymbols.length > 0 || this.corporateActionListeners.size > 0)) {
         this.scheduleReconnect();
       }
     };
@@ -99,7 +113,7 @@ class ContinuaRealtimeClient {
   }
 
   private send(msg: { action: "subscribe" | "unsubscribe"; symbols: string[] }) {
-    if (this.socket?.readyState === WebSocket.OPEN) {
+    if (this.authorized && this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(msg));
     }
   }
@@ -109,7 +123,7 @@ class ContinuaRealtimeClient {
   }
 
   isConnected(): boolean {
-    return this.socket?.readyState === WebSocket.OPEN;
+    return this.authorized && this.socket?.readyState === WebSocket.OPEN;
   }
 
   onConnectionChange(listener: (connected: boolean) => void): () => void {
@@ -120,7 +134,7 @@ class ContinuaRealtimeClient {
   /** Subscribe to live quote ticks for one symbol. Multiple callers can
    *  subscribe to the same symbol — only the FIRST subscriber triggers a
    *  `subscribe` message to the server, and only the LAST unsubscribe
-   *  triggers `unsubscribe`, so N components watching SAFCOM still share
+   *  triggers `unsubscribe`, so N components watching SCOM still share
    *  one server-side subscription. */
   subscribeQuote(symbol: string, listener: QuoteListener): () => void {
     const key = symbol.toUpperCase();
@@ -143,13 +157,21 @@ class ContinuaRealtimeClient {
         this.quoteListeners.delete(key);
         this.send({ action: "unsubscribe", symbols: [key] });
       }
+      this.closeIfIdle();
     };
   }
 
   onCorporateAction(listener: CorporateActionListener): () => void {
     this.corporateActionListeners.add(listener);
     this.ensureConnected();
-    return () => this.corporateActionListeners.delete(listener);
+    return () => {this.corporateActionListeners.delete(listener); this.closeIfIdle();};
+  }
+
+  private closeIfIdle() {
+    if (this.quoteListeners.size || this.corporateActionListeners.size) return;
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+    this.socket?.close(1000, 'No active subscriptions');
   }
 }
 

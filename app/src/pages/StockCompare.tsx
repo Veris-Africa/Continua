@@ -1,130 +1,273 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, GitCompare, Plus, X, TrendingUp, TrendingDown, Search, BarChart3, PieChart, Activity, DollarSign, Percent, Scale, ChevronRight } from "lucide-react";
+import {
+  ArrowLeft,
+  GitCompare,
+  Plus,
+  X,
+  TrendingUp,
+  TrendingDown,
+  Search,
+  BarChart3,
+  DollarSign,
+  Percent,
+  Scale,
+  ChevronRight,
+  Gauge,
+} from "lucide-react";
 import { SparklineChart } from "@/components/shared/SparklineChart";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange, DIV_YIELD, getStockFundamentals, parseMagnitude, tickerSeed } from "@/lib/stockPrices";
+import {useStockDirectory} from '@/hooks/useStockDirectory';
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { useQuery } from "@tanstack/react-query";
+import { screenerApi } from "@/api/screenerApi";
+import { TrendResearch } from "@/components/markets/TrendResearch";
+import "./markets.css";
 
 interface Stock {
   symbol: string;
   name: string;
-  price: number;
-  change: number;
+  price: number | null;
+  change: number | null;
   marketCap: string;
-  pe: number;
-  eps: number;
-  dividendYield: number;
-  roe: number;
-  debtToEquity: number;
-  beta: number;
-  high52: number;
-  low52: number;
+  pe: number | null;
+  dividendYield: number | null;
+  afriScore: number | null;
   volume: string;
   sector: string;
+  pb: number | null;
+  roe: number | null;
+  netMargin: number | null;
+  debtToEquity: number | null;
+  payoutRatio: number | null;
+  ratiosAsOf: string | null;
 }
 
-// Market cap, P/E, beta and volume come from the same shared fundamentals table used by
-// StockDetail and the Screener, so a stock's stats here can never disagree with its own
-// detail page. ROE and debt/equity aren't tracked elsewhere, so they're derived here
-// deterministically per symbol (stable across reloads, but compare-only). Price/change are
-// overlaid live below (useLiveQuotes) wherever the Data Layer covers a symbol.
-function buildStaticStocks(): Stock[] {
-  return CANONICAL_SYMBOLS.map(symbol => {
-    const price = getPrice(symbol);
-    const { pct } = getDayChange(symbol);
-    const seed = tickerSeed(symbol);
-    const meta = getStockFundamentals(symbol);
-    return {
-      symbol,
-      name: STOCK_META[symbol].name,
-      sector: STOCK_META[symbol].sector,
-      price,
-      change: +pct.toFixed(2),
-      marketCap: meta.marketCap,
-      pe: meta.pe,
-      eps: meta.pe > 0 ? +(price / meta.pe).toFixed(2) : 0,
-      dividendYield: DIV_YIELD[symbol] ?? 0,
-      roe: +(10 + (seed % 20)).toFixed(1),
-      debtToEquity: +(0.3 + (seed % 70) / 100).toFixed(2),
-      beta: meta.beta,
-      high52: +(price * 1.12).toFixed(2),
-      low52: +(price * 0.85).toFixed(2),
-      volume: meta.volume,
-    };
-  });
+// Formats a raw KES figure as "692.9B" / "8.1M" for market cap and volume
+// display — the inverse of stockPrices.ts's old parseMagnitude, now local
+// since it's only needed here for real (live-quote) numbers.
+function formatMagnitude(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(2)}K`;
+  return String(n);
+}
+
+// Inverse of the above, for comparing magnitude-formatted strings ("692.9B" vs "8.1M").
+function parseMagnitude(s: string): number {
+  const m = s.match(/^([\d.]+)([KMBT]?)$/i);
+  if (!m) return 0;
+  const n = parseFloat(m[1]);
+  const mult = { K: 1e3, M: 1e6, B: 1e9, T: 1e12 }[m[2].toUpperCase()] ?? 1;
+  return n * mult;
 }
 
 const comparisonMetrics = [
-  { key: "price", label: "Price", icon: DollarSign, format: (v: number) => `KES ${v.toFixed(2)}` },
-  { key: "change", label: "Change %", icon: TrendingUp, format: (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`, colorize: true },
-  { key: "marketCap", label: "Market Cap", icon: BarChart3, format: (v: string) => v },
-  { key: "pe", label: "P/E Ratio", icon: Scale, format: (v: number) => v.toFixed(1) },
-  { key: "eps", label: "EPS", icon: Activity, format: (v: number) => `KES ${v.toFixed(2)}` },
-  { key: "dividendYield", label: "Dividend Yield", icon: Percent, format: (v: number) => `${v.toFixed(1)}%` },
-  { key: "roe", label: "ROE", icon: PieChart, format: (v: number) => `${v.toFixed(1)}%` },
-  { key: "debtToEquity", label: "Debt/Equity", icon: Scale, format: (v: number) => v.toFixed(2) },
-  { key: "beta", label: "Beta", icon: Activity, format: (v: number) => v.toFixed(2) },
-  { key: "high52", label: "52W High", icon: TrendingUp, format: (v: number) => `KES ${v.toFixed(2)}` },
-  { key: "low52", label: "52W Low", icon: TrendingDown, format: (v: number) => `KES ${v.toFixed(2)}` },
+  {
+    key: "price",
+    label: "Price",
+    icon: DollarSign,
+    format: (v: number) => `KES ${v.toFixed(2)}`,
+  },
+  {
+    key: "change",
+    label: "Change %",
+    icon: TrendingUp,
+    format: (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`,
+    colorize: true,
+  },
+  {
+    key: "marketCap",
+    label: "Market Cap",
+    icon: BarChart3,
+    format: (v: string) => v,
+  },
+  {
+    key: "pe",
+    label: "P/E Ratio",
+    icon: Scale,
+    format: (v: number) => v.toFixed(2),
+  },
+  {
+    key: "dividendYield",
+    label: "Dividend Yield",
+    icon: Percent,
+    format: (v: number) => `${v.toFixed(2)}%`,
+  },
+  {
+    key: "afriScore",
+    label: "C score",
+    icon: Gauge,
+    format: (v: number) => `${v.toFixed(0)}/100`,
+  },
   { key: "volume", label: "Volume", icon: BarChart3, format: (v: string) => v },
+  {
+    key: "pb",
+    label: "Price / Book",
+    icon: Scale,
+    format: (v: number) => v.toFixed(2),
+  },
+  {
+    key: "roe",
+    label: "Return on equity",
+    icon: Percent,
+    format: (v: number) => `${v.toFixed(2)}%`,
+  },
+  {
+    key: "netMargin",
+    label: "Net margin",
+    icon: Percent,
+    format: (v: number) => `${v.toFixed(2)}%`,
+  },
+  {
+    key: "debtToEquity",
+    label: "Debt / equity",
+    icon: Scale,
+    format: (v: number) => v.toFixed(2),
+  },
+  {
+    key: "payoutRatio",
+    label: "Payout ratio",
+    icon: Percent,
+    format: (v: number) => `${v.toFixed(2)}%`,
+  },
 ];
 
 export default function StockCompare() {
+  const {symbols: directorySymbols, metadata} = useStockDirectory();
   const navigate = useNavigate();
-  const [selectedSymbols, setSelectedSymbols] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedSymbols, setSelectedSymbols] = useState<string[]>(() => {
+    return [
+      ...new Set(
+        (searchParams.get("stocks") ?? searchParams.get("stock") ?? "")
+          .toUpperCase()
+          .split(","),
+      ),
+    ]
+      .filter((s) => /^[A-Z0-9.-]{1,20}$/.test(s))
+      .slice(0, 4);
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
 
-  // Live Continua Data Layer quotes overlaid onto the static comparison table — same
-  // pattern as Screener/SectorDetail/AllStocksList. Keeping selection as symbols (not
-  // snapshotted Stock objects) means an already-added stock's price/change keeps updating
-  // live instead of freezing at whatever it was when it was added to the comparison.
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
+  // Live Continua Data Layer quotes — the ONLY source for price/change/
+  // marketCap/volume. A symbol with no live quote yet is excluded from
+  // stocksDatabase entirely (so it can't be searched/added while unpriced,
+  // and the comparison table never has to show a fabricated cell).
+  const { quotes } = useLiveQuotes(directorySymbols);
+  const screenerQuery = useQuery({
+    queryKey: ["continua", "compare", "screener"],
+    queryFn: () => screenerApi.run({ limit: 100 }),
+    staleTime: 60_000,
+  });
+  const researchBySymbol = useMemo(
+    () =>
+      new Map(
+        (screenerQuery.data ?? []).map((row) => [
+          row.symbol.toUpperCase(),
+          row,
+        ]),
+      ),
+    [screenerQuery.data],
+  );
   const stocksDatabase = useMemo(() => {
-    const base = buildStaticStocks();
-    return base.map(s => {
-      const q = quotes[s.symbol];
-      return q ? { ...s, price: q.lastPrice, change: +q.changePercent.toFixed(2) } : s;
-    });
-  }, [quotes]);
+    return directorySymbols.map((symbol) => {
+      const q = quotes[symbol];
+      const research = researchBySymbol.get(symbol);
+      const price = q?.lastPrice ?? research?.lastPrice ?? null;
+      return {
+        symbol,
+        name: metadata[symbol].name,
+        sector: metadata[symbol].sector,
+        price,
+        change: q?.changePercent ?? research?.changePercent ?? null,
+        marketCap:
+          (q?.marketCap ?? research?.marketCap) != null
+            ? formatMagnitude((q?.marketCap ?? research?.marketCap)!)
+            : "—",
+        volume: q?.volume == null ? "—" : formatMagnitude(q.volume),
+        pe: research?.pe ?? null,
+        dividendYield:
+          research?.dividendYield != null ? research.dividendYield * 100 : null,
+        afriScore: research?.afriScore ?? null,
+        pb: research?.pb ?? null,
+        roe: research?.roe == null ? null : research.roe * 100,
+        netMargin:
+          research?.netMargin == null ? null : research.netMargin * 100,
+        debtToEquity: research?.debtToEquity ?? null,
+        payoutRatio:
+          research?.payoutRatio == null ? null : research.payoutRatio * 100,
+        ratiosAsOf: research?.ratiosAsOf ?? null,
+      } satisfies Stock;
+    }).filter((s): s is Stock => s !== null);
+  }, [quotes, researchBySymbol, directorySymbols, metadata]);
 
   const selectedStocks = useMemo(
-    () => selectedSymbols.map(sym => stocksDatabase.find(s => s.symbol === sym)).filter((s): s is Stock => !!s),
-    [selectedSymbols, stocksDatabase]
+    () =>
+      selectedSymbols
+        .map((sym) => stocksDatabase.find((s) => s.symbol === sym))
+        .filter((s): s is Stock => !!s),
+    [selectedSymbols, stocksDatabase],
   );
 
+  const { getSparkline } = useSparklines(selectedSymbols);
+
   const filteredStocks = stocksDatabase.filter(
-    stock =>
+    (stock) =>
       !selectedSymbols.includes(stock.symbol) &&
       (stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        stock.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        stock.name.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const addStock = (stock: Stock) => {
     if (selectedSymbols.length < 4) {
-      setSelectedSymbols(prev => [...prev, stock.symbol]);
+      const next = [...selectedSymbols, stock.symbol];
+      setSelectedSymbols(next);
+      setSearchParams({ stocks: next.join(",") }, { replace: true });
       setSearchQuery("");
       setShowSearch(false);
     }
   };
 
   const removeStock = (symbol: string) => {
-    setSelectedSymbols(prev => prev.filter(s => s !== symbol));
+    const next = selectedSymbols.filter((s) => s !== symbol);
+    setSelectedSymbols(next);
+    setSearchParams(next.length ? { stocks: next.join(",") } : {}, {
+      replace: true,
+    });
   };
 
   const getBestValue = (key: string, isHigherBetter: boolean = true) => {
     if (selectedStocks.length < 2) return null;
-    const values = selectedStocks.map(s => {
-      const val = s[key as keyof Stock];
-      return typeof val === 'number' ? val : parseMagnitude(String(val));
-    });
-    const bestIdx = isHigherBetter
-      ? values.indexOf(Math.max(...values))
-      : values.indexOf(Math.min(...values));
-    return selectedStocks[bestIdx]?.symbol;
+    const values = selectedStocks
+      .map((s) => {
+        const val = s[key as keyof Stock];
+        if (typeof val === "number" && Number.isFinite(val))
+          return { symbol: s.symbol, value: val };
+        if (typeof val === "string" && val !== "—")
+          return { symbol: s.symbol, value: parseMagnitude(val) };
+        return null;
+      })
+      .filter(
+        (entry): entry is { symbol: string; value: number } => entry !== null,
+      );
+    if (values.length < 2) return null;
+    return values.reduce((best, entry) =>
+      isHigherBetter
+        ? entry.value > best.value
+          ? entry
+          : best
+        : entry.value < best.value
+          ? entry
+          : best,
+    ).symbol;
   };
 
   return (
@@ -133,7 +276,12 @@ export default function StockCompare() {
       <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="tap-scale h-9 w-9">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigateBack(navigate, "/markets")}
+              className="tap-scale h-9 w-9"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -141,11 +289,21 @@ export default function StockCompare() {
                 <GitCompare className="h-4 w-4 text-primary" />
                 Compare
               </h1>
-              <p className="text-[10px] text-muted-foreground">Side-by-side analysis</p>
+              <p className="text-[0.625rem] text-muted-foreground">
+                Side-by-side analysis
+              </p>
             </div>
           </div>
           {selectedStocks.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setSelectedSymbols([])} className="text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedSymbols([]);
+                setSearchParams({}, { replace: true });
+              }}
+              className="text-xs text-muted-foreground"
+            >
               Clear
             </Button>
           )}
@@ -176,19 +334,28 @@ export default function StockCompare() {
                       className="w-full flex items-center justify-between py-2.5 border-b border-border/40 hover:bg-muted/30 -mx-4 px-4 transition-colors"
                     >
                       <div className="flex items-center gap-2.5 text-left">
-                        <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary">
+                        <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[0.625rem] font-bold text-primary">
                           {stock.symbol.slice(0, 2)}
                         </div>
                         <div>
-                          <div className="text-sm font-semibold">{stock.symbol}</div>
-                          <div className="text-[10px] text-muted-foreground">{stock.name}</div>
+                          <div className="text-sm font-semibold">
+                            {stock.symbol}
+                          </div>
+                          <div className="text-[0.625rem] text-muted-foreground">
+                            {stock.name}
+                          </div>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </button>
                   ))}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowSearch(false)} className="w-full">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSearch(false)}
+                  className="w-full"
+                >
                   Cancel
                 </Button>
               </div>
@@ -198,7 +365,7 @@ export default function StockCompare() {
                 className="w-full h-12 rounded-full border border-dashed border-border/70 hover:border-primary/40 hover:bg-primary/5 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                Add Stock to Compare ({selectedStocks.length}/4)
+                Add Stock to Compare (<RollingNumber value={selectedStocks.length} />/4)
               </button>
             )}
           </div>
@@ -209,29 +376,52 @@ export default function StockCompare() {
           <ScrollArea className="w-full -mx-4">
             <div className="flex gap-4 px-4 pb-2">
               {selectedStocks.map((stock) => (
-                <div key={stock.symbol} className="min-w-[150px] flex-shrink-0 border-t border-border/60 pt-3 relative">
+                <div
+                  key={stock.symbol}
+                  className="min-w-[150px] flex-shrink-0 border-t border-border/60 pt-3 relative"
+                >
                   <button
                     className="absolute -top-1 right-0 h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
                     onClick={() => removeStock(stock.symbol)}
+                    aria-label={`Remove ${stock.symbol} from comparison`}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[10px] font-bold text-primary">
+                    <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center text-[0.625rem] font-bold text-primary">
                       {stock.symbol.slice(0, 2)}
                     </div>
                     <div>
-                      <div className="text-sm font-semibold">{stock.symbol}</div>
-                      <div className="text-[9px] text-muted-foreground">{stock.sector}</div>
+                      <div className="text-sm font-semibold">
+                        {stock.symbol}
+                      </div>
+                      <div className="text-[0.5625rem] text-muted-foreground">
+                        {stock.sector}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-sm font-semibold tabular">KES {stock.price.toFixed(2)}</div>
-                  <div className={`text-[11px] flex items-center gap-0.5 tabular ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                    {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                    {stock.change >= 0 ? '+' : ''}{stock.change}%
+                  <div className="text-sm font-semibold tabular">
+                    KES <RollingNumber value={stock.price == null ? "—" : stock.price.toFixed(2)} />
+                  </div>
+                  <div
+                    className={`text-[0.6875rem] flex items-center gap-0.5 tabular ${stock.change >= 0 ? "text-bull" : "text-bear"}`}
+                  >
+                    {stock.change >= 0 ? (
+                      <TrendingUp className="h-3 w-3" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3" />
+                    )}
+                    <RollingNumber value={stock.change == null
+                      ? "—"
+                      : `${stock.change > 0 ? "+" : ""}${stock.change.toFixed(2)}%`} />
                   </div>
                   <div className="mt-2">
-                    <SparklineChart isPositive={stock.change >= 0} width={130} height={26} />
+                    <SparklineChart
+                      isPositive={stock.change >= 0}
+                      width={130}
+                      height={26}
+                      data={getSparkline(stock.symbol)}
+                    />
                   </div>
                 </div>
               ))}
@@ -242,17 +432,34 @@ export default function StockCompare() {
 
         {/* Comparison table — flat */}
         {selectedStocks.length >= 2 && (
+          <section className="border-y py-5">
+            <h2 className="text-xl">Performance, aligned.</h2>
+            <TrendResearch symbols={selectedSymbols} />
+            <p className="market-note">
+              Share this comparison using the URL. Highlighted values below
+              indicate relative extremes, not a recommendation or an overall
+              winner.
+            </p>
+          </section>
+        )}
+        {selectedStocks.length >= 2 && (
           <div>
             <p className="section-eyebrow mb-2 flex items-center gap-2">
-              <BarChart3 className="h-3.5 w-3.5 text-accent" /> Detailed Comparison
+              <BarChart3 className="h-3.5 w-3.5 text-accent" /> Detailed
+              Comparison
             </p>
             <div className="-mx-4 overflow-x-auto">
-              <table className="w-full text-xs">
+              <table className="comparison-table w-max min-w-full text-xs">
                 <thead>
                   <tr className="border-y border-border/60">
-                    <th className="text-left py-2 px-4 font-medium text-muted-foreground sticky left-0 bg-background">Metric</th>
+                    <th className="text-left py-2 px-4 font-medium text-muted-foreground bg-background">
+                      Metric
+                    </th>
                     {selectedStocks.map((stock) => (
-                      <th key={stock.symbol} className="text-center py-2 px-3 font-semibold min-w-[90px]">
+                      <th
+                        key={stock.symbol}
+                        className="text-center py-2 px-3 font-semibold min-w-[140px] whitespace-nowrap"
+                      >
                         {stock.symbol}
                       </th>
                     ))}
@@ -261,33 +468,53 @@ export default function StockCompare() {
                 <tbody>
                   {comparisonMetrics.map((metric) => {
                     const Icon = metric.icon;
-                    const isHigherBetter = !['pe', 'debtToEquity', 'beta'].includes(metric.key);
-                    const bestSymbol = getBestValue(metric.key, isHigherBetter);
+                    const isHigherBetter = metric.key !== "pe";
+                    const bestSymbol = [
+                      "dividendYield",
+                      "afriScore",
+                      "roe",
+                      "netMargin",
+                    ].includes(metric.key)
+                      ? getBestValue(metric.key, isHigherBetter)
+                      : null;
 
                     return (
-                      <tr key={metric.key} className="border-b border-border/40">
-                        <td className="py-2.5 px-4 font-medium sticky left-0 bg-background">
+                      <tr
+                        key={metric.key}
+                        className="border-b border-border/40"
+                      >
+                        <td className="py-2 px-4 font-medium bg-background whitespace-nowrap min-w-[160px]">
                           <div className="flex items-center gap-2">
-                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             {metric.label}
                           </div>
                         </td>
                         {selectedStocks.map((stock) => {
                           const value = stock[metric.key as keyof Stock];
                           const isBest = bestSymbol === stock.symbol;
-                          const numValue = typeof value === 'number' ? value : 0;
-                          const colorClass = metric.colorize && typeof value === 'number'
-                            ? numValue >= 0 ? 'text-bull' : 'text-bear'
-                            : '';
+                          const numValue =
+                            typeof value === "number" ? value : 0;
+                          const colorClass =
+                            metric.colorize && typeof value === "number"
+                              ? numValue >= 0
+                                ? "text-bull"
+                                : "text-bear"
+                              : "";
 
                           return (
                             <td
                               key={stock.symbol}
-                              className={`text-center py-2.5 px-3 tabular ${isBest ? 'font-bold text-primary' : ''} ${colorClass}`}
+                              className={`text-center py-2 px-3 tabular whitespace-nowrap min-w-[140px] ${isBest ? "font-bold text-primary" : ""} ${colorClass}`}
                             >
-                              {typeof value === 'number'
-                                ? (metric.format as (v: number) => string)(value)
-                                : (metric.format as (v: string) => string)(value as string)}
+                              {value == null
+                                ? "—"
+                                : typeof value === "number"
+                                  ? (metric.format as (v: number) => string)(
+                                      value,
+                                    )
+                                  : (metric.format as (v: string) => string)(
+                                      value as string,
+                                    )}
                               {isBest && <span className="ml-1">★</span>}
                             </td>
                           );
@@ -307,7 +534,8 @@ export default function StockCompare() {
             <GitCompare className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
             <h3 className="font-semibold mb-2">Compare Stocks</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
-              Add 2–4 stocks to compare performance, valuation and key metrics side-by-side.
+              Add 2–4 stocks to compare performance, valuation and key metrics
+              side-by-side.
             </p>
             <Button onClick={() => setShowSearch(true)} className="btn-primary">
               <Plus className="h-4 w-4 mr-2" />
@@ -318,8 +546,22 @@ export default function StockCompare() {
 
         {selectedStocks.length === 1 && (
           <div className="border-t border-b border-primary/25 bg-primary/5 -mx-4 px-4 py-3 text-center">
-            <p className="text-xs text-muted-foreground">Add at least one more stock to start comparing</p>
+            <p className="text-xs text-muted-foreground">
+              Add at least one more stock to start comparing
+            </p>
           </div>
+        )}
+        {selectedStocks.length > 0 && (
+          <p className="market-note">
+            Financial evidence dates:{" "}
+            {selectedStocks
+              .map(
+                (s) =>
+                  `${s.symbol}: ${s.ratiosAsOf ? new Date(s.ratiosAsOf).toLocaleDateString() : "unavailable"}`,
+              )
+              .join(" · ")}
+            . Different reporting periods may not be directly comparable.
+          </p>
         )}
       </div>
     </div>

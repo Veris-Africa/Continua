@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, X, Users, Radio, MessageSquare, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase,OWNED_IDENTITY_ENABLED,subscribeOwnedSnapshots } from "@/integrations/continua/browserClient";
 import { useAuth } from "@/hooks/useAuth";
 import type { Room } from "@/hooks/useRooms";
 
@@ -23,11 +24,28 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [loadError,setLoadError]=useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !room) return;
+    let active=true,snapshotRevision=0;
+    setMessages([]);setLoadError('');
     setLoading(true);
+    if(OWNED_IDENTITY_ENABLED){
+      const channel=subscribeOwnedSnapshots(`room-${room.id}`,{table:'room_messages',filter:`room_id=eq.${room.id}`},async({rows})=>{
+        const revision=++snapshotRevision;
+        if(rows.some(row=>row.room_id!==room.id)){if(active)setLoadError('Messages could not be verified. Reopen this room.');return;}
+        const ids=[...new Set(rows.map(row=>row.user_id))];
+        const {data:profiles}=ids.length?await supabase.from('profiles_public').select('user_id,full_name,avatar_url').in('user_id',ids):{data:[]};
+        if(!active||revision!==snapshotRevision)return;
+        const authors=new Map((profiles??[]).map(profile=>[profile.user_id,profile]));
+        setMessages(rows.map(row=>({...row,author:authors.get(row.user_id)})).sort((a,b)=>a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id)));
+        setLoading(false);setLoadError('');
+        setTimeout(()=>{if(active)scrollRef.current?.scrollTo({top:scrollRef.current.scrollHeight});},50);
+      },status=>{if(active&&status==='CHANNEL_ERROR'){setLoading(false);setLoadError('Live messages disconnected. Reconnecting…');}});
+      return()=>{active=false;snapshotRevision++;void supabase.removeChannel(channel);};
+    }
     (async () => {
       const { data } = await supabase.from("room_messages" as any).select("*").eq("room_id", room.id).order("created_at", { ascending: true }).limit(100);
       const msgs = (data as any[]) || [];
@@ -37,10 +55,11 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
         const { data: profs } = await supabase.from("profiles_public").select("user_id, full_name, avatar_url").in("user_id", uids);
         pmap = new Map((profs || []).map((p: any) => [p.user_id, p]));
       }
+      if(!active)return;
       setMessages(msgs.map((m: any) => ({ ...m, author: pmap.get(m.user_id) })));
       setLoading(false);
       setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }), 50);
-    })();
+    })().catch(()=>{if(active){setLoading(false);setLoadError('Messages could not load. Reopen this room to retry.');}});
 
     // realtime
     const channel = supabase
@@ -48,11 +67,12 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "room_messages", filter: `room_id=eq.${room.id}` }, async (payload: any) => {
         const m = payload.new as any;
         const { data: prof } = await supabase.from("profiles_public").select("full_name, avatar_url").eq("user_id", m.user_id).maybeSingle();
+        if(!active)return;
         setMessages(prev => [...prev, { ...m, author: prof || undefined }]);
         setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }), 50);
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {active=false;supabase.removeChannel(channel); };
   }, [open, room]);
 
   const send = async () => {
@@ -74,14 +94,15 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
               {room.room_type === "live" ? <Radio className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
             </div>
             <div className="min-w-0">
-              <div className="text-sm font-bold truncate flex items-center gap-1.5">{room.name}{room.is_live && <span className="text-[10px] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">LIVE</span>}</div>
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" />{room.member_count} members</div>
+              <div className="text-sm font-bold truncate flex items-center gap-1.5">{room.name}{room.is_live && <span className="text-[0.625rem] bg-destructive text-destructive-foreground px-1.5 py-0.5 rounded font-bold">LIVE</span>}</div>
+              <div className="text-[0.6875rem] text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /><RollingNumber value={room.member_count} /> members</div>
             </div>
           </div>
           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => onOpenChange(false)}><X className="h-4 w-4" /></Button>
         </header>
 
         <ScrollArea className="flex-1" ref={scrollRef as any}>
+          {loadError&&<p role="status" className="px-3 pt-3 text-sm text-muted-foreground">{loadError}</p>}
           <div className="p-3 space-y-2.5">
             {loading ? (
               <div className="text-center text-sm text-muted-foreground py-8"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
@@ -94,10 +115,10 @@ export function RoomChatDialog({ open, onOpenChange, room }: Props) {
                   <div key={m.id} className={`flex gap-2 ${own ? "flex-row-reverse" : ""}`}>
                     <Avatar className="h-7 w-7 shrink-0">
                       <AvatarImage src={m.author?.avatar_url || ""} />
-                      <AvatarFallback className="text-[10px]">{(m.author?.full_name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="text-[0.625rem]">{(m.author?.full_name || "U").slice(0, 1).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className={`max-w-[75%] ${own ? "items-end" : "items-start"} flex flex-col`}>
-                      <div className="text-[10px] text-muted-foreground px-1">{m.author?.full_name || "User"}</div>
+                      <div className="text-[0.625rem] text-muted-foreground px-1">{m.author?.full_name || "User"}</div>
                       <div className={`px-3 py-2 rounded-2xl text-sm ${own ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>{m.content}</div>
                     </div>
                   </div>

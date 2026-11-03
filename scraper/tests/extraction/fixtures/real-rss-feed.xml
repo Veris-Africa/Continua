@@ -1,0 +1,16 @@
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Hacker News: Front Page</title><link>https://news.ycombinator.com/</link><description>Hacker News RSS</description><docs>https://hnrss.org/</docs><generator>hnrss v2.1.1</generator><lastBuildDate>Sat, 29 Aug 2026 12:02:49 +0000</lastBuildDate><atom:link href="https://hnrss.org/frontpage" rel="self" type="application/rss+xml"></atom:link><item><title><![CDATA[Iceland votes on whether to restart talks on joining EU]]></title><description><![CDATA[
+<p>Article URL: <a href="https://www.bbc.com/news/articles/cn45vdxyvvlo">https://www.bbc.com/news/articles/cn45vdxyvvlo</a></p>
+<p>Comments URL: <a href="https://news.ycombinator.com/item?id=49489057">https://news.ycombinator.com/item?id=49489057</a></p>
+<p>Points: 34</p>
+<p># Comments: 13</p>
+]]></description><pubDate>Sat, 29 Aug 2026 11:39:38 +0000</pubDate><link>https://www.bbc.com/news/articles/cn45vdxyvvlo</link><dc:creator>tosh</dc:creator><comments>https://news.ycombinator.com/item?id=49489057</comments><guid isPermaLink="false">https://news.ycombinator.com/item?id=49489057</guid></item><item><title><![CDATA[Samsung's Processing-in-Memory (PIM)]]></title><description><![CDATA[
+<p>Article URL: <a href="https://chipsandcheese.com/p/hot-chips-2026-samsungs-processing">https://chipsandcheese.com/p/hot-chips-2026-samsungs-processing</a></p>
+<p>Comments URL: <a href="https://news.ycombinator.com/item?id=49487341">https://news.ycombinator.com/item?id=49487341</a></p>
+<p>Points: 130</p>
+<p># Comments: 44</p>
+]]></description><pubDate>Sat, 29 Aug 2026 06:06:51 +0000</pubDate><link>https://chipsandcheese.com/p/hot-chips-2026-samsungs-processing</link><dc:creator>ingve</dc:creator><comments>https://news.ycombinator.com/item?id=49487341</comments><guid isPermaLink="false">https://news.ycombinator.com/item?id=49487341</guid></item><item><title><![CDATA[TurboKV: Insanely fast Rust key-value store]]></title><description><![CDATA[
+<p>Article URL: <a href="https://github.com/kingroryg/turbokv">https://github.com/kingroryg/turbokv</a></p>
+<p>Comments URL: <a href="https://news.ycombinator.com/item?id=49486334">https://news.ycombinator.com/item?id=49486334</a></p>
+<p>Points: 117</p>
+<p># Comments: 53</p>
+]]></description><pubDate>Sat, 29 Aug 2026 02:23:37 +0000</pubDate><link>https://github.com/kingroryg/turbokv</link><dc:creator>rgbimbochamp</dc:creator><comments>https://news.ycombinator.com/item?id=49486334</comments><guid isPermaLink="false">https://news.ycombinator.com/item?id=49486334</guid></item></channel></rss>

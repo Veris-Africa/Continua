@@ -1,490 +1,454 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-
+import { ArrowLeft, Download, Save, SlidersHorizontal, X } from "lucide-react";
+import { screenerApi } from "@/api/screenerApi";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Filter, TrendingUp, TrendingDown, ChevronRight, RotateCcw, Sparkles, Search, ArrowUpDown, SlidersHorizontal, BarChart3, LineChart } from "lucide-react";
-import { SparklineChart } from "@/components/shared/SparklineChart";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange, DIV_YIELD, getStockFundamentals, parseMagnitude, tickerSeed } from "@/lib/stockPrices";
-import { useAfriScreener } from "@/hooks/useAfriScreener";
+import "./markets.css";
 
-interface ScreenerFilters {
+type Filters = {
   sector: string;
-  minChange: number;
-  maxChange: number;
-  minPrice: number;
-  maxPrice: number;
-  minPE: number;
-  maxPE: number;
+  minPrice: string;
+  maxPrice: string;
+  minChange: string;
+  maxChange: string;
+  minYield: string;
+  maxPe: string;
+  minCap: string;
   minVolume: string;
-  marketCapRange: string;
-  minDividendYield: number;
-  maxDividendYield: number;
-  minVolumeM: number;
-  minBeta: number;
-  maxBeta: number;
-  minRSI: number;
-  maxRSI: number;
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-}
-
-const MARKET_CAP_BUCKETS: Record<string, { min: number; max: number }> = {
-  all: { min: 0, max: Infinity },
-  large: { min: 50, max: Infinity }, // >50B
-  mid: { min: 5, max: 50 },          // 5B–50B
-  small: { min: 0, max: 5 },         // <5B
+  minRoe: string;
+  minMargin: string;
+  maxDebt: string;
+  maxPb: string;
 };
-
-const sectors = ["All Sectors", ...Array.from(new Set(Object.values(STOCK_META).map(m => m.sector))).sort()];
-
-// Volume, beta and RSI come from the shared static fundamentals table used by StockDetail
-// and Compare (the Data Layer doesn't compute RSI). Price, market cap, P/E, dividend yield
-// and AfriScore are overlaid live below via useAfriScreener wherever the Data Layer covers
-// a symbol.
-function buildStaticStocks() {
-  return CANONICAL_SYMBOLS.map(symbol => {
-    const { pct } = getDayChange(symbol);
-    const meta = getStockFundamentals(symbol);
-    return {
-      symbol,
-      name: STOCK_META[symbol].name,
-      sector: STOCK_META[symbol].sector,
-      price: getPrice(symbol),
-      change: +pct.toFixed(2),
-      dividendYield: DIV_YIELD[symbol] ?? 0,
-      volume: meta.volume,
-      volumeM: parseMagnitude(meta.volume) / 1e6,
-      marketCap: meta.marketCap,
-      pe: meta.pe,
-      beta: meta.beta,
-      rsi: 30 + (tickerSeed(symbol) % 45),
-      afriScore: undefined as number | undefined,
-    };
-  });
+const empty: Filters = {
+  sector: "All",
+  minPrice: "",
+  maxPrice: "",
+  minChange: "",
+  maxChange: "",
+  minYield: "",
+  maxPe: "",
+  minCap: "",
+  minVolume: "",
+  minRoe: "",
+  minMargin: "",
+  maxDebt: "",
+  maxPb: "",
+};
+type Saved = { name: string; filters: Filters };
+function readSaved(): Saved[] {
+  try {
+    const data = JSON.parse(
+      localStorage.getItem("continua:screeners:v1") ?? "[]",
+    );
+    return Array.isArray(data)
+      ? data
+          .filter(
+            (s) =>
+              typeof s?.name === "string" &&
+              s.filters &&
+              Object.keys(empty).every((k) => typeof s.filters[k] === "string"),
+          )
+          .slice(0, 20)
+      : [];
+  } catch {
+    return [];
+  }
 }
-
-const presetFilters = [
-  { name: "🔥 Top Gainers", icon: TrendingUp, filters: { sector: "All Sectors", minChange: 1, maxChange: 100, sortBy: "change", sortOrder: "desc" as const } },
-  { name: "📉 Top Losers", icon: TrendingDown, filters: { sector: "All Sectors", minChange: -100, maxChange: -0.1, sortBy: "change", sortOrder: "asc" as const } },
-  { name: "💰 High Dividend", icon: BarChart3, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, sortBy: "dividendYield", sortOrder: "desc" as const } },
-  { name: "📊 High Volume", icon: LineChart, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, sortBy: "volume", sortOrder: "desc" as const } },
-  { name: "🏦 Banking", icon: Filter, filters: { sector: "Banking", minChange: -100, maxChange: 100, sortBy: "marketCap", sortOrder: "desc" as const } },
-  { name: "⚡ Oversold (RSI<40)", icon: Sparkles, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, minRSI: 0, maxRSI: 40, sortBy: "rsi", sortOrder: "asc" as const } },
-  { name: "🎯 Top AfriScore", icon: Sparkles, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, sortBy: "afriScore", sortOrder: "desc" as const } },
-  { name: "🏛️ Large Cap", icon: BarChart3, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, marketCapRange: "large", sortBy: "marketCap", sortOrder: "desc" as const } },
-  { name: "🐣 Small Cap", icon: Sparkles, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, marketCapRange: "small", sortBy: "marketCap", sortOrder: "desc" as const } },
-  { name: "🛡️ Low Volatility (Beta<0.8)", icon: Filter, filters: { sector: "All Sectors", minChange: -100, maxChange: 100, minBeta: 0, maxBeta: 0.8, sortBy: "marketCap", sortOrder: "desc" as const } },
-];
-
-export default function StockScreenerPage() {
+export function StockScreener() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [filters, setFilters] = useState<ScreenerFilters>({
-    sector: "All Sectors",
-    minChange: -10,
-    maxChange: 10,
-    minPrice: 0,
-    maxPrice: 500,
-    minPE: 0,
-    maxPE: 50,
-    minVolume: "0",
-    marketCapRange: "all",
-    minDividendYield: 0,
-    maxDividendYield: 15,
-    minVolumeM: 0,
-    minBeta: 0,
-    maxBeta: 2,
-    minRSI: 0,
-    maxRSI: 100,
-    sortBy: "marketCap",
-    sortOrder: "desc",
+  const [filters, setFilters] = useState<Filters>({ ...empty }),
+    [category, setCategory] = useState("Market"),
+    [search, setSearch] = useState(""),
+    [name, setName] = useState(""),
+    [saved, setSaved] = useState(readSaved),
+    [sort, setSort] = useState("change"),
+    [ascending, setAscending] = useState(false);
+  const { directory, symbols } = useStockDirectory();
+  const { quotes } = useLiveQuotes(symbols, "NSE");
+  const research = useQuery({
+    queryKey: ["continua", "market-screener"],
+    queryFn: () => screenerApi.run({ limit: 200 }),
+    staleTime: 300_000,
+    retry: 1,
   });
-
-  const applyPreset = (preset: typeof presetFilters[0]) => {
-    setFilters(prev => ({ ...prev, ...preset.filters }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      sector: "All Sectors",
-      minChange: -10,
-      maxChange: 10,
-      minPrice: 0,
-      maxPrice: 500,
-      minPE: 0,
-      maxPE: 50,
-      minVolume: "0",
-      marketCapRange: "all",
-      minDividendYield: 0,
-      maxDividendYield: 15,
-      minVolumeM: 0,
-      minBeta: 0,
-      maxBeta: 2,
-      minRSI: 0,
-      maxRSI: 100,
-      sortBy: "marketCap",
-      sortOrder: "desc",
-    });
-    setSearchQuery("");
-  };
-
-  // Real marketCap/PE/dividendYield/AfriScore from the Data Layer's
-  // /screener endpoint (one batched call), plus live price/change from the
-  // same shared quote hook every other page uses. Volume, beta, and RSI
-  // stay on the static table below — the Data Layer doesn't compute those
-  // yet — so sliders for them keep working, just against static ranges.
-  const { bySymbol: liveScreener } = useAfriScreener(CANONICAL_SYMBOLS);
-  const allStocks = useMemo(() => {
-    const base = buildStaticStocks();
-    return base.map(s => {
-      const live = liveScreener[s.symbol];
-      if (!live) return s;
+  const rows = useMemo(() => {
+    const lookup = new Map((research.data ?? []).map((r) => [r.symbol, r]));
+    return directory.map(({symbol,name,sector,aliases}) => {
+      const q = quotes[symbol],
+        r = lookup.get(symbol);
       return {
-        ...s,
-        price: live.price ?? s.price,
-        change: live.changePercent != null ? +live.changePercent.toFixed(2) : s.change,
-        marketCap: live.marketCap,
-        pe: live.pe,
-        dividendYield: live.dividendYield,
-        afriScore: live.afriScore,
+        symbol,
+        name,
+        sector,
+        aliases,
+        price: q?.lastPrice ?? null,
+        change: q?.changePercent ?? null,
+        volume: q?.volume ?? null,
+        cap: q?.marketCap ?? r?.marketCap ?? null,
+        pe: r?.pe ?? null,
+        yield: r?.dividendYield == null ? null : r.dividendYield * 100,
+        score: r?.afriScore ?? null,
+        roe: r?.roe == null ? null : r.roe * 100,
+        margin: r?.netMargin == null ? null : r.netMargin * 100,
+        debt: r?.debtToEquity ?? null,
+        pb: r?.pb ?? null,
       };
     });
-  }, [liveScreener]);
-
-  const filteredStocks = allStocks
-    .filter(stock => {
-      if (searchQuery && !stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !stock.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (filters.sector !== "All Sectors" && stock.sector !== filters.sector) return false;
-      if (stock.change < filters.minChange || stock.change > filters.maxChange) return false;
-      if (stock.price < filters.minPrice || stock.price > filters.maxPrice) return false;
-      if (stock.pe < filters.minPE || stock.pe > filters.maxPE) return false;
-      if (stock.dividendYield < filters.minDividendYield || stock.dividendYield > filters.maxDividendYield) return false;
-      if (stock.volumeM < filters.minVolumeM) return false;
-      if (stock.beta < filters.minBeta || stock.beta > filters.maxBeta) return false;
-      if (stock.rsi < filters.minRSI || stock.rsi > filters.maxRSI) return false;
-      const capBucket = MARKET_CAP_BUCKETS[filters.marketCapRange] ?? MARKET_CAP_BUCKETS.all;
-      const marketCapB = parseMagnitude(stock.marketCap) / 1e9;
-      if (marketCapB < capBucket.min || marketCapB > capBucket.max) return false;
-      return true;
+  }, [quotes, research.data, directory]);
+  const result = rows
+    .filter((r) => {
+      if (filters.sector !== "All" && r.sector !== filters.sector) return false;
+      if (!`${r.symbol} ${r.aliases.join(' ')} ${r.name}`.toLowerCase().includes(search.toLowerCase()))
+        return false;
+      const bounds: [keyof Filters, number | null, boolean, number][] = [
+        ["minPrice", r.price, true, 1],
+        ["maxPrice", r.price, false, 1],
+        ["minChange", r.change, true, 1],
+        ["maxChange", r.change, false, 1],
+        ["minYield", r.yield, true, 1],
+        ["maxPe", r.pe, false, 1],
+        ["minCap", r.cap, true, 1e9],
+        ["minVolume", r.volume, true, 1],
+        ["minRoe", r.roe, true, 1],
+        ["minMargin", r.margin, true, 1],
+        ["maxDebt", r.debt, false, 1],
+        ["maxPb", r.pb, false, 1],
+      ];
+      return bounds.every(
+        ([key, value, min, scale]) =>
+          filters[key] === "" ||
+          (Number.isFinite(Number(filters[key])) &&
+            value != null &&
+            (key !== "maxPe" || value > 0) &&
+            (min
+              ? value >= Number(filters[key]) * scale
+              : value <= Number(filters[key]) * scale)),
+      );
     })
     .sort((a, b) => {
-      let aVal: number, bVal: number;
-      switch (filters.sortBy) {
-        case 'change': aVal = a.change; bVal = b.change; break;
-        case 'price': aVal = a.price; bVal = b.price; break;
-        case 'volume': aVal = parseMagnitude(a.volume); bVal = parseMagnitude(b.volume); break;
-        case 'pe': aVal = a.pe; bVal = b.pe; break;
-        case 'dividendYield': aVal = a.dividendYield; bVal = b.dividendYield; break;
-        case 'rsi': aVal = a.rsi; bVal = b.rsi; break;
-        case 'beta': aVal = a.beta; bVal = b.beta; break;
-        case 'afriScore': aVal = a.afriScore ?? 0; bVal = b.afriScore ?? 0; break;
-        default: aVal = parseMagnitude(a.marketCap); bVal = parseMagnitude(b.marketCap);
-      }
-      return filters.sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
+      const av = a[sort as "change"],
+        bv = b[sort as "change"];
+      if (av == null) return bv == null ? 0 : 1;
+      if (bv == null) return -1;
+      return (av - bv) * (ascending ? 1 : -1);
     });
-
+  const change = (key: keyof Filters, value: string) =>
+    setFilters((f) => ({ ...f, [key]: value }));
+  const number = (value: number | null) =>
+    value == null
+      ? "—"
+      : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const exportCsv = () => {
+    const csv = [
+      "Symbol,Company,Price KES,Change %,Volume,Market cap KES,PE,Dividend yield %,C score",
+      ...result.map((r) =>
+        [
+          r.symbol,
+          `"${r.name.replaceAll('"', '""')}"`,
+          r.price ?? "",
+          r.change ?? "",
+          r.volume ?? "",
+          r.cap ?? "",
+          r.pe ?? "",
+          r.yield ?? "",
+          r.score ?? "",
+        ].join(","),
+      ),
+    ].join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "continua-screen.csv";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const fields: Record<string, [keyof Filters, string][]> = {
+    Market: [
+      ["minPrice", "Min price · KES"],
+      ["maxPrice", "Max price · KES"],
+      ["minChange", "Min change · %"],
+      ["maxChange", "Max change · %"],
+    ],
+    Valuation: [
+      ["maxPe", "Maximum positive P/E"],
+      ["minCap", "Min market cap · KES billions"],
+      ["maxPb", "Maximum P/B"],
+    ],
+    Income: [["minYield", "Min dividend yield · %"]],
+    Activity: [["minVolume", "Minimum volume · shares"]],
+    Profitability: [
+      ["minRoe", "Minimum ROE · %"],
+      ["minMargin", "Minimum net margin · %"],
+    ],
+    Health: [["maxDebt", "Maximum debt / equity"]],
+  };
   return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="tap-scale">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold">Stock Screener</h1>
-              <p className="text-xs text-muted-foreground">Discover your next investment</p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-xs"
-          >
-            <SlidersHorizontal className="h-4 w-4 mr-1" />
-            {showAdvanced ? 'Simple' : 'Advanced'}
-          </Button>
-        </div>
+    <div className="page-canvas market-desk pb-24">
+      <header className="market-detail-header">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Back to markets"
+          onClick={() => navigate("/markets")}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1>Stock Screener</h1>
       </header>
-
-      <div className="p-4 space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search stocks by name or symbol..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 bg-muted/20"
-          />
+      <main className="px-4 py-6 space-y-5">
+        <div>
+          <p className="section-eyebrow">NSE research lab</p>
+          <h2 className="mt-2">Find your own shortlist.</h2>
+          <p className="market-note">
+            Combine market, valuation, income and activity criteria. Missing
+            metrics never qualify for an active numeric filter.
+          </p>
         </div>
-
-        {/* Quick Presets */}
-        <div className="overflow-x-auto -mx-4 px-4">
-          <div className="flex gap-2 pb-2">
-            {presetFilters.map((preset) => (
-              <Badge
-                key={preset.name}
-                variant="secondary"
-                className="cursor-pointer hover:bg-primary/20 transition-colors whitespace-nowrap text-xs py-1.5 px-3 tap-scale"
-                onClick={() => applyPreset(preset)}
+        <div className="market-tool-rail">
+          {[
+            ["Gainers", { minChange: "0.01" }],
+            ["Income", { minYield: "5" }],
+            ["Value", { maxPe: "10" }],
+            ["Banking", { sector: "Banking" }],
+          ].map(([label, preset]) => (
+            <Button
+              key={label as string}
+              variant="outline"
+              onClick={() =>
+                setFilters({ ...empty, ...(preset as Partial<Filters>) })
+              }
+            >
+              {label as string}
+            </Button>
+          ))}
+        </div>
+        <Input
+          aria-label="Search screener"
+          placeholder="Company or symbol…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="border-y py-4">
+          <div className="flex justify-between items-center">
+            <h3 className="flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter builder
+            </h3>
+            <Button variant="ghost" onClick={() => setFilters({ ...empty })}>
+              Reset
+            </Button>
+          </div>
+          <div className="market-choices">
+            {Object.keys(fields).map((c) => (
+              <button
+                key={c}
+                className={`pill-tab ${c === category ? "contrast-active" : ""}`}
+                onClick={() => setCategory(c)}
               >
-                {preset.name}
-              </Badge>
+                {c}
+              </button>
+            ))}
+          </div>
+          <label className="block text-xs mb-4">
+            Sector
+            <select
+              aria-label="Sector"
+              className="block w-full bg-background border rounded-full p-3 mt-2"
+              value={filters.sector}
+              onChange={(e) => change("sector", e.target.value)}
+            >
+              {["All", ...new Set(rows.map((r) => r.sector))].map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            {fields[category].map(([key, label]) => (
+              <label className="text-xs" key={key}>
+                {label}
+                <Input
+                  type="number"
+                  min={key.toLowerCase().includes("change") ? undefined : 0}
+                  step="any"
+                  aria-label={label}
+                  className="mt-2"
+                  value={filters[key]}
+                  onChange={(e) => change(key, e.target.value)}
+                />
+              </label>
             ))}
           </div>
         </div>
-
-        {/* Filters — flat canvas */}
-        <div className="pt-1">
-          <div className="flex items-center justify-between border-b border-border/60 pb-2">
-            <p className="section-eyebrow flex items-center gap-2">
-              <Filter className="h-3.5 w-3.5 text-primary" />
-              Filters
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground tabular">{filteredStocks.length} results</span>
-              <Button variant="ghost" size="sm" onClick={resetFilters} className="text-[11px] h-7 px-2" aria-label="Reset filters">
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Reset
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block">Sector</label>
-                <Select
-                  value={filters.sector}
-                  onValueChange={(val) => setFilters(prev => ({ ...prev, sector: val }))}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sectors.map(sector => (
-                      <SelectItem key={sector} value={sector} className="text-xs">
-                        {sector}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block">Sort By</label>
-                <Select
-                  value={filters.sortBy}
-                  onValueChange={(val) => setFilters(prev => ({ ...prev, sortBy: val }))}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="marketCap" className="text-xs">Market Cap</SelectItem>
-                    <SelectItem value="change" className="text-xs">% Change</SelectItem>
-                    <SelectItem value="price" className="text-xs">Price</SelectItem>
-                    <SelectItem value="volume" className="text-xs">Volume</SelectItem>
-                    <SelectItem value="pe" className="text-xs">P/E Ratio</SelectItem>
-                    <SelectItem value="dividendYield" className="text-xs">Dividend Yield</SelectItem>
-                    <SelectItem value="rsi" className="text-xs">RSI</SelectItem>
-                    <SelectItem value="beta" className="text-xs">Beta</SelectItem>
-                    <SelectItem value="afriScore" className="text-xs">AfriScore</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
-                Price Change: {filters.minChange}% to {filters.maxChange}%
-              </label>
-              <Slider
-                value={[filters.minChange, filters.maxChange]}
-                min={-10}
-                max={10}
-                step={0.5}
-                onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minChange: min, maxChange: max }))}
-              />
-            </div>
-
-            {showAdvanced && (
-              <>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    Price Range: KES {filters.minPrice} to KES {filters.maxPrice}
-                  </label>
-                  <Slider
-                    value={[filters.minPrice, filters.maxPrice]}
-                    min={0}
-                    max={500}
-                    step={5}
-                    onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    P/E Ratio: {filters.minPE} to {filters.maxPE}
-                  </label>
-                  <Slider
-                    value={[filters.minPE, filters.maxPE]}
-                    min={0}
-                    max={50}
-                    step={1}
-                    onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minPE: min, maxPE: max }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    Dividend Yield: {filters.minDividendYield}% to {filters.maxDividendYield}%
-                  </label>
-                  <Slider
-                    value={[filters.minDividendYield, filters.maxDividendYield]}
-                    min={0}
-                    max={15}
-                    step={0.5}
-                    onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minDividendYield: min, maxDividendYield: max }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    Beta (volatility): {filters.minBeta.toFixed(1)} to {filters.maxBeta.toFixed(1)}
-                  </label>
-                  <Slider
-                    value={[filters.minBeta, filters.maxBeta]}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minBeta: min, maxBeta: max }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    RSI: {filters.minRSI} to {filters.maxRSI} {filters.maxRSI <= 40 ? "(oversold)" : filters.minRSI >= 70 ? "(overbought)" : ""}
-                  </label>
-                  <Slider
-                    value={[filters.minRSI, filters.maxRSI]}
-                    min={0}
-                    max={100}
-                    step={1}
-                    onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minRSI: min, maxRSI: max }))}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Market Cap</label>
-                    <Select
-                      value={filters.marketCapRange}
-                      onValueChange={(val) => setFilters(prev => ({ ...prev, marketCapRange: val }))}
-                    >
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all" className="text-xs">All Sizes</SelectItem>
-                        <SelectItem value="large" className="text-xs">Large Cap (&gt;50B)</SelectItem>
-                        <SelectItem value="mid" className="text-xs">Mid Cap (5B–50B)</SelectItem>
-                        <SelectItem value="small" className="text-xs">Small Cap (&lt;5B)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1.5 block">Min Volume</label>
-                    <Select
-                      value={String(filters.minVolumeM)}
-                      onValueChange={(val) => setFilters(prev => ({ ...prev, minVolumeM: Number(val) }))}
-                    >
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0" className="text-xs">Any</SelectItem>
-                        <SelectItem value="0.1" className="text-xs">&gt;100K</SelectItem>
-                        <SelectItem value="0.5" className="text-xs">&gt;500K</SelectItem>
-                        <SelectItem value="1" className="text-xs">&gt;1M</SelectItem>
-                        <SelectItem value="5" className="text-xs">&gt;5M</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex items-center justify-between pt-2 border-t border-border/60">
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(filters)
+            .filter(([k, v]) => (k === "sector" ? v !== "All" : v !== ""))
+            .map(([k, v]) => (
               <Button
+                key={k}
                 variant="outline"
                 size="sm"
-                onClick={() => setFilters(prev => ({ ...prev, sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' }))}
-                className="text-xs"
+                onClick={() =>
+                  change(k as keyof Filters, k === "sector" ? "All" : "")
+                }
               >
-                <ArrowUpDown className="h-3 w-3 mr-1" />
-                {filters.sortOrder === 'desc' ? 'Descending' : 'Ascending'}
+                {k}: {v}
+                <X className="ml-2 h-3 w-3" />
               </Button>
+            ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Input
+            className="flex-1 min-w-40"
+            aria-label="Screen name"
+            placeholder="Name this screen"
+            maxLength={60}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Button
+            variant="outline"
+            disabled={!name.trim()}
+            onClick={() => {
+              const next = [
+                { name: name.trim(), filters: { ...filters } },
+                ...saved.filter((s) => s.name !== name.trim()),
+              ].slice(0, 20);
+              try {
+                localStorage.setItem(
+                  "continua:screeners:v1",
+                  JSON.stringify(next),
+                );
+                setSaved(next);
+                setName("");
+              } catch {
+                /* Storage unavailable: do not claim saved. */
+              }
+            }}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+          <Button variant="ghost" onClick={exportCsv}>
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+        </div>
+        {!!saved.length && (
+          <div>
+            <p className="market-note">Saved on this device</p>
+            <div className="flex flex-wrap gap-2">
+              {saved.map((s) => (
+                <div key={s.name} className="flex">
+                  <Button
+                    variant="outline"
+                    onClick={() => setFilters({ ...s.filters })}
+                  >
+                    {s.name}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Delete saved screen ${s.name}`}
+                    onClick={() => {
+                      const next = saved.filter((x) => x.name !== s.name);
+                      try {
+                        localStorage.setItem(
+                          "continua:screeners:v1",
+                          JSON.stringify(next),
+                        );
+                        setSaved(next);
+                      } catch {}
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-
-        {/* Results — hairline rows, no cards */}
-        <div className="-mx-4 border-t border-border/60">
-          {filteredStocks.map((stock) => (
-            <button
-              key={stock.symbol}
-              onClick={() => navigate(`/stock/${stock.symbol}`)}
-              className="w-full text-left px-4 py-3 border-b border-border/40 hover:bg-muted/25 transition-colors"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="font-semibold text-sm">{stock.symbol}</span>
-                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{stock.sector}</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate mb-1.5">{stock.name}</div>
-                  <div className="flex gap-3 flex-wrap text-[10px] text-muted-foreground tabular">
-                    <span>Vol {stock.volume}</span>
-                    <span>P/E {stock.pe}</span>
-                    <span>Div {stock.dividendYield}%</span>
-                    <span>RSI {stock.rsi}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0">
-                  <SparklineChart isPositive={stock.change >= 0} width={50} height={22} />
-                  <div className="text-right min-w-[75px]">
-                    <div className="font-semibold text-sm tabular">KES {stock.price.toFixed(2)}</div>
-                    <div className={`text-xs flex items-center justify-end gap-0.5 tabular ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {stock.change >= 0 ? '+' : ''}{stock.change}%
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {filteredStocks.length === 0 && (
-          <div className="py-14 text-center">
-            <Search className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
-            <p className="text-sm font-medium mb-1">No stocks found</p>
-            <p className="text-xs text-muted-foreground">Try adjusting your filters</p>
-          </div>
         )}
-      </div>
+        <div className="flex justify-between">
+          <h3><RollingNumber value={result.length} /> matching stocks</h3>
+          <Button variant="ghost" onClick={() => navigate("/compare")}>
+            Compare →
+          </Button>
+        </div>
+        <div className="market-table-scroll">
+          <table className="market-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                {[
+                  ["price", "Price · KES"],
+                  ["change", "Change %"],
+                  ["volume", "Volume"],
+                  ["cap", "Market cap"],
+                  ["pe", "P/E"],
+                  ["yield", "Yield %"],
+                  ["score", "C score"],
+                ].map(([key, label]) => (
+                  <th key={key}>
+                    <button
+                      onClick={() => {
+                        setSort(key);
+                        setAscending(sort === key ? !ascending : false);
+                      }}
+                    >
+                      {label} {sort === key ? (ascending ? "↑" : "↓") : "↕"}
+                    </button>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {result.map((r) => (
+                <tr key={r.symbol}>
+                  <th>
+                    <button onClick={() => navigate(`/stock/${r.symbol}`)}>
+                      {r.symbol}
+                      <small>{r.name}</small>
+                    </button>
+                  </th>
+                  <td>{number(r.price)}</td>
+                  <td
+                    className={
+                      r.change != null && r.change < 0
+                        ? "text-bear"
+                        : "text-bull"
+                    }
+                  >
+                    {number(r.change)}
+                  </td>
+                  <td>{number(r.volume)}</td>
+                  <td>{number(r.cap)}</td>
+                  <td>{number(r.pe)}</td>
+                  <td>{number(r.yield)}</td>
+                  <td>{number(r.score)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!result.length && (
+          <p className="market-empty">
+            No matches. Widen or reset the filters.
+          </p>
+        )}
+        {research.isError && (
+          <p className="market-error">
+            Research ratios could not load.{" "}
+            <Button variant="ghost" onClick={() => void research.refetch()}>
+              Retry ratios
+            </Button>
+          </p>
+        )}
+      </main>
     </div>
   );
 }

@@ -1,0 +1,109 @@
+# Render Blueprint — deploys continua-data (backend/) and continua-scraper
+# (scraper/) as two Docker-based Web Services. The frontend (app/) stays on
+# Vercel and isn't part of this file.
+#
+# Both services are single-process apps that run their own HTTP server AND
+# their own internal cron-scheduled workers (see backend/src/index.js and
+# scraper/src/index.js) — there is nothing here for a separate Background
+# Worker or Cron Job service to do. "Web Service" is the correct — and only
+# needed — Render service type for each.
+#
+# One-time setup:
+#   1. Push this repo to GitHub (if it isn't already).
+#   2. Render dashboard → New → Blueprint → pick this repo/branch.
+#   3. Render reads this file and shows both services below — click Apply.
+#   4. Fill in each `sync: false` variable in the Render dashboard for both
+#      services (Render won't have real values for these — it just
+#      reserves the slot). See the deployment runbook for exactly what
+#      goes in each one: docs/deployment/RENDER_DEPLOY.md
+#   5. Once both services are live, update the Vercel frontend's env vars
+#      to point at the new *.onrender.com URLs (also covered in that doc).
+#
+# Both are on the free plan, per the reason this migration is happening —
+# see the runbook for the tradeoffs that come with that (cold starts after
+# 15 min idle, ephemeral disk, 512MB RAM).
+
+services:
+  - type: web
+    name: continua-backend
+    runtime: docker
+    autoDeployTrigger: checksPass
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /api/v1/health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Same Supabase Postgres instance the app already uses (backend
+      # writes into its `market` schema — see backend/src/storage/db.ts).
+      # Use the Session pooler connection string from Supabase's Project
+      # Settings → Database, not the Transaction pooler — see the runbook.
+      - key: DATABASE_URL
+        sync: false
+      # Comma-separated, no spaces — must include the Vercel production
+      # domain(s) or the browser app's requests will be blocked by CORS.
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: CACHE_DRIVER
+        value: memory
+      - key: NEWS_SCRAPER_URL
+        value: https://continua-scraper.onrender.com
+      - key: API_KEY_AUTH_ENABLED
+        value: "true"
+      # ── Live NSE data (carried over from Railway) ──────────────────────
+      # Explicit live transport; production must not use synthetic fixtures.
+      - key: ADAPTER_MODE
+        value: live
+      - key: NSE_CLIENT_MODE
+        value: mystocks
+      # How often the price/index workers poll (ms). Non-default on
+      # Railway — same values carried over here.
+      - key: PRICE_POLL_INTERVAL_MS
+        value: "30000"
+      - key: INDEX_POLL_INTERVAL_MS
+        value: "1800000"
+      # Deliberately NOT included: DEV_API_KEY. The code (config/env.ts)
+      # explicitly warns against setting this in production — issue a real
+      # DB-backed key instead via `npm run apikey:create` (see the runbook,
+      # step 3). Railway had DEV_API_KEY set; don't carry that habit over.
+
+  - type: web
+    name: continua-scraper
+    runtime: docker
+    autoDeployTrigger: checksPass
+    rootDir: scraper
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: oregon
+    healthCheckPath: /health/live
+    envVars:
+      # Compute-only Render; durable originals and snapshots belong in R2.
+      # Existing private legacy objects are retained for recovery, not rewritten.
+      - key: RAW_STORAGE_DRIVER
+        value: r2
+      - key: R2_DUAL_WRITE
+        value: "false"
+      - key: R2_ARCHIVE_CRON
+        value: "*/15 * * * *"
+      - key: R2_ARCHIVE_BATCH_SIZE
+        value: "5"
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_BUCKET
+        value: continua-financial-documents
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: NEWS_CRAWL_CRON
+        value: "*/10 * * * *"
+      # Same value as continua-backend's DATABASE_URL above — this service
+      # only ever touches the `scraping` schema of that same database.
+      - key: DATABASE_URL
+        sync: false

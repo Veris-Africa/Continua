@@ -38,7 +38,7 @@ Returns database + cache connectivity status. `200` if healthy/degraded,
 ### `GET /quotes/:symbol`
 Latest quote for one symbol. `404` if unknown.
 
-### `GET /quotes?symbols=SAFCOM,EQTY,KCB`
+### `GET /quotes?symbols=SCOM,EQTY,KCB`
 Batch quotes. `symbols` is required, comma-separated.
 
 ## Historical
@@ -75,8 +75,50 @@ All corporate actions for a security, newest first.
 ### `GET /dividends/:symbol`
 Dividend-type corporate actions only, ordered by ex-date.
 
+### `GET /dividends/upcoming?exchange=NSE&limit=20`
+Market-wide, for a dividend calendar view. Only returns dividends with `exDate >= today`. Real,
+forward-looking data — an ex-date is a fact stated in the company's own dividend announcement,
+not a prediction, so this is safe to surface as "upcoming" (contrast with earnings below).
+
+### `GET /earnings/recent?exchange=NSE&limit=20`
+Market-wide, already-reported earnings only (`reportedDate`/`epsActual`/`revenueActual`) —
+deliberately NOT an "upcoming earnings" calendar. The schema has `expectedDate`/`epsEstimate`
+columns, but nothing in this system has a real analyst-estimates source to populate them
+honestly, so this endpoint only ever returns facts, never predictions.
+
 ### `GET /ownership/:symbol`
 Holder breakdown (institution/insider/government/public), by % held.
+
+## Announcements & news
+
+### `GET /announcements/:symbol?exchange=NSE&limit=50`
+Company filings/announcements, scraped from NSE announcement PDFs by continua-scraper and
+bridged into `market.company_announcements` (see `announcementsIngestionPipeline.ts`).
+Newest first. `companyId`/`securityId` are `null` when entity resolution couldn't confidently
+match the filing to a listed company — `rawCompanyName` and `needsReview: true` in that case.
+Returns `{ "data": [] }`, not a 404, for a symbol with no filings scraped yet.
+
+### `GET /news?category=markets|earnings|companies|economy|top&limit=50`
+Site-wide recent news feed, scraped from configured RSS sources (e.g. Capital FM Business) by
+continua-scraper's generic RSS adapter and bridged into `market.news_items`
+(see `newsIngestionPipeline.ts`). `category` is optional; omitting it returns all categories.
+Ordered by `published_at` (falls back to when it was scraped, for feeds that don't reliably
+expose a publish date).
+
+Duplicate crawl/syndication rows are collapsed by canonical URL and normalized headline, and
+non-financial hard-news false positives are excluded before results leave the API.
+
+### `GET /news/item/:id`
+Detail payload for the full-screen in-app reader. It includes cleaned extracted `content` when
+the source page supplied usable article text, while retaining publisher attribution and the
+canonical `articleUrl`. Feed endpoints omit this heavier field so Home and TradersHub stay fast.
+
+### `GET /news/:symbol?exchange=NSE&limit=20`
+News mentioning one specific security. `securityIds` on each item is a best-effort keyword
+match against ticker/company name (see `resolveStockMentions.ts`) — an article can legitimately
+mention several companies, or none (general market/economy news), so an empty `securityIds` list
+elsewhere in the feed isn't itself an error; `needsReview: true` is the explicit "the bridge
+wasn't confident about this one" signal. `articleUrl` always links to the original publisher.
 
 ## Market movers
 
@@ -123,7 +165,7 @@ gets the connection rejected with a 401 before the upgrade completes.
 
 **Subscribe:**
 ```json
-{ "action": "subscribe", "symbols": ["SAFCOM", "EQTY"] }
+{ "action": "subscribe", "symbols": ["SCOM", "EQTY"] }
 ```
 **Unsubscribe:**
 ```json
@@ -131,7 +173,7 @@ gets the connection rejected with a 401 before the upgrade completes.
 ```
 **Received events:**
 ```json
-{ "type": "quote", "payload": { "symbol": "SAFCOM", "lastPrice": 12.91, "...": "..." } }
+{ "type": "quote", "payload": { "symbol": "SCOM", "lastPrice": 12.91, "...": "..." } }
 { "type": "corporate_action", "payload": { "securityId": "NSE:KCB", "type": "dividend", "...": "..." } }
 ```
 A client with no active subscriptions receives nothing — subscribe to at

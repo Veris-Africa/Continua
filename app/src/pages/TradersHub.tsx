@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Search, X, Bell, Feather, Users, Flame, MessageSquare, Hash, Building2, TrendingUp, ChevronDown, Newspaper, Check } from "lucide-react";
@@ -14,15 +15,18 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
 import { HubPostCard } from "@/components/social/HubPostCard";
+import {HubResearchTools} from '@/components/social/HubResearchTools';
 import { XComposeModal } from "@/components/social/XComposeModal";
-import { TradersHubDisclaimer } from "@/components/social/TradersHubDisclaimer";
+import { TradersHubOnboarding, INTEREST_SECTOR_TICKERS } from "@/components/social/TradersHubOnboarding";
+import { SuggestedForYou } from "@/components/social/SuggestedForYou";
 import { PostSkeletonList } from "@/components/social/PostSkeleton";
 import { MediaFeed } from "@/components/social/MediaFeed";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { atHandle, getInitials } from "@/lib/handle";
 import { CommunityReaction } from "@/components/social/CommunityReactionButton";
-import { getPrice } from "@/lib/stockPrices";
+import { useLivePortfolioQuotes } from "@/hooks/useLiveQuotes";
 import { shareLink } from "@/lib/share";
+import {useInstruments} from '@/hooks/useInstruments';
 
 type FeedTab = "for-you" | "following" | "trending";
 type Tab = FeedTab | "media";
@@ -40,20 +44,22 @@ interface PeopleResult {
 }
 
 const NSE_NAMES: Record<string, string> = {
-  SCOM: "Safaricom PLC", SAFCOM: "Safaricom PLC", EQTY: "Equity Group Holdings",
+  SCOM: "Safaricom PLC", EQTY: "Equity Group Holdings",
   KCB: "KCB Group PLC", COOP: "Co-operative Bank", SCBK: "Standard Chartered Kenya",
-  BAMB: "Bamburi Cement", EABL: "East African Breweries", BAT: "BAT Kenya",
+  PORT: "East African Portland Cement", EABL: "East African Breweries", BAT: "BAT Kenya",
   ABSA: "ABSA Bank Kenya", NCBA: "NCBA Group", JUB: "Jubilee Holdings",
   BRIT: "Britam Holdings", DTK: "Diamond Trust Bank", KEGN: "KenGen PLC", KPLC: "Kenya Power",
 };
 
 export default function TradersHub() {
+  const {instruments}=useInstruments('NSE');
+  const companyNames=useMemo(()=>({...NSE_NAMES,...Object.fromEntries(instruments.map(i=>[i.symbol,i.companyName]))}),[instruments]);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const { profile } = useProfile();
-  const { posts, loading, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
-  const { isFollowing, toggleFollow } = useFollows();
+  const { profile, updateProfile } = useProfile();
+  const { posts, loading, error: feedError, fetchPosts, createPost, bookmarkPost, reactToPost, deletePost, editPost, reportPost, hidePost } = usePosts();
+  const { isFollowing, toggleFollow, followingIds, loading: followsLoading } = useFollows();
   const { portfolio } = usePortfolio();
   const { watchlist } = useWatchlist();
   const { notifications } = useNotifications();
@@ -69,17 +75,19 @@ export default function TradersHub() {
     const t = searchParams.get("tab");
     return t === "following" || t === "trending" ? t : "for-you";
   });
-  const [deepLinkArticleId, setDeepLinkArticleId] = useState<string | null>(() => searchParams.get("article"));
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [people, setPeople] = useState<PeopleResult[]>([]);
+  const [peopleStatus,setPeopleStatus]=useState<'idle'|'loading'|'ready'|'error'>('idle');
   const [composeOpen, setComposeOpen] = useState(false);
   const [prefillContent, setPrefillContent] = useState("");
+  const [sharePreset, setSharePreset] = useState<{ hideAmounts: boolean; hideGains: boolean; topHoldingsOnly: boolean; showDayChange: boolean } | undefined>();
   const [editing, setEditing] = useState<Post | null>(null);
   const [editDraft, setEditDraft] = useState("");
   const [disclaimerDone, setDisclaimerDone] = useState(() => {
     if (!user) return true;
-    return !!localStorage.getItem(`tradershub_disclaimer_${user.id}`);
+    try { return !!localStorage.getItem(`tradershub_disclaimer_${user.id}`); } catch { return false; }
   });
+  const finishOnboarding = useCallback(() => setDisclaimerDone(true), []);
 
   const hubUnread = useMemo(
     () => notifications.filter(n => !n.read && (n.feature === "tradershub" || n.feature === "social")).length,
@@ -87,12 +95,24 @@ export default function TradersHub() {
   );
 
   useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    const nextTab: Tab = requestedTab === "media" || requestedTab === "following" || requestedTab === "trending" ? requestedTab : "for-you";
+    setActiveTab(nextTab);
+    if (isFeedTab(nextTab)) setLastFeedTab(nextTab);
     const urlSearch = searchParams.get("search");
     if (urlSearch) setSearchQuery(urlSearch);
     const ticker = searchParams.get("ticker");
     if (searchParams.get("compose") === "true" && ticker) {
       setComposeOpen(true);
       setPrefillContent(`$${ticker.toUpperCase()} `);
+    } else if (searchParams.get("compose") === "true" && searchParams.get("attachPortfolio") === "true") {
+      setComposeOpen(true);
+      setSharePreset({
+        hideAmounts: searchParams.get("hideAmounts") === "true",
+        hideGains: searchParams.get("hideGains") === "true",
+        topHoldingsOnly: searchParams.get("topOnly") === "true",
+        showDayChange: searchParams.get("dayChange") !== "false",
+      });
     } else if (ticker) {
       setSearchQuery(`$${ticker.toUpperCase()}`);
     }
@@ -102,16 +122,17 @@ export default function TradersHub() {
 
   // People search — users by name or handle
   useEffect(() => {
-    const q = searchQuery.trim().replace(/^@/, "");
-    if (q.length < 2) { setPeople([]); return; }
+    const q = searchQuery.trim().replace(/^@/, "").replace(/[^\p{L}\p{N} _\-]/gu,'').slice(0,80);
+    if (!q) { setPeople([]);setPeopleStatus('idle'); return; }
+    setPeopleStatus('loading');
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const { data } = await supabase
+      const { data,error } = await supabase
         .from("profiles_public")
         .select("user_id, full_name, handle, avatar_url, bio")
         .or(`full_name.ilike.%${q}%,handle.ilike.%${q}%`)
-        .limit(8);
-      if (!cancelled) setPeople((data as PeopleResult[]) || []);
+        .order('full_name').limit(30);
+      if (!cancelled){setPeople((data as PeopleResult[]) || []);setPeopleStatus(error?'error':'ready');}
     }, 250);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [searchQuery]);
@@ -134,16 +155,49 @@ export default function TradersHub() {
     return [...counts.entries()].map(([symbol, count]) => ({ symbol, count })).sort((a, b) => b.count - a.count).slice(0, 12);
   }, [posts]);
 
+  const { liveQuotes: livePortfolioQuotes } = useLivePortfolioQuotes(portfolio.map(h => h.symbol));
+
   const portfolioSnapshot = useMemo(() => {
     if (!portfolio.length) return null;
-    const holdings = portfolio.map(h => {
-      const currentPrice = getPrice(h.symbol, h.avg_cost);
-      return { symbol: h.symbol, name: h.name, shares: h.shares, avgCost: h.avg_cost, currentPrice, gain: ((currentPrice - h.avg_cost) / h.avg_cost) * 100 };
-    });
+    // Only holdings with a real live quote are included — an unpriced
+    // holding is left out of the snapshot (and its totals) rather than
+    // priced from a fabricated fallback, since this snapshot is what
+    // people actually attach to a public post.
+    const holdings = portfolio
+      .map(h => {
+        const quote = livePortfolioQuotes[h.symbol.toUpperCase()];
+        if (!quote) return null;
+        const currentPrice = quote.price;
+        const dayChangeAbs = quote.dayChangeAbs;
+        return {
+          symbol: h.symbol,
+          name: h.name,
+          shares: h.shares,
+          avgCost: h.avg_cost,
+          currentPrice,
+          gain: ((currentPrice - h.avg_cost) / h.avg_cost) * 100,
+          dayChangeAbs,
+          dayChangePct: currentPrice - dayChangeAbs > 0 ? (dayChangeAbs / (currentPrice - dayChangeAbs)) * 100 : 0,
+        };
+      })
+      .filter((h): h is NonNullable<typeof h> => h !== null);
+    if (holdings.length === 0) return null;
+    // Same maths as computePortfolioStats (lib/stockPrices.ts) — kept inline
+    // here since we also need the per-holding breakdown above for the
+    // compose card's "top holdings" list, which that helper doesn't return.
     const totalValue = holdings.reduce((s, h) => s + h.currentPrice * h.shares, 0);
     const totalCost = holdings.reduce((s, h) => s + h.avgCost * h.shares, 0);
-    return { totalValue, totalGain: totalValue - totalCost, gainPercent: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0, holdings };
-  }, [portfolio]);
+    const todayGain = holdings.reduce((s, h) => s + h.dayChangeAbs * h.shares, 0);
+    const prevValue = totalValue - todayGain;
+    return {
+      totalValue,
+      totalGain: totalValue - totalCost,
+      gainPercent: totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0,
+      todayGain,
+      todayPercent: prevValue > 0 ? (todayGain / prevValue) * 100 : 0,
+      holdings,
+    };
+  }, [portfolio, livePortfolioQuotes]);
 
   /** Feed ranking: portfolio, watchlist, reactions, saves, follows, engagement, recency. */
   const feed = useMemo(() => {
@@ -153,7 +207,7 @@ export default function TradersHub() {
         const inContent = post.content.toLowerCase().includes(q);
         const inTicker = post.stock_mentions?.some(s => s.toLowerCase().includes(q));
         const inAuthor = (post.author?.full_name || "").toLowerCase().includes(q) || (post.author?.handle || "").toLowerCase().includes(q);
-        const inCompany = post.stock_mentions?.some(s => (NSE_NAMES[s.toUpperCase()] || "").toLowerCase().includes(q));
+        const inCompany = post.stock_mentions?.some(s => (companyNames[s.toUpperCase()] || "").toLowerCase().includes(q));
         if (!inContent && !inTicker && !inAuthor && !inCompany) return false;
       }
       if (activeTab === "following") return isFollowing(post.user_id);
@@ -172,6 +226,10 @@ export default function TradersHub() {
     }
 
     if (activeTab === "for-you" && !q) {
+      const myInterestSectors = new Set(profile?.interests || []);
+      const myInterestTickers = new Set(
+        [...myInterestSectors].flatMap(sector => INTEREST_SECTOR_TICKERS[sector] || [])
+      );
       return [...result].map(post => {
         let score = 0;
         const ageHours = (Date.now() - new Date(post.created_at).getTime()) / 3600000;
@@ -183,6 +241,11 @@ export default function TradersHub() {
           if (portfolioSymbols.has(sym)) score += 34;
           if (watchlistSymbols.has(sym)) score += 22;
           if (reactedTopics.has(sym)) score += 14;
+          // Sector interests chosen during TradersHub onboarding — a post
+          // mentioning a ticker from a sector someone said they follow
+          // (e.g. "Banking") gets a boost even before they've ever
+          // watchlisted or reacted to that specific ticker.
+          if (myInterestTickers.has(sym)) score += 18;
         });
         if (bookmarkedIds.has(post.id)) score += 12;
         const reacts = Object.values(post.reaction_counts || {}).reduce((s, n) => s + (n || 0), 0);
@@ -192,7 +255,7 @@ export default function TradersHub() {
     }
 
     return result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [posts, searchQuery, activeTab, isFollowing, portfolioSymbols, watchlistSymbols, reactedTopics, bookmarkedIds, user]);
+  }, [posts, searchQuery, activeTab, isFollowing, portfolioSymbols, watchlistSymbols, reactedTopics, bookmarkedIds, user, profile?.interests,companyNames]);
 
   // Merges into the current URL params instead of replacing them wholesale,
   // so switching tabs, searching, and the notification deep-link param
@@ -222,7 +285,8 @@ export default function TradersHub() {
 
   const handleFollow = async (targetId: string) => {
     if (!user) { navigate("/auth"); return; }
-    await toggleFollow(targetId);
+    const {error}=await toggleFollow(targetId);
+    if(error)toast({title:"Couldn't update following",description:error.message,variant:'destructive'});
   };
 
   const handleBookmark = async (postId: string) => {
@@ -249,15 +313,22 @@ export default function TradersHub() {
   const searching = searchQuery.trim().length > 0;
   const q = searchQuery.trim().replace(/^[#$@]/, "").toUpperCase();
   const tickerMatches = searching
-    ? Object.keys(NSE_NAMES).filter(sym => sym.includes(q) || NSE_NAMES[sym].toUpperCase().includes(q)).slice(0, 5)
+    ? Object.keys(companyNames).filter(sym => sym.includes(q) || companyNames[sym].toUpperCase().includes(q)).slice(0, 12)
     : [];
   const hashtagMatches = searching
     ? [...new Set(posts.flatMap(p => p.content.match(/#\w+/g) || []))].filter(h => h.toUpperCase().includes(q)).slice(0, 5)
     : [];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {!disclaimerDone && <TradersHubDisclaimer userId={user?.id} onAccept={() => setDisclaimerDone(true)} />}
+    <div className="community-desk page-canvas min-h-screen bg-background pb-24">
+      {!disclaimerDone && (
+        <TradersHubOnboarding
+          userId={user?.id}
+          profile={profile}
+          updateProfile={updateProfile}
+          onDone={finishOnboarding}
+        />
+      )}
 
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2.5 px-3 py-2.5">
@@ -266,7 +337,7 @@ export default function TradersHub() {
             onClick={() => user ? navigate(`/profile/${user.id}`) : navigate("/auth")}
           >
             <AvatarImage src={profile?.avatar_url || ""} className="object-cover" />
-            <AvatarFallback className="text-[12px] font-bold bg-primary/10 text-primary">{getInitials(profile?.full_name)}</AvatarFallback>
+            <AvatarFallback className="text-[0.75rem] font-bold bg-primary/10 text-primary">{getInitials(profile?.full_name)}</AvatarFallback>
           </Avatar>
 
           <div className="relative flex-1 min-w-0">
@@ -275,7 +346,7 @@ export default function TradersHub() {
               placeholder="Search people, tickers, #topics, posts"
               value={searchQuery}
               onChange={e => setSearch(e.target.value)}
-              className="h-10 pl-10 pr-9 rounded-full bg-muted/50 border-0 text-[13.5px]"
+              className="h-10 pl-10 pr-9 rounded-full bg-muted/50 border-0 text-[0.84375rem]"
             />
             {searching && (
               <button onClick={clearSearch} data-small-target aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -303,11 +374,11 @@ export default function TradersHub() {
             <DropdownMenuTrigger asChild>
               <button
                 data-small-target
-                className={`relative flex items-center justify-center gap-1 pb-2 pt-0.5 text-[14px] transition-colors ${isFeedTab(activeTab) ? "font-bold text-foreground" : "text-muted-foreground"}`}
+                className={`relative flex items-center justify-center gap-1 pb-2 pt-0.5 text-[0.875rem] transition-colors ${isFeedTab(activeTab) ? "font-bold text-foreground" : "text-muted-foreground"}`}
               >
                 {currentFeedLabel}
                 <ChevronDown className="h-3.5 w-3.5" />
-                {isFeedTab(activeTab) && <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-primary" />}
+                {isFeedTab(activeTab) && <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-foreground" />}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -315,10 +386,10 @@ export default function TradersHub() {
                 <DropdownMenuItem
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className="flex items-center justify-between text-[13px]"
+                  className="flex items-center justify-between text-[0.8125rem]"
                 >
                   {tab.label}
-                  {activeTab === tab.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                  {activeTab === tab.id && <Check className="h-3.5 w-3.5 text-foreground" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -327,16 +398,17 @@ export default function TradersHub() {
           <button
             data-small-target
             onClick={() => handleTabChange("media")}
-            className={`relative flex items-center justify-center gap-1.5 pb-2 pt-0.5 text-[14px] transition-colors ${activeTab === "media" ? "font-bold text-foreground" : "text-muted-foreground"}`}
+            className={`relative flex items-center justify-center gap-1.5 pb-2 pt-0.5 text-[0.875rem] transition-colors ${activeTab === "media" ? "font-bold text-foreground" : "text-muted-foreground"}`}
           >
             <Newspaper className="h-3.5 w-3.5" />
             Media
-            {activeTab === "media" && <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-primary" />}
+            {activeTab === "media" && <span className="absolute -bottom-px left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-full bg-foreground" />}
           </button>
         </div>
       </header>
 
       {/* Ticker rail */}
+      {!searching&&activeTab!=='media'&&<HubResearchTools posts={posts} watchlist={watchlist.map(w=>w.symbol)} onTicker={symbol=>setSearch(`$${symbol}`)} onCompose={draft=>{setPrefillContent(draft);setComposeOpen(true);}}/>}
       {activeTab !== "media" && !searching && trendingTickers.length > 0 && (
         <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 py-2 border-b border-border/40">
           {trendingTickers.map(t => (
@@ -344,10 +416,10 @@ export default function TradersHub() {
               key={t.symbol}
               data-small-target
               onClick={() => setSearch(`$${t.symbol}`)}
-              className="shrink-0 flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-muted/50 text-[11px] font-semibold text-muted-foreground"
+              className="shrink-0 flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] font-semibold text-muted-foreground"
             >
               <span className="text-primary">${t.symbol}</span>
-              <span className="opacity-70 tabular-nums">{t.count}</span>
+              <span className="opacity-70 tabular-nums"><RollingNumber value={t.count} /></span>
             </button>
           ))}
         </div>
@@ -356,15 +428,17 @@ export default function TradersHub() {
       {/* Search results */}
       {activeTab !== "media" && searching && (
         <div className="border-b border-border/50">
+          {peopleStatus==='loading'&&<p role="status" className="px-4 py-3 text-xs text-muted-foreground">Searching people…</p>}
+          {peopleStatus==='error'&&<p role="alert" className="px-4 py-3 text-xs text-destructive">People search could not load. Try again shortly.</p>}
           {people.length > 0 && (
             <div className="px-4 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">People</p>
               {people.map(p => (
                 <button key={p.user_id} onClick={() => navigate(`/profile/${p.user_id}`)} className="w-full flex items-center gap-2.5 py-1.5 text-left">
-                  <Avatar className="h-7 w-7"><AvatarImage src={p.avatar_url || ""} /><AvatarFallback className="text-[10px]">{getInitials(p.full_name)}</AvatarFallback></Avatar>
+                  <Avatar className="h-7 w-7"><AvatarImage src={p.avatar_url || ""} /><AvatarFallback className="text-[0.625rem]">{getInitials(p.full_name)}</AvatarFallback></Avatar>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-bold truncate">{p.full_name || "Investor"}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{atHandle(p as any)}</p>
+                    <p className="text-[0.78125rem] font-bold truncate">{p.full_name || "Investor"}</p>
+                    <p className="text-[0.6875rem] text-muted-foreground truncate">{atHandle(p as any)}</p>
                   </div>
                 </button>
               ))}
@@ -372,17 +446,17 @@ export default function TradersHub() {
           )}
           {(tickerMatches.length > 0 || hashtagMatches.length > 0) && (
             <div className="px-4 py-2 border-t border-border/40">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Companies & topics</p>
+              <p className="text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Companies & topics</p>
               <div className="flex flex-wrap gap-1.5">
                 {tickerMatches.map(sym => (
-                  <button key={sym} data-small-target onClick={() => navigate(`/stock/${sym}`)} className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[11px]">
+                  <button key={sym} data-small-target onClick={() => navigate(`/stock/${sym}`)} className="flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem]">
                     <Building2 className="h-3 w-3 text-primary" />
                     <span className="font-semibold text-primary">${sym}</span>
-                    <span className="text-muted-foreground truncate max-w-[110px]">{NSE_NAMES[sym]}</span>
+                    <span className="text-muted-foreground truncate max-w-[110px]">{companyNames[sym]}</span>
                   </button>
                 ))}
                 {hashtagMatches.map(tag => (
-                  <button key={tag} data-small-target onClick={() => setSearch(tag)} className="flex items-center gap-1 h-7 px-2.5 rounded-full bg-muted/50 text-[11px] text-primary font-semibold">
+                  <button key={tag} data-small-target onClick={() => setSearch(tag)} className="flex items-center gap-1 h-7 px-2.5 rounded-full bg-muted/50 text-[0.6875rem] text-primary font-semibold">
                     <Hash className="h-3 w-3" />{tag.slice(1)}
                   </button>
                 ))}
@@ -390,50 +464,58 @@ export default function TradersHub() {
             </div>
           )}
           <div className="flex items-center justify-between px-4 py-1.5 bg-muted/20">
-            <p className="text-[11px] text-muted-foreground">Posts matching <span className="font-bold text-foreground">"{searchQuery}"</span></p>
-            <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={clearSearch}>Clear</Button>
+            <p className="text-[0.6875rem] text-muted-foreground">Posts matching <span className="font-bold text-foreground">"{searchQuery}"</span></p>
+            <Button variant="ghost" size="sm" className="h-6 text-[0.6875rem]" onClick={clearSearch}>Clear</Button>
           </div>
         </div>
       )}
 
+      {feedError && activeTab !== "media" && <div role="alert" className="px-4 py-3 text-sm">Your feed could not load. <button className="text-primary" onClick={() => void fetchPosts()}>Retry feed</button></div>}
+      {/* Suggested people — ranked by shared TradersHub interests */}
+      {activeTab === "for-you" && !searching && user && !followsLoading && (
+        <SuggestedForYou
+          currentUserId={user?.id}
+          myInterests={profile?.interests || []}
+          followingIds={followingIds}
+          onFollow={handleFollow}
+        />
+      )}
+
       {/* Feed */}
       {activeTab === "media" ? (
-        <MediaFeed
-          searchQuery={searchQuery}
-          deepLinkArticleId={deepLinkArticleId}
-          onDeepLinkConsumed={() => { setDeepLinkArticleId(null); updateParams({ article: null }); }}
-        />
+        <MediaFeed searchQuery={searchQuery} />
       ) : loading || !disclaimerDone ? (
         <PostSkeletonList count={6} />
-      ) : feed.length === 0 ? (
-        <div className="px-10 py-16 text-center">
+      ) : feedError && feed.length === 0 ? null : feed.length === 0 ? (
+        <div className="px-6 py-8 text-center">
           {activeTab === "following" ? (
             <>
               <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-sm font-bold">Nothing here yet</p>
-              <p className="text-[12px] text-muted-foreground mt-1">Follow investors to build this timeline.</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">Follow investors to build this timeline.</p>
               <Button variant="outline" size="sm" className="mt-4 rounded-full" onClick={() => handleTabChange("for-you")}>Discover investors</Button>
             </>
           ) : activeTab === "trending" ? (
             <>
               <Flame className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-sm font-bold">No active discussions</p>
-              <p className="text-[12px] text-muted-foreground mt-1">The most discussed posts show up here.</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">The most discussed posts show up here.</p>
             </>
           ) : (
             <>
               <MessageSquare className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-              <p className="text-sm font-bold">{searching ? "No matches" : "Start the conversation"}</p>
-              <p className="text-[12px] text-muted-foreground mt-1">{searching ? "Try a different ticker, person or topic." : "Share your first idea with the community."}</p>
+              <p className="text-sm font-bold">{searching ? "No matching posts" : "Start the conversation"}</p>
+              <p className="text-[0.75rem] text-muted-foreground mt-1">{searching ? "People, company and topic results appear above, independently of posts." : "Share your first idea with the community."}</p>
             </>
           )}
         </div>
       ) : (
         <div>
-          {feed.map(post => (
+          {feed.map((post, index) => (
             <HubPostCard
               key={post.id}
               post={post}
+              priority={index < 2}
               currentUserId={user?.id}
               isFollowing={isFollowing(post.user_id)}
               onFollow={handleFollow}
@@ -442,13 +524,13 @@ export default function TradersHub() {
               onReact={handleReact}
               onBookmark={handleBookmark}
               onShare={handleShare}
-              onDelete={async id => { const { error } = await deletePost(id); if (!error) toast({ title: "Post deleted" }); }}
+              onDelete={async id => { const { error } = await deletePost(id); toast(error?{title:"Couldn't delete post",variant:'destructive'}:{title:"Post deleted"}); }}
               onEdit={p => { setEditing(p); setEditDraft(p.content); }}
               onReport={id => reportPost(id)}
               onHide={id => hidePost(id)}
             />
           ))}
-          <div className="flex items-center justify-center gap-2 py-8 text-[11px] text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 py-8 text-[0.6875rem] text-muted-foreground">
             <TrendingUp className="h-3.5 w-3.5" />You're all caught up
           </div>
         </div>
@@ -466,17 +548,19 @@ export default function TradersHub() {
 
       <XComposeModal
         open={composeOpen}
-        onOpenChange={o => { setComposeOpen(o); if (!o) setPrefillContent(""); }}
+        onOpenChange={o => { setComposeOpen(o); if (!o) { setPrefillContent(""); setSharePreset(undefined); } }}
         user={user}
         profile={profile}
-        onPost={async (content, imageUrl, quotedPostId) => {
-          const { error } = await createPost(content, imageUrl, quotedPostId);
+        sharePreset={sharePreset}
+        onPost={async (content, imageUrl, quotedPostId, poll) => {
+          const { error } = await createPost(content, imageUrl, quotedPostId, poll);
           if (error) { toast({ title: "Could not publish", variant: "destructive" }); return { error }; }
           toast({ title: "Posted to TradersHub" });
           return { error: null };
         }}
         portfolioSnapshot={portfolioSnapshot}
         prefillContent={prefillContent}
+        isPremium={profile?.subscription_plan === 'premium' || profile?.subscription_plan === 'premium_plus'}
       />
 
       {/* Inline edit */}
@@ -502,9 +586,9 @@ export default function TradersHub() {
               value={editDraft}
               onChange={e => setEditDraft(e.target.value)}
               maxLength={500}
-              className="w-full min-h-[130px] bg-transparent text-[13.5px] leading-relaxed outline-none resize-none"
+              className="w-full min-h-[130px] bg-transparent text-[0.84375rem] leading-relaxed outline-none resize-none"
             />
-            <p className="text-[11px] text-muted-foreground">Posts can be edited within 30 minutes of publishing.</p>
+            <p className="text-[0.6875rem] text-muted-foreground">Posts can be edited within 30 minutes of publishing.</p>
           </div>
         </div>
       )}

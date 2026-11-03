@@ -1,14 +1,19 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, TrendingUp, TrendingDown, Filter, ChevronDown, Star } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Filter, ChevronDown, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange } from "@/lib/stockPrices";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { useStockDirectory } from "@/hooks/useStockDirectory";
+import { PriceCell } from "@/components/shared/PriceCell";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useToast } from "@/hooks/use-toast";
+import { AddToWatchlistDialog } from "@/components/markets/AddToWatchlistDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,46 +23,50 @@ import {
 
 // Canonical symbols only, so a company with two ticker aliases — e.g.
 // Diamond Trust Bank, Stanbic — never appears twice.
-const sectors = ["All Sectors", ...Array.from(new Set(CANONICAL_SYMBOLS.map(s => STOCK_META[s].sector))).sort()];
 
 interface AllStocksListProps {
+  search?: string;
   /** Pre-applied sector filter, e.g. from tapping a sector card elsewhere on Markets. */
   initialSector?: string;
   /** Restrict the list to just these symbols, e.g. for a "Featured list" drill-down. */
   onlySymbols?: string[];
 }
 
-export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps = {}) {
+export function AllStocksList({ initialSector, onlySymbols, search }: AllStocksListProps = {}) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  useEffect(() => { if (search !== undefined) setSearchQuery(search); }, [search]);
   const [selectedSector, setSelectedSector] = useState(initialSector || "All Sectors");
   const [sortBy, setSortBy] = useState<"name" | "change" | "price">("name");
-  const { isInWatchlist, addToWatchlist, removeFromWatchlist } = useWatchlist();
+  const { isInWatchlist, addToWatchlist, removeFromWatchlist, folders, foldersLoading } = useWatchlist();
   const { toast } = useToast();
+  const [pickerStock, setPickerStock] = useState<{ symbol: string; name: string } | null>(null);
+  const { directory, symbols } = useStockDirectory();
+  const sectors = useMemo(() => ["All Sectors", ...Array.from(new Set(directory.map(stock => stock.sector))).sort()], [directory]);
 
   useEffect(() => { if (initialSector) setSelectedSector(initialSector); }, [initialSector]);
 
-  // Live Continua Data Layer quotes overlaid on top of the static
-  // reference list below — symbols the Data Layer's current NSE universe
-  // doesn't have yet (see docs/api/API.md / instruments endpoint) simply
-  // keep showing the static reference price instead of breaking.
-  const { quotes } = useLiveQuotes(CANONICAL_SYMBOLS);
+  // Live Continua Data Layer quotes — a symbol the Data Layer's current NSE
+  // universe doesn't have yet (see docs/api/API.md / instruments endpoint)
+  // shows a loading skeleton in the list rather than a fabricated price.
+  const { quotes } = useLiveQuotes(symbols);
+  const { getSparkline } = useSparklines(symbols);
 
   const allStocks = useMemo(
-    () => CANONICAL_SYMBOLS.map(symbol => {
+    () => directory.map(({symbol, name, sector, aliases}) => {
       const quote = quotes[symbol];
-      const { abs, pct } = getDayChange(symbol);
       return {
         symbol,
-        name: STOCK_META[symbol].name,
-        sector: STOCK_META[symbol].sector,
-        price: quote?.lastPrice ?? getPrice(symbol),
-        change: quote?.changePercent ?? pct,
-        isUp: (quote?.change ?? abs) >= 0,
+        name,
+        sector,
+        aliases,
+        price: quote?.lastPrice ?? null,
+        change: quote?.changePercent ?? null,
+        isUp: (quote?.change ?? 0) >= 0,
         isLive: !!quote,
       };
     }),
-    [quotes]
+    [quotes, directory]
   );
 
   const baseStocks = useMemo(
@@ -67,7 +76,7 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
 
   const filteredStocks = useMemo(() => {
     let stocks = baseStocks.filter(stock => {
-      const matchesSearch = stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = [stock.symbol,...stock.aliases].join(' ').toLowerCase().includes(searchQuery.toLowerCase()) ||
                            stock.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSector = selectedSector === "All Sectors" || stock.sector === selectedSector;
       return matchesSearch && matchesSector;
@@ -76,9 +85,9 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
     return stocks.sort((a, b) => {
       switch(sortBy) {
         case "change":
-          return b.change - a.change;
+          return (b.change ?? -Infinity) - (a.change ?? -Infinity);
         case "price":
-          return b.price - a.price;
+          return (b.price ?? -Infinity) - (a.price ?? -Infinity);
         default:
           return a.symbol.localeCompare(b.symbol);
       }
@@ -105,19 +114,27 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
 
   const toggleFavorite = async (symbol: string, name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isInWatchlist(symbol)) {
-      await removeFromWatchlist(symbol);
-      toast({ title: "Removed from watchlist" });
-    } else {
-      const { error } = await addToWatchlist(symbol, name) || {};
-      if (!error) toast({ title: "Added to watchlist" });
+    // Only one watchlist exists (the common free-tier case) — just toggle it,
+    // no need to make the person pick from a list of one.
+    if (!foldersLoading && folders.length <= 1) {
+      if (isInWatchlist(symbol)) {
+        await removeFromWatchlist(symbol);
+        toast({ title: "Removed from watchlist" });
+      } else {
+        const { error } = await addToWatchlist(symbol, name) || {};
+        if (!error) toast({ title: "Added to watchlist" });
+      }
+      return;
     }
+    // Multiple named watchlists (Premium) — let them choose which one(s).
+    setPickerStock({ symbol, name });
   };
 
   return (
+    <>
     <Card className="soft-card overflow-hidden">
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
-        <span className="text-sm font-bold">All Stocks ({filteredStocks.length})</span>
+        <span className="text-sm font-bold">All Stocks (<RollingNumber value={filteredStocks.length} />)</span>
         <div className="flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -177,22 +194,27 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
               className="shrink-0 -ml-1 p-1"
               aria-label="Toggle watchlist"
             >
-              <Star className={`h-4 w-4 ${isInWatchlist(stock.symbol) ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`} />
+              <Heart className={`h-4 w-4 ${isInWatchlist(stock.symbol) ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
             </button>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[13.5px] font-bold leading-tight">{stock.symbol}</p>
-              <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">{stock.name} · {stock.sector}</p>
+              <p className="text-[0.84375rem] font-bold leading-tight">{stock.symbol}</p>
+              <p className="text-[0.6875rem] text-muted-foreground truncate leading-tight mt-0.5">{stock.name} · {stock.sector}</p>
             </div>
 
-            <SparklineChart isPositive={stock.isUp} width={48} height={20} />
+            <SparklineChart isPositive={stock.isUp} width={48} height={20} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
 
             <div className="text-right shrink-0 w-[84px]">
-              <p className="text-[13.5px] font-bold tabular-nums leading-tight">KES {stock.price.toFixed(2)}</p>
-              <div className={`flex items-center justify-end gap-0.5 mt-0.5 ${stock.isUp ? 'text-bull' : 'text-bear'}`}>
-                {stock.isUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                <span className="text-[11px] font-semibold tabular-nums">{stock.isUp ? '+' : ''}{stock.change.toFixed(2)}%</span>
-              </div>
+              {stock.isLive ? (
+                <>
+                  <PriceCell price={stock.price} changePercent={stock.change} isLive />
+                </>
+              ) : (
+                <div className="flex flex-col items-end gap-1">
+                  <Skeleton className="h-4 w-14" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -206,5 +228,15 @@ export function AllStocksList({ initialSector, onlySymbols }: AllStocksListProps
         )}
       </div>
     </Card>
+
+    {pickerStock && (
+      <AddToWatchlistDialog
+        open={!!pickerStock}
+        onOpenChange={(o) => !o && setPickerStock(null)}
+        symbol={pickerStock.symbol}
+        name={pickerStock.name}
+      />
+    )}
+    </>
   );
 }

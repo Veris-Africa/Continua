@@ -1,6 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useId } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
+
+export interface NotificationActor {
+  user_id: string;
+  full_name: string | null;
+  handle: string | null;
+  avatar_url: string | null;
+}
 
 export interface AppNotification {
   id: string;
@@ -15,61 +24,80 @@ export interface AppNotification {
   entity_type: string | null;
   read: boolean;
   created_at: string;
+  actor?: NotificationActor | null;
+}
+
+// Notifications carry an actor_id (who liked/followed/replied) but not the
+// actor's name/avatar -- that has to be joined in separately, from
+// profiles_public so it's automatically limited to people with a real
+// TradersHub presence (see migration 20260824090000).
+async function attachActors(rows: AppNotification[]): Promise<AppNotification[]> {
+  const actorIds = [...new Set(rows.map(r => r.actor_id).filter((id): id is string => !!id))];
+  if (actorIds.length === 0) return rows;
+  const { data } = await supabase
+    .from('profiles_public')
+    .select('user_id, full_name, handle, avatar_url')
+    .in('user_id', actorIds);
+  const byId = new Map<string,NotificationActor>((data || []).map((p: any) => [p.user_id, p as NotificationActor]));
+  return rows.map(r => ({ ...r, actor: r.actor_id ? byId.get(r.actor_id) || null : null }));
 }
 
 export function useNotifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetch = useCallback(async () => {
-    if (!user) { setNotifications([]); setLoading(false); return; }
-    setLoading(true);
-    const { data } = await supabase
-      .from('notifications' as any)
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    setNotifications((data as any) || []);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { fetch(); }, [fetch]);
-
-  // Realtime
+  const client = useQueryClient();
+  const instanceId = useId();
+  const key = ['continua', 'notifications', user?.id];
+  const result = useQuery({
+    queryKey: key, enabled: !!user, staleTime: 30000,
+    queryFn: async ({ signal }) => {
+      const { data, error } = await supabase.from('notifications' as any).select('*')
+        .eq('user_id', user!.id).order('created_at', { ascending: false }).limit(100).abortSignal(signal);
+      if (error) throw error;
+      return attachActors((data ?? []) as unknown as AppNotification[]);
+    },
+  });
+  const notifications = user ? result.data ?? [] : [];
+  const loading = !!user && result.isLoading;
+  useEffect(()=>{const changed=()=>{client.setQueryData(['continua','notifications',user?.id],[]);void client.invalidateQueries({queryKey:['continua','notifications',user?.id]});};window.addEventListener('continua:community-safety-changed',changed);return()=>window.removeEventListener('continua:community-safety-changed',changed);},[client,user?.id]);
+  const fetch = () => result.refetch();
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        (payload) => setNotifications(prev => [payload.new as AppNotification, ...prev])
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+    const channel = supabase.channel(`notifications-${user.id}-${instanceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => { void client.invalidateQueries({ queryKey: ['continua', 'notifications', user.id] }); }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user?.id, instanceId, client]);
 
-  const markAsRead = async (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    await supabase.from('notifications' as any).update({ read: true }).eq('id', id);
+  // Update every mounted inbox/badge together, only after persistence succeeds.
+  const persist = async (request: PromiseLike<{ error: unknown }>, update: (rows: AppNotification[]) => AppNotification[]) => {
+    try {
+      const { error } = await request;
+      if (error) throw error;
+      await client.cancelQueries({ queryKey: key });
+      client.setQueryData<AppNotification[]>(key, rows => update(rows ?? []));
+      void client.invalidateQueries({ queryKey: key });
+    } catch {
+      toast.error("Couldn't update notifications. Please try again.");
+    }
   };
-
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+    await persist(supabase.from('notifications' as any).update({ read: true }).eq('id', id).eq('user_id', user.id),
+      rows => rows.map(n => n.id === id ? { ...n, read: true } : n));
+  };
   const markAllAsRead = async () => {
     if (!user) return;
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    await supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await persist(supabase.from('notifications' as any).update({ read: true }).eq('user_id', user.id).eq('read', false),
+      rows => rows.map(n => ({ ...n, read: true })));
   };
-
   const remove = async (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-    await supabase.from('notifications' as any).delete().eq('id', id);
+    if (!user) return;
+    await persist(supabase.from('notifications' as any).delete().eq('id', id).eq('user_id', user.id),
+      rows => rows.filter(n => n.id !== id));
   };
-
   const clearAll = async () => {
     if (!user) return;
-    setNotifications([]);
-    await supabase.from('notifications' as any).delete().eq('user_id', user.id);
+    await persist(supabase.from('notifications' as any).delete().eq('user_id', user.id), () => []);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

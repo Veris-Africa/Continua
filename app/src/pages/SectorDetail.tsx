@@ -1,50 +1,68 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { navigateBack } from "@/lib/navigation";
 import { ArrowLeft, TrendingUp, TrendingDown, Landmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SparklineChart } from "@/components/shared/SparklineChart";
-import { CANONICAL_SYMBOLS, STOCK_META, getPrice, getDayChange } from "@/lib/stockPrices";
+import { useStockDirectory } from '@/hooks/useStockDirectory';
+import { sectorMembers, sectorKey } from '@/lib/sectors';
+import { useQuery } from '@tanstack/react-query';
+import { marketResearchApi } from '@/api/marketResearchApi';
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SectorDetail() {
   const navigate = useNavigate();
   const { sector } = useParams();
-  const sectorName = decodeURIComponent(sector || "");
+  const sectorName = sector || ""; // React Router already decodes route parameters.
+  const {directory,metadata,isLoading:directoryLoading}=useStockDirectory();
+  const knownMembers=useMemo(()=>sectorMembers(directory,sectorName),[directory,sectorName]);
+  const sourceSector=useQuery({queryKey:['continua','market-intelligence'],queryFn:marketResearchApi.intelligence,
+    enabled:knownMembers.length===0,staleTime:60_000,retry:1});
 
   const sectorSymbols = useMemo(
-    () => CANONICAL_SYMBOLS.filter(symbol => STOCK_META[symbol].sector === sectorName),
-    [sectorName]
+    () => knownMembers.length ? knownMembers.map(stock=>stock.symbol) :
+      sourceSector.data?.sectors.find(group=>sectorKey(group.name)===sectorKey(sectorName))?.symbols ?? [],
+    [knownMembers,sourceSector.data,sectorName]
   );
   const { quotes } = useLiveQuotes(sectorSymbols);
+  const { getSparkline } = useSparklines(sectorSymbols);
 
   // Live-computed from the same shared source as Markets/Screener/Compare/AllStocksList —
   // so a sector's member count, top mover, and average change here can never disagree
-  // with the "Sector Performance" card the person tapped through from.
+  // with the "Sector Performance" card the person tapped through from. A symbol with no
+  // live quote yet still appears (so the member list/count stays complete) but with
+  // isLive=false, rendering a loading skeleton instead of a fabricated price.
   const stocks = useMemo(() => {
     return sectorSymbols
       .map(symbol => {
         const quote = quotes[symbol];
-        const { pct } = getDayChange(symbol);
         return {
           symbol,
-          name: STOCK_META[symbol].name,
-          price: quote?.lastPrice ?? getPrice(symbol),
-          change: quote?.changePercent ?? pct,
+          name: metadata[symbol]?.name ?? symbol,
+          price: quote?.lastPrice ?? null,
+          change: quote?.changePercent ?? null,
+          isLive: !!quote,
         };
       })
-      .sort((a, b) => b.change - a.change);
-  }, [sectorSymbols, quotes]);
+      .sort((a, b) => (b.change ?? -Infinity) - (a.change ?? -Infinity));
+  }, [sectorSymbols, quotes,metadata]);
 
-  const avgChange = stocks.length > 0 ? stocks.reduce((sum, s) => sum + s.change, 0) / stocks.length : 0;
-  const isUp = avgChange >= 0;
-  const topMover = stocks[0];
+  const liveStocks = stocks.filter(s => s.isLive);
+  const avgChange = liveStocks.length > 0 ? liveStocks.reduce((sum, s) => sum + s.change!, 0) / liveStocks.length : null;
+  const isUp = (avgChange ?? 0) >= 0;
+  const topMover = liveStocks[0] ?? null;
 
   if (stocks.length === 0) {
+    const loading=directoryLoading||sourceSector.isPending;
     return (
       <div className="page-canvas min-h-screen bg-background pb-24 px-4 pt-16 text-center">
-        <p className="text-sm font-semibold mb-2">Sector not found</p>
-        <p className="text-xs text-muted-foreground mb-4">No NSE-listed stocks match this sector.</p>
+        <p role="status" className="text-sm font-semibold mb-2">{loading?'Loading sector…':sourceSector.isError?'Sector could not load':'Sector not found'}</p>
+        <p className="text-xs text-muted-foreground mb-4">{loading?'Checking listed companies.':sourceSector.isError?'Please retry; this does not mean the sector has no stocks.':'No NSE-listed stocks match this sector.'}</p>
+        {sourceSector.isError&&<Button variant="outline" size="sm" onClick={()=>void sourceSector.refetch()}>Retry</Button>}
         <Button variant="outline" size="sm" onClick={() => navigate("/markets")}>Back to Markets</Button>
       </div>
     );
@@ -54,12 +72,12 @@ export default function SectorDetail() {
     <div className="page-canvas min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2 px-3 py-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9" data-small-target>
+          <Button variant="ghost" size="icon" onClick={() => navigateBack(navigate, "/markets")} className="h-9 w-9" data-small-target>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
             <h1 className="text-base font-semibold truncate">{sectorName}</h1>
-            <p className="text-[11px] text-muted-foreground truncate">Sector Performance</p>
+            <p className="text-[0.6875rem] text-muted-foreground truncate">Sector Performance</p>
           </div>
         </div>
       </header>
@@ -72,15 +90,19 @@ export default function SectorDetail() {
               <div className="w-9 h-9 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
                 <Landmark className="h-4.5 w-4.5" />
               </div>
-              <p className="text-sm font-bold truncate">{stocks.length} {stocks.length === 1 ? "stock" : "stocks"} on the NSE</p>
+              <p className="text-sm font-bold truncate"><RollingNumber value={stocks.length} /> {stocks.length === 1 ? "stock" : "stocks"} on the NSE</p>
             </div>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
-              {isUp ? '+' : ''}{avgChange.toFixed(1)}%
-            </span>
+            {avgChange != null ? (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isUp ? 'bg-bull/10 text-bull' : 'bg-bear/10 text-bear'}`}>
+                {isUp ? '+' : ''}<RollingNumber value={avgChange.toFixed(2)} />%
+              </span>
+            ) : (
+              <Skeleton className="h-5 w-12 rounded-full shrink-0" />
+            )}
           </div>
           {topMover && (
             <p className="text-xs text-muted-foreground mt-1">
-              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change >= 0 ? '+' : ''}{topMover.change.toFixed(1)}%
+              Top mover today: <span className="font-semibold text-foreground">{topMover.symbol}</span> {topMover.change! >= 0 ? '+' : ''}<RollingNumber value={topMover.change!.toFixed(2)} />%
             </p>
           )}
         </Card>
@@ -105,14 +127,21 @@ export default function SectorDetail() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <SparklineChart isPositive={stock.change >= 0} width={44} height={18} />
-                  <div className="text-right min-w-[72px]">
-                    <p className="text-sm font-bold">KES {stock.price.toFixed(2)}</p>
-                    <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                      {stock.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                      {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(1)}%
-                    </p>
-                  </div>
+                  <SparklineChart isPositive={(stock.change ?? 0) >= 0} width={44} height={18} data={getSparkline(stock.symbol)} isLoading={!stock.isLive} />
+                  {stock.isLive ? (
+                    <div className="text-right min-w-[72px]">
+                      <p className="text-sm font-bold">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
+                      <p className={`text-xs font-semibold flex items-center justify-end gap-0.5 ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
+                        {stock.change! >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                        {stock.change! >= 0 ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="min-w-[72px] flex flex-col items-end gap-1">
+                      <Skeleton className="h-4 w-14" />
+                      <Skeleton className="h-3 w-10" />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

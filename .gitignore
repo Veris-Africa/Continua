@@ -31,3 +31,9 @@ backend/.env.local
 *.njsproj
 *.sln
 *.sw?
+scraper/data/*
+.qa-artifacts/
+__pycache__/
+*.pyc
+.neon
+.wrangler/

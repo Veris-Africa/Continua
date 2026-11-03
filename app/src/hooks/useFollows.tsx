@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/continua/browserClient';
 import { useAuth } from './useAuth';
 
 export interface FollowUser {
@@ -8,6 +8,7 @@ export interface FollowUser {
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  handle?: string | null;
 }
 
 export function useFollows() {
@@ -16,6 +17,7 @@ export function useFollows() {
   const [following, setFollowing] = useState<FollowUser[]>([]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
   const fetchFollowing = useCallback(async (userId?: string) => {
     const targetUserId = userId || user?.id;
@@ -33,7 +35,7 @@ export function useFollows() {
     // Use public view to exclude sensitive data like email
     const { data: profiles } = await supabase
       .from('profiles_public')
-      .select('id, user_id, full_name, avatar_url, bio')
+      .select('id, user_id, full_name, avatar_url, bio, handle')
       .in('user_id', followingIds);
 
     return profiles || [];
@@ -55,7 +57,7 @@ export function useFollows() {
     // Use public view to exclude sensitive data like email
     const { data: profiles } = await supabase
       .from('profiles_public')
-      .select('id, user_id, full_name, avatar_url, bio')
+      .select('id, user_id, full_name, avatar_url, bio, handle')
       .in('user_id', followerIds);
 
     return profiles || [];
@@ -64,38 +66,50 @@ export function useFollows() {
   const fetchMyFollowingIds = useCallback(async () => {
     if (!user) return new Set<string>();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_follows')
       .select('following_id')
       .eq('follower_id', user.id);
 
-    return new Set(data?.map(f => f.following_id) || []);
+    if (error) throw error;
+    return new Set<string>(data?.map(f => f.following_id) || []);
   }, [user]);
 
   useEffect(() => {
+    let cancelled = false;
     const loadData = async () => {
       if (!user) {
         setFollowers([]);
         setFollowing([]);
         setFollowingIds(new Set());
         setLoading(false);
+        setResolvedUserId(null);
         return;
       }
 
       setLoading(true);
+      try {
       const [followersData, followingData, ids] = await Promise.all([
         fetchFollowers(),
         fetchFollowing(),
         fetchMyFollowingIds()
       ]);
       
+      if (cancelled) return;
       setFollowers(followersData);
       setFollowing(followingData);
       setFollowingIds(ids);
       setLoading(false);
+      setResolvedUserId(user.id);
+      } catch {
+        // A failed lookup must not be mistaken for "follows nobody".
+        if (!cancelled) setResolvedUserId(null);
+      }
     };
 
     loadData();
+    const changed=()=>void loadData();window.addEventListener('continua:community-safety-changed',changed);
+    return () => { cancelled = true;window.removeEventListener('continua:community-safety-changed',changed); };
   }, [user, fetchFollowers, fetchFollowing, fetchMyFollowingIds]);
 
   const followUser = async (targetUserId: string) => {
@@ -134,7 +148,6 @@ export function useFollows() {
   };
 
   const isFollowing = (userId: string) => followingIds.has(userId);
-
   const toggleFollow = async (targetUserId: string) => {
     if (isFollowing(targetUserId)) {
       return unfollowUser(targetUserId);
@@ -146,7 +159,8 @@ export function useFollows() {
   return {
     followers,
     following,
-    loading,
+    followingIds,
+    loading: loading || (!!user && resolvedUserId !== user.id),
     followUser,
     unfollowUser,
     isFollowing,
@@ -162,6 +176,8 @@ export function useFollows() {
       setFollowers(followersData);
       setFollowing(followingData);
       setFollowingIds(ids);
+      setResolvedUserId(user?.id ?? null);
+      setLoading(false);
     }
   };
 }

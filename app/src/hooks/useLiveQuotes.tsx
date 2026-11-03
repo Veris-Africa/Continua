@@ -2,34 +2,36 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { quotesApi } from "@/api/quotesApi";
 import { continuaRealtime } from "@/api/websocketClient";
+import { useExchange } from "@/hooks/useExchange";
 import type { Quote } from "@/api/types";
+import { readQuoteSnapshot, writeQuoteSnapshot } from "@/lib/quoteSnapshotCache";
 
-/**
- * The single hook every screen should use to get live Continua quotes.
- * REST gives the initial snapshot (and a periodic safety-net refetch);
- * the shared WebSocket connection (api/websocketClient.ts) layers live
- * ticks on top as they arrive. Multiple components calling this with
- * overlapping symbol sets share the same underlying WS subscriptions.
- *
- * Symbols the Data Layer doesn't know about (outside the current NSE mock
- * universe, or a future exchange not yet onboarded) simply won't appear in
- * `quotes` — callers should treat a missing symbol as "not covered yet",
- * not as an error, and fall back to their own display data if needed.
- */
-export function useLiveQuotes(symbols: string[]) {
+/** NSE research data. Coverage depends on the available sources; missing values remain unavailable. */
+export function useLiveQuotes(symbols: string[], exchange?: string) {
+  const { exchange: selectedExchange } = useExchange();
+  const activeExchange = exchange ?? selectedExchange;
+
   const normalized = useMemo(
     () => [...new Set(symbols.map((s) => s.toUpperCase()))].sort(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [symbols.join(",")]
   );
   const key = normalized.join(",");
+  const persistedSnapshot = useMemo(
+    () => readQuoteSnapshot(activeExchange, normalized),
+    [activeExchange, normalized]
+  );
 
   const query = useQuery({
-    queryKey: ["continua", "quotes", key],
-    queryFn: () => quotesApi.getBatch(normalized),
+    queryKey: ["continua", "quotes", activeExchange, key],
+    queryFn: () => quotesApi.getBatch(normalized, activeExchange),
     enabled: normalized.length > 0,
     staleTime: 15_000,
     refetchInterval: 30_000,
+    refetchOnMount: "always",
+    refetchOnReconnect: "always",
+    initialData: persistedSnapshot?.quotes,
+    initialDataUpdatedAt: persistedSnapshot?.savedAt ?? 0,
     retry: 1,
   });
 
@@ -40,21 +42,33 @@ export function useLiveQuotes(symbols: string[]) {
     setLiveTicks({});
     const unsubscribers = normalized.map((symbol) =>
       continuaRealtime.subscribeQuote(symbol, (quote) => {
+        if (quote.exchange !== activeExchange) return;
         setLiveTicks((prev) => ({ ...prev, [symbol]: quote }));
       })
     );
     return () => unsubscribers.forEach((unsub) => unsub());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, activeExchange]);
 
   useEffect(() => continuaRealtime.onConnectionChange(setIsConnected), []);
 
   const quotes = useMemo(() => {
     const map: Record<string, Quote> = {};
     (query.data ?? []).forEach((q) => { map[q.symbol.toUpperCase()] = q; });
-    Object.values(liveTicks).forEach((q) => { map[q.symbol.toUpperCase()] = q; });
+    Object.values(liveTicks).forEach((q) => {
+      if (q.exchange !== activeExchange) return;
+      const current = map[q.symbol.toUpperCase()];
+      if (!current || new Date(q.timestamp).getTime() >= new Date(current.timestamp).getTime()) map[q.symbol.toUpperCase()] = q;
+    });
     return map;
-  }, [query.data, liveTicks]);
+  }, [query.data, liveTicks, activeExchange]);
+
+  useEffect(() => {
+    const snapshot = Object.values(quotes);
+    if (snapshot.length === 0) return;
+    const timer = window.setTimeout(() => writeQuoteSnapshot(activeExchange, snapshot), 250);
+    return () => window.clearTimeout(timer);
+  }, [activeExchange, quotes]);
 
   return {
     quotes,

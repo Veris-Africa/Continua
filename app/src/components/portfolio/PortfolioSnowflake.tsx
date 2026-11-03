@@ -1,94 +1,17 @@
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
-import { Card } from "@/components/ui/card";
-import { Sparkles } from "lucide-react";
-
-interface Holding {
-  symbol: string;
-  shares: number;
-  avg_cost: number;
-  price: number;
-  value: number;
-  gainPct: number;
-  weight: number;
-  sector?: string | null;
-  created_at: string;
-}
-
-interface Props {
-  holdings: Holding[];
-  totalValue: number;
-  totalCost: number;
-  gainPct: number;
-}
-
-// Annualized IRR approximation: simple time-weighted average using oldest holding date
-function calcIRR(totalValue: number, totalCost: number, holdings: Holding[]): number {
-  if (!holdings.length || totalCost <= 0) return 0;
-  const oldest = holdings.reduce((min, h) => {
-    const t = new Date(h.created_at).getTime();
-    return t < min ? t : min;
-  }, Date.now());
-  const years = Math.max(0.25, (Date.now() - oldest) / (365.25 * 24 * 3600 * 1000));
-  const ratio = totalValue / totalCost;
-  return (Math.pow(ratio, 1 / years) - 1) * 100;
-}
-
-export function PortfolioSnowflake({ holdings, totalValue, totalCost, gainPct }: Props) {
-  if (holdings.length === 0) return null;
-
-  const sectorCount = new Set(holdings.map(h => h.sector || "Other")).size;
-  const maxWeight = Math.max(...holdings.map(h => h.weight), 0);
-  const winners = holdings.filter(h => h.gainPct > 0).length;
-  const irr = calcIRR(totalValue, totalCost, holdings);
-
-  const score = (val: number, max: number) => Math.min(100, Math.max(5, (val / max) * 100));
-
-  const data = [
-    { metric: "Value", v: score(Math.max(0, gainPct + 20), 60) },
-    { metric: "Growth", v: score(Math.max(0, irr + 10), 40) },
-    { metric: "Diversity", v: score(sectorCount, 6) },
-    { metric: "Stability", v: score(100 - maxWeight, 100) },
-    { metric: "Winners", v: score(winners, Math.max(1, holdings.length)) },
-    { metric: "Size", v: score(holdings.length, 12) },
-  ];
-
-  return (
-    <Card className="border-0 rounded-2xl p-4 shadow-sm bg-gradient-to-br from-card to-primary/5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          Portfolio Health
-        </h3>
-        <span className="text-[10px] text-muted-foreground font-medium">IRR · {irr >= 0 ? '+' : ''}{irr.toFixed(1)}%/yr</span>
-      </div>
-
-      <div className="grid grid-cols-5 gap-3 items-center">
-        <div className="col-span-3 h-[180px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={data} outerRadius="75%">
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="metric" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
-              <Radar dataKey="v" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.35} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="col-span-2 space-y-1.5">
-          <Metric label="Annualized IRR" value={`${irr >= 0 ? '+' : ''}${irr.toFixed(1)}%`} positive={irr >= 0} />
-          <Metric label="Diversity" value={`${sectorCount} sectors`} />
-          <Metric label="Top weight" value={`${maxWeight.toFixed(0)}%`} positive={maxWeight < 40} negative={maxWeight > 50} />
-          <Metric label="Winners" value={`${winners}/${holdings.length}`} positive={winners >= holdings.length / 2} />
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-function Metric({ label, value, positive, negative }: { label: string; value: string; positive?: boolean; negative?: boolean }) {
-  const tone = positive ? "text-bull" : negative ? "text-bear" : "text-foreground";
-  return (
-    <div className="bg-background/60 rounded-xl px-2.5 py-1.5 border border-border/30">
-      <p className="text-[9px] text-muted-foreground font-medium leading-none">{label}</p>
-      <p className={`text-xs font-bold mt-0.5 ${tone}`}>{value}</p>
-    </div>
-  );
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import {useQuery} from '@tanstack/react-query';
+import {continuaFetch} from '@/api/client';
+import {useAuth} from '@/hooks/useAuth';
+import {useExchange} from '@/hooks/useExchange';
+type Summary={measures:Record<string,{score:number|null;coverage:number}>;holdingCount:number;pricedCount:number;methodology:string};
+type Props={holdings:{symbol:string}[];totalValue:number;totalCost:number;gainPct:number};
+export function PortfolioSnowflake({holdings}:Props){
+ const {user}=useAuth(),{exchange}=useExchange();
+ const query=useQuery({queryKey:['continua','portfolio-scorecard',user?.id,exchange,holdings.map(h=>h.symbol).join(',')],queryFn:()=>continuaFetch<Summary>('/engine/portfolio/scorecard',{params:{exchange}}),enabled:!!user&&holdings.length>0,staleTime:300000,retry:1});
+ return <section className="rounded-2xl border p-4 space-y-4" aria-label="Portfolio health"><h3 className="text-lg font-semibold">Portfolio health</h3>
+  {!holdings.length?<p className="text-sm text-muted-foreground">Add holdings to see your financial-strength assessment.</p>:query.isLoading?<p role="status">Loading portfolio health…</p>:query.error?<p role="alert" className="text-sm">Portfolio health could not load. <button className="underline" onClick={()=>void query.refetch()}>Try again</button></p>:<>
+   <div className="grid grid-cols-2 gap-3">{[['health','Financial strength'],['quality','Company quality'],['risk','Price resilience'],['growth','Reported growth']].map(([key,label])=>{const measure=query.data?.measures[key];return <div key={key} className="rounded-xl bg-muted/30 p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold"><RollingNumber value={measure?.score==null?'Unavailable':measure.score.toFixed(0)+'/100'} /></p>{measure?.score!=null&&<div className="mt-2 h-1.5 rounded bg-muted"><div className="h-full rounded bg-primary" style={{width:measure.score+'%'}}/></div>}</div>})}</div>
+   <details className="text-xs text-muted-foreground"><summary>How portfolio health is calculated</summary><p className="mt-2">{query.data?.methodology}</p><p className="mt-2">Higher scores indicate stronger measured factors. They do not guarantee future performance.</p></details>
+  </>}
+ </section>;
 }

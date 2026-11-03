@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {session} from './session.mjs';
+test('retired session routes never call a former identity provider',async()=>{for(const path of ['/api/session/auth/v1/token','/api/session/auth/v1/user','/api/session/clear']){let calls=0;const response=await session(new Request('https://continua.invalid'+path),{},()=>{calls++;throw Error('No provider call allowed');});assert.equal(response.status,410);assert.equal(calls,0);assert.equal(response.headers.get('Cache-Control'),'private, no-store');}});
+test('non-session routes are not intercepted',async()=>assert.equal(await session(new Request('https://continua.invalid/markets')),null));

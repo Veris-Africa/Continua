@@ -1,4 +1,6 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState } from "react";
+import {SafetyMenuItems} from './SafetyMenuItems';
 import { MessageCircle, Share, Bookmark, BookmarkCheck, Trash2, MoreHorizontal, Verified, Eye, Pencil, VolumeX, Flag, UserX, Link2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -7,24 +9,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { Post } from "@/hooks/usePosts";
-import { ImageViewer } from "./ImageViewer";
+import { PostAttachments } from "./PostAttachments";
 import { formatTimestamp } from "@/lib/formatTimestamp";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
 import { CommunityReactionButton, CommunityReaction } from "./CommunityReactionButton";
 import { atHandle, getHandle } from "@/lib/handle";
+import { NSE_TICKER_SET, ALIAS_OF } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 
 
-const NSE_PRICES: Record<string, { price: number; change: number }> = {
-  SCOM: { price: 12.85, change: 2.4 }, SAFCOM: { price: 12.85, change: 2.4 },
-  EQTY: { price: 62.50, change: -1.2 }, KCB: { price: 45.30, change: 0.8 },
-  COOP: { price: 15.20, change: -0.5 }, SCBK: { price: 185.00, change: 1.1 },
-  BAMB: { price: 89.75, change: 3.2 }, EABL: { price: 155.00, change: -2.1 },
-  BAT: { price: 320.00, change: 0.3 }, ABSA: { price: 14.10, change: 1.5 },
-  NCBA: { price: 42.50, change: -0.7 }, SBIC: { price: 8.90, change: 4.2 },
-  JUB: { price: 380.00, change: 0.9 }, BRIT: { price: 6.50, change: -1.8 },
-  DTK: { price: 82.00, change: 2.0 },
-};
+
 
 interface XPostCardProps {
   post: Post;
@@ -46,8 +41,18 @@ interface XPostCardProps {
 
 export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare, onDelete, onEdit, onReact, isFollowing, onFollow, expanded }: XPostCardProps) {
   const navigate = useNavigate();
+
+  // Every $TICKER mentioned in this post's text or stock_mentions gets one
+  // batched live-quote lookup — no per-render fabricated price.
+  const mentionedSymbols = (() => {
+    const fromText = Array.from(post.content.matchAll(/\$([A-Z]+)\b/g)).map((m) => m[1]);
+    const fromField = post.stock_mentions ?? [];
+    return Array.from(new Set([...fromText, ...fromField].map((s) => s.toUpperCase())));
+  })();
+  const { quotes: mentionQuotes } = useLiveQuotes(mentionedSymbols);
+
   const { toast } = useToast();
-  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+
   const [editOpen, setEditOpen] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
 
@@ -55,26 +60,13 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
     const url = `${window.location.origin}/traders-hub?post=${post.id}`;
     try { await navigator.clipboard.writeText(url); toast({ title: "Link copied" }); } catch { /* no-op */ }
   };
-  const handleMute = async () => {
-    if (!currentUserId) return navigate("/auth");
-    await supabase.from("muted_users").insert({ muter_id: currentUserId, muted_id: post.user_id });
-    toast({ title: `Muted ${atHandle(post.author as any)}` });
-  };
-  const handleBlock = async () => {
-    if (!currentUserId) return navigate("/auth");
-    await supabase.from("blocked_users").insert({ blocker_id: currentUserId, blocked_id: post.user_id });
-    toast({ title: "User blocked", description: "You won't see their posts anymore." });
-  };
-  const handleReport = () => {
-    toast({ title: "Reported", description: "Thanks — our team will review this post." });
-  };
 
   const canEdit = currentUserId === post.user_id && onEdit &&
     (Date.now() - new Date(post.created_at).getTime()) < 30 * 60 * 1000;
 
   const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    if (num >= 1000000) return (num / 1000000).toFixed(2) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(2) + "K";
     return num > 0 ? num.toString() : "";
   };
 
@@ -93,16 +85,19 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
     return content.split(/(\$[A-Z]+|#\w+)/g).map((part, i) => {
       if (part.startsWith("$")) {
         const symbol = part.slice(1);
-        const priceData = NSE_PRICES[symbol];
+        const upper = symbol.toUpperCase();
+        const isRealTicker = NSE_TICKER_SET.has(upper) || !!ALIAS_OF[upper];
+        const q = isRealTicker ? mentionQuotes[upper] : undefined;
+        const priceData = q ? { price: q.lastPrice, change: q.changePercent } : null;
         return (
           <span key={i} className="inline-flex items-center">
             <span className="text-primary font-semibold cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${symbol}`); }}>
               {part}
             </span>
             {priceData && (
-              <span className={`ml-1 text-[11px] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
-                KES {priceData.price.toFixed(2)}
-                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}{Math.abs(priceData.change).toFixed(1)}%</span>
+              <span className={`ml-1 text-[0.6875rem] font-medium ${priceData.change >= 0 ? "text-bull" : "text-bear"}`}>
+                KES <RollingNumber value={priceData.price.toFixed(2)} />
+                <span className="ml-0.5">{priceData.change >= 0 ? "↑" : "↓"}<RollingNumber value={Math.abs(priceData.change).toFixed(2)} />%</span>
               </span>
             )}
           </span>
@@ -122,7 +117,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
 
   return (
     <>
-      <article className="px-4 py-3 border-b border-border/40 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => onComment(post)}>
+      <article className="px-4 py-3 border-b border-border/40 hover:bg-muted/20 transition-colors">
         <div className="flex gap-3">
           <Avatar className="h-10 w-10 shrink-0 cursor-pointer ring-2 ring-primary/10" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${post.user_id}`); }}>
             <AvatarImage src={post.author?.avatar_url || ""} className="object-cover" />
@@ -138,12 +133,12 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                 <span className="text-muted-foreground text-sm">·</span>
                 <span className="text-muted-foreground text-sm shrink-0">{formatTimeAgo(post.created_at)}</span>
                 {(post as any).edited_at && (
-                  <span className="text-muted-foreground text-[11px] italic ml-0.5">(edited)</span>
+                  <span className="text-muted-foreground text-[0.6875rem] italic ml-0.5">(edited)</span>
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {currentUserId !== post.user_id && onFollow && (
-                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[11px] font-semibold" onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
+                  <Button variant={isFollowing ? "ghost" : "outline"} size="sm" className="h-7 px-3 rounded-full text-[0.6875rem] font-semibold" onClick={(e) => { e.stopPropagation(); onFollow(post.user_id); }}>
                     {isFollowing ? "Following" : "Follow"}
                   </Button>
                 )}
@@ -173,9 +168,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                   {currentUserId !== post.user_id && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleMute(); }}><VolumeX className="h-4 w-4 mr-2" />Mute {atHandle(post.author as any)}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleBlock(); }}><UserX className="h-4 w-4 mr-2" />Block {atHandle(post.author as any)}</DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleReport(); }} className="text-destructive"><Flag className="h-4 w-4 mr-2" />Report post</DropdownMenuItem>
+                      <SafetyMenuItems authorId={post.user_id} postId={post.id}/>
                     </>
                   )}
                 </DropdownMenuContent>
@@ -183,27 +176,25 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
               </div>
             </div>
 
-            <p className="text-[15px] leading-[1.5] mt-1 whitespace-pre-wrap break-words">{renderContent(post.content)}</p>
+            <p className="text-[0.9375rem] leading-[1.5] mt-1 whitespace-pre-wrap break-words">{renderContent(post.content)}</p>
 
             {post.stock_mentions && post.stock_mentions.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {post.stock_mentions.map(stock => {
-                  const priceData = NSE_PRICES[stock];
+                  const upper = stock.toUpperCase();
+                  const isRealTicker = NSE_TICKER_SET.has(upper) || !!ALIAS_OF[upper];
+                  const change = isRealTicker ? mentionQuotes[upper]?.changePercent ?? null : null;
                   return (
-                    <Badge key={stock} variant="secondary" className="text-[11px] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
+                    <Badge key={stock} variant="secondary" className="text-[0.6875rem] px-2 py-0.5 cursor-pointer hover:bg-primary/10 rounded-full gap-1 border-0" onClick={(e) => { e.stopPropagation(); navigate(`/stock/${stock}`); }}>
                       ${stock}
-                      {priceData && <span className={priceData.change >= 0 ? "text-bull" : "text-bear"}>{priceData.change >= 0 ? "+" : ""}{priceData.change.toFixed(1)}%</span>}
+                      {change !== null && <span className={change >= 0 ? "text-bull" : "text-bear"}>{change >= 0 ? "+" : ""}<RollingNumber value={change.toFixed(2)} />%</span>}
                     </Badge>
                   );
                 })}
               </div>
             )}
 
-            {post.image_url && (
-              <div className="mt-3 rounded-2xl overflow-hidden border border-border/50" onClick={(e) => { e.stopPropagation(); setImageViewerOpen(true); }}>
-                <img src={post.image_url} alt="Post" className="w-full max-h-[350px] object-cover cursor-pointer hover:opacity-95 transition-opacity" loading="lazy" />
-              </div>
-            )}
+            <PostAttachments post={post} />
 
             {/* Quoted post embed (X-style) */}
             {post.quoted_post && (
@@ -211,23 +202,23 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
                 className="mt-3 rounded-2xl border border-border/60 p-3 hover:bg-muted/30 transition-colors"
                 onClick={(e) => { e.stopPropagation(); navigate(`/traders-hub?post=${post.quoted_post!.id}`); }}
               >
-                <div className="flex items-center gap-1.5 text-[12px]">
-                  <Avatar className="h-5 w-5"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[9px]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
+                <div className="flex items-center gap-1.5 text-[0.75rem]">
+                  <Avatar className="h-5 w-5"><AvatarImage src={post.quoted_post.author?.avatar_url || ""} /><AvatarFallback className="text-[0.5625rem]">{getInitials(post.quoted_post.author?.full_name)}</AvatarFallback></Avatar>
                   <span className="font-bold truncate">{post.quoted_post.author?.full_name || "User"}</span>
                   <Verified className="h-3 w-3 text-primary fill-primary shrink-0" />
                   <span className="text-muted-foreground">· {formatTimeAgo(post.quoted_post.created_at)}</span>
                 </div>
-                <p className="text-[13px] mt-1 line-clamp-4 whitespace-pre-wrap">{post.quoted_post.content}</p>
+                <p className="text-[0.8125rem] mt-1 line-clamp-4 whitespace-pre-wrap">{post.quoted_post.content}</p>
               </div>
             )}
 
-            {expanded && <p className="mt-3 text-[11px] text-muted-foreground tabular">{formatNumber(viewCount || 1)} views</p>}
+            {expanded && <p className="mt-3 text-[0.6875rem] text-muted-foreground tabular"><RollingNumber value={formatNumber(viewCount || 1)} /> views</p>}
             {/* Community action bar: reactions, replies, bookmark */}
             <div className="flex items-center justify-between mt-3 -ml-2 max-w-[425px] border-t border-border/40 pt-1">
               <CommunityReactionButton counts={post.reaction_counts || {}} selected={post.my_reaction} onSelect={reaction => onReact?.(post.id, reaction)} />
               <button className="group flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors" onClick={(e) => { e.stopPropagation(); onComment(post); }} data-small-target>
                 <div className="p-2 rounded-full group-hover:bg-primary/10 transition-colors"><MessageCircle className="h-[18px] w-[18px]" /></div>
-                <span className="text-xs">{formatNumber(post.comments_count)}</span>
+                <span className="text-xs"><RollingNumber value={formatNumber(post.comments_count)} /></span>
               </button>
                 <button className={`p-2 rounded-full transition-colors ${post.is_bookmarked ? "text-primary" : "text-muted-foreground hover:text-primary hover:bg-primary/10"}`} onClick={(e) => { e.stopPropagation(); onBookmark(post.id); }} data-small-target aria-label="Bookmark post">
                   {post.is_bookmarked ? <BookmarkCheck className="h-[18px] w-[18px] fill-current" /> : <Bookmark className="h-[18px] w-[18px]" />}
@@ -238,9 +229,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
       </article>
 
       {/* Image viewer */}
-      {post.image_url && (
-        <ImageViewer open={imageViewerOpen} onOpenChange={setImageViewerOpen} images={[post.image_url]} />
-      )}
+
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -253,7 +242,7 @@ export function XPostCard({ post, currentUserId, onComment, onBookmark, onShare,
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full bg-transparent border-0 outline-none resize-none text-[15px] leading-[1.5] min-h-[120px]"
+              className="w-full bg-transparent border-0 outline-none resize-none text-[0.9375rem] leading-[1.5] min-h-[120px]"
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground mt-2">You can edit posts within 30 minutes of posting.</p>

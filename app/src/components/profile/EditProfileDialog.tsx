@@ -1,3 +1,4 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,10 @@ import { Camera, User, Loader2, Upload, X, Check, AlertCircle } from "lucide-rea
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
+import { uploadCloudImage } from "@/lib/cloudMedia.js";
+import {handleError,normalizeUserHandle} from '../../../../backend/src/data/handlePolicy.js';
+import {EXPERIENCE_OPTIONS} from '@/lib/tradersHubOnboarding';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -26,6 +30,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   const [fullName, setFullName] = useState("");
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
+  const [experience,setExperience]=useState('');
   const [avatarUrl, setAvatarUrl] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +46,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       setFullName(profile.full_name || "");
       setHandle(profile.handle || "");
       setBio(profile.bio || "");
+      setExperience(profile.trading_experience || '');
       setAvatarUrl(profile.avatar_url || "");
       setPreviewUrl(profile.avatar_url || "");
       setHandleState("idle");
@@ -51,34 +57,33 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   // Debounced live handle check
   useEffect(() => {
     if (!open) return;
-    const clean = handle.replace(/^@/, "").toLowerCase();
+    const clean = normalizeUserHandle(handle);
     if (!clean) { setHandleState("idle"); setSuggestions([]); return; }
     if (clean === originalHandle) { setHandleState("current"); setSuggestions([]); return; }
-    if (clean.length < 3 || clean.length > 30 || !/^[a-z0-9_]+$/.test(clean)) {
+    if (handleError(clean)) {
       setHandleState("invalid"); setSuggestions([]); return;
     }
     setHandleState("checking");
+    let cancelled=false;
     const t = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from("profiles_public")
-        .select("handle")
-        .ilike("handle", clean)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('continua_handle_available' as never,{p_handle:clean} as never);
+      if(cancelled)return;
       if (error) { setHandleState("idle"); return; }
-      if (!data) { setHandleState("available"); setSuggestions([]); return; }
+      if (data===true) { setHandleState("available"); setSuggestions([]); return; }
       setHandleState("taken");
       // Generate suggestions
-      const bases = [clean, clean.slice(0, 20)];
+      const bases = [clean, clean.slice(0, 8)];
       const suffixes = ["_ke", "01", "_trader", "invest", "_nse", "254"];
-      const candidates = Array.from(new Set(bases.flatMap(b => suffixes.map(s => `${b}${s}`.slice(0, 30)))));
+      const candidates = Array.from(new Set(bases.flatMap(b => suffixes.map(s => `${b}${s}`.slice(0, 15))))).filter(c=>!handleError(c));
       const { data: taken } = await supabase
         .from("profiles_public")
         .select("handle")
         .in("handle", candidates);
+      if(cancelled)return;
       const takenSet = new Set((taken || []).map(t => (t.handle || "").toLowerCase()));
       setSuggestions(candidates.filter(c => !takenSet.has(c)).slice(0, 3));
     }, 450);
-    return () => clearTimeout(t);
+    return () => {cancelled=true;clearTimeout(t);};
   }, [handle, open, originalHandle]);
 
 
@@ -87,20 +92,20 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     if (!file || !user) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (file.type==='image/svg+xml') {
       toast({
         title: "Invalid file type",
-        description: "Please upload an image file",
+        description: "Choose a JPEG, PNG, WebP, GIF or supported HEIC photo.",
         variant: "destructive",
       });
       return;
     }
 
     // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 20 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please upload an image smaller than 5MB",
+        description: "Please choose a photo smaller than 20 MB. It will be resized before upload.",
         variant: "destructive",
       });
       return;
@@ -109,21 +114,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     setUploading(true);
 
     try {
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      const publicUrl = await uploadCloudImage('avatars', file);
 
       setAvatarUrl(publicUrl);
       setPreviewUrl(publicUrl);
@@ -141,6 +132,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       });
     } finally {
       setUploading(false);
+      e.target.value='';
     }
   };
 
@@ -150,19 +142,22 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
   };
 
   const handleSave = async () => {
+    const normalized=normalizeUserHandle(handle),validation=handleError(normalized);
+    if(validation){toast({title:'Invalid handle',description:validation,variant:'destructive'});return;}
     setLoading(true);
     try {
       const result = await updateProfile({
         full_name: fullName,
         bio: bio,
+        trading_experience: experience || null,
         avatar_url: avatarUrl,
-        handle: handle.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, '') || null,
+        handle: normalized,
       } as any);
       
       if (result?.error) {
         toast({
           title: "Error",
-          description: "Failed to update profile",
+          description: result.error.code==='23505'?'That handle was just taken. Choose another.':result.error.message || 'Failed to update profile',
           variant: "destructive",
         });
       } else {
@@ -206,7 +201,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
           <div className="flex flex-col items-center gap-4">
             <div className="relative group">
               <Avatar className="h-28 w-28 ring-4 ring-primary/20">
-                <AvatarImage src={previewUrl} className="object-cover" />
+                <AvatarImage src={previewUrl} alt="Profile photo preview" className="object-cover" />
                 <AvatarFallback className="bg-gradient-primary text-primary-foreground text-3xl font-bold">
                   {fullName ? getInitials(fullName) : <User className="h-12 w-12" />}
                 </AvatarFallback>
@@ -227,6 +222,8 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               {/* Remove button */}
               {previewUrl && (
                 <Button
+                  type="button"
+                  aria-label="Remove profile photo"
                   size="icon"
                   variant="destructive"
                   className="absolute -top-1 -right-1 h-7 w-7 rounded-full"
@@ -242,6 +239,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               ref={fileInputRef}
               className="hidden"
               accept="image/*"
+              disabled={uploading}
               onChange={handleFileUpload}
             />
             
@@ -288,10 +286,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 <Input
                   id="handle"
                   value={handle}
-                  onChange={(e) => setHandle(e.target.value.replace(/^@/, '').toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                  onChange={(e) => setHandle(e.target.value.replace(/^@/, '').toLowerCase())}
                   placeholder="cypskip"
                   className="h-11 pl-8 pr-9"
-                  maxLength={30}
+                  maxLength={15}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2">
                   {handleState === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
@@ -301,7 +299,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
               </div>
               {handleState === "available" && <p className="text-xs text-bull">✓ Available</p>}
               {handleState === "current" && <p className="text-xs text-muted-foreground">Your current handle</p>}
-              {handleState === "invalid" && <p className="text-xs text-bear">Use 3–30 letters, numbers, or underscores</p>}
+              {handleState === "invalid" && <p className="text-xs text-bear">{handleError(normalizeUserHandle(handle))}</p>}
               {handleState === "taken" && (
                 <div className="space-y-1.5">
                   <p className="text-xs text-bear">Already taken</p>
@@ -309,7 +307,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                     <div className="flex flex-wrap gap-1.5">
                       {suggestions.map(s => (
                         <button key={s} type="button" onClick={() => setHandle(s)}
-                          className="text-[11px] px-2 py-1 rounded-full bg-muted hover:bg-muted/70 font-medium">
+                          className="text-[0.6875rem] px-2 py-1 rounded-full bg-muted hover:bg-muted/70 font-medium">
                           @{s}
                         </button>
                       ))}
@@ -317,7 +315,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                   )}
                 </div>
               )}
-              {handleState === "idle" && <p className="text-xs text-muted-foreground">Letters, numbers, and underscores only</p>}
+              {handleState === "idle" && <p className="text-xs text-muted-foreground">4–15 letters, numbers or underscores. Handles are unique regardless of case; official names are reserved.</p>}
             </div>
 
 
@@ -334,26 +332,21 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
                 maxLength={160}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {bio.length}/160
+                <RollingNumber value={bio.length} />/160
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="avatarUrl" className="text-sm font-medium">
-                Avatar URL (optional)
+              <Label htmlFor="investingExperience" className="text-sm font-medium">
+                Investing experience
               </Label>
-              <Input
-                id="avatarUrl"
-                value={avatarUrl}
-                onChange={(e) => {
-                  setAvatarUrl(e.target.value);
-                  setPreviewUrl(e.target.value);
-                }}
-                placeholder="https://example.com/avatar.jpg"
-                className="h-11"
-              />
+              <select id="investingExperience" value={experience} onChange={e=>setExperience(e.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+                <option value="">Not shown — remove from profile</option>
+                {EXPERIENCE_OPTIONS.map(option=><option key={option.id} value={option.id}>{option.label}</option>)}
+              </select>
+              {experience&&<Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={()=>setExperience('')}>Remove investing experience</Button>}
               <p className="text-xs text-muted-foreground">
-                Or paste a direct link to your profile picture
+                Change your experience level or remove it. Your account and other profile details stay intact.
               </p>
             </div>
           </div>

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/continua/browserClient";
+import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 
 interface Props {
   symbol: string;
@@ -14,9 +15,7 @@ interface Props {
   eps: string | number;
   dividend: string | number;
   marketCap?: string;
-  scores?: Record<string, number>;
-  mode?: "thesis" | "news_summary" | "market_insight";
-  headlines?: string[];
+  scores?: ContinuaScores;
   title?: string;
 }
 
@@ -31,7 +30,7 @@ export function AIThesisCard(props: Props) {
     try {
       const { data, error } = await supabase.functions.invoke("stock-thesis", {
         body: {
-          mode: props.mode || "thesis",
+          mode: "thesis",
           symbol: props.symbol,
           name: props.name,
           sector: props.sector,
@@ -42,13 +41,12 @@ export function AIThesisCard(props: Props) {
           dividend: props.dividend,
           marketCap: props.marketCap,
           scores: props.scores,
-          headlines: props.headlines,
         },
       });
       if (error) throw error;
-      setText((data as any)?.text || "No analysis available.");
-    } catch (e: any) {
-      setError(e?.message || "Failed to load analysis");
+      setText(typeof data === "object" && data !== null && "text" in data && typeof data.text === "string" ? data.text : "No analysis available.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load analysis");
     } finally {
       setLoading(false);
     }
@@ -57,7 +55,7 @@ export function AIThesisCard(props: Props) {
   useEffect(() => {
     fetchThesis();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.symbol, props.mode]);
+  }, [props.symbol]);
 
   return (
     <Card className="grouped-card border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
@@ -82,9 +80,9 @@ export function AIThesisCard(props: Props) {
         ) : error ? (
           <p className="text-xs text-bear">{error}</p>
         ) : (
-          <p className="text-[13px] leading-relaxed whitespace-pre-line text-foreground/90">{text}</p>
+          <p className="text-[0.8125rem] leading-relaxed whitespace-pre-line text-foreground/90">{text}</p>
         )}
-        <p className="text-[10px] text-muted-foreground mt-2">AI-generated. Not investment advice.</p>
+        <p className="text-[0.625rem] text-muted-foreground mt-2">AI-generated. Not investment advice.</p>
       </CardContent>
     </Card>
   );

@@ -1,65 +1,61 @@
+import { RollingNumber } from "@/components/shared/RollingNumber";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Flame, Eye, ArrowUpRight, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SparklineChart } from "@/components/shared/SparklineChart";
+import { getStockName } from "@/lib/stockPrices";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { useSparklines } from "@/hooks/useSparklines";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Only the editorial part — which stocks are "trending" and why — is
+// curated here. Price, change, and sparkline all come from live quotes /
+// real candle history at render time, never hardcoded.
+const TRENDING_PICKS: { symbol: string; reason: string; mentions: number }[] = [
+  { symbol: "SCOM", reason: "M-Pesa expansion news", mentions: 1250 },
+  { symbol: "EQTY", reason: "Strong Q4 earnings", mentions: 890 },
+  { symbol: "KCB", reason: "Regional expansion", mentions: 654 },
+  { symbol: "PORT", reason: "Infrastructure deals", mentions: 432 },
+];
 
 interface TrendingStock {
   symbol: string;
   name: string;
-  price: number;
-  change: number;
-  volume: string;
+  price: number | null;
+  change: number | null;
+  volume: number | null;
   mentions: number;
-  sparkline: number[];
+  sparkline: number[] | undefined;
   reason: string;
+  isLive: boolean;
 }
-
-const TRENDING_STOCKS: TrendingStock[] = [
-  {
-    symbol: 'SAFCOM',
-    name: 'Safaricom PLC',
-    price: 12.85,
-    change: 4.52,
-    volume: '45.2M',
-    mentions: 1250,
-    sparkline: [10, 11, 10.5, 11.5, 12, 11.8, 12.5, 12.85],
-    reason: 'M-Pesa expansion news'
-  },
-  {
-    symbol: 'EQTY',
-    name: 'Equity Group',
-    price: 62.50,
-    change: 2.89,
-    volume: '12.8M',
-    mentions: 890,
-    sparkline: [58, 59, 60, 59.5, 61, 62, 61.5, 62.5],
-    reason: 'Strong Q4 earnings'
-  },
-  {
-    symbol: 'KCB',
-    name: 'KCB Group',
-    price: 45.30,
-    change: -1.24,
-    volume: '8.5M',
-    mentions: 654,
-    sparkline: [47, 46.5, 46, 45.8, 45.5, 45.2, 45.4, 45.3],
-    reason: 'Regional expansion'
-  },
-  {
-    symbol: 'BAMB',
-    name: 'Bamburi Cement',
-    price: 89.75,
-    change: 3.15,
-    volume: '5.2M',
-    mentions: 432,
-    sparkline: [85, 86, 87, 86.5, 88, 89, 88.5, 89.75],
-    reason: 'Infrastructure deals'
-  },
-];
 
 export function TrendingStocks() {
   const navigate = useNavigate();
+  const symbols = TRENDING_PICKS.map((p) => p.symbol);
+  const { quotes } = useLiveQuotes(symbols);
+  const { getSparkline } = useSparklines(symbols);
+
+  const stocks: TrendingStock[] = useMemo(
+    () =>
+      TRENDING_PICKS.map((pick) => {
+        const q = quotes[pick.symbol];
+        return {
+          symbol: pick.symbol,
+          name: getStockName(pick.symbol),
+          price: q?.lastPrice ?? null,
+          change: q?.changePercent ?? null,
+          volume: q?.volume ?? null,
+          mentions: pick.mentions,
+          sparkline: getSparkline(pick.symbol),
+          reason: pick.reason,
+          isLive: !!q,
+        };
+      }),
+    [quotes, getSparkline]
+  );
 
   return (
     <Card className="card-gradient">
@@ -76,16 +72,16 @@ export function TrendingStocks() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {TRENDING_STOCKS.map((stock, index) => (
+        {stocks.map((stock, index) => (
           <div
             key={stock.symbol}
             onClick={() => navigate(`/stock/${stock.symbol}`)}
-            className="p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer border border-transparent hover:border-primary/20 group"
+            className="flat-section p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all cursor-pointer border border-transparent hover:border-primary/20 group"
           >
             <div className="flex items-center gap-3">
               {/* Rank */}
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-xs font-bold">
-                {index + 1}
+                <RollingNumber value={index + 1} />
               </div>
 
               {/* Stock Info */}
@@ -107,10 +103,19 @@ export function TrendingStocks() {
 
               {/* Price & Change */}
               <div className="text-right">
-                <p className="text-sm font-semibold">KES {stock.price.toFixed(2)}</p>
-                <p className={`text-xs font-medium ${stock.change >= 0 ? 'text-bull' : 'text-bear'}`}>
-                  {stock.change >= 0 ? '+' : ''}{stock.change}%
-                </p>
+                {stock.isLive ? (
+                  <>
+                    <p className="text-sm font-semibold">KES <RollingNumber value={stock.price!.toFixed(2)} /></p>
+                    <p className={`text-xs font-medium ${stock.change! >= 0 ? 'text-bull' : 'text-bear'}`}>
+                      {stock.change! >= 0 ? '+' : ''}<RollingNumber value={stock.change!.toFixed(2)} />%
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <Skeleton className="h-4 w-14" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -122,12 +127,14 @@ export function TrendingStocks() {
               <div className="flex items-center gap-3 text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Eye className="h-3 w-3" />
-                  {stock.mentions}
+                  <RollingNumber value={stock.mentions} />
                 </span>
-                <span className="flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  {stock.volume}
-                </span>
+                {stock.volume != null && (
+                  <span className="flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    <RollingNumber value={stock.volume.toLocaleString()} />
+                  </span>
+                )}
               </div>
             </div>
           </div>
