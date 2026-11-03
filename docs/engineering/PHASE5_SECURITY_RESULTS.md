@@ -11,3 +11,8 @@ Phase 5 is local only. No production schema, policies, accounts, portfolios, wat
 - Public-cache allowlist, backend rights, financial outputs and chart missing-data behavior were not expanded or weakened.
 
 Automated frontend tests and production artifact audits are recorded in `PHASE5_PERFORMANCE_RESULTS.md`. No alerts were dismissed, security checks disabled, permission changes applied or paid features enabled. Full populated-browser cross-account and two-tab mutation evidence is not yet available; keep production deployment gated on it.
+
+
+## Release follow-up — 2026-11-03
+
+The owner subsequently approved the Phase 5 main release. Commit 9ab1945a7165a866200717a51f6d3fb34d3cf7f1 is on main and all GitHub checks passed. Cloudflare serves that revision (Worker dd40a3bb-70d4-41a5-b237-b6f63c10adae). Render remains at 7dfe140d009ac78db072dc7b2dc4a30c7805e12b; independently verified identical backend trees make a restart unnecessary. The release verifier passed with --allow-equivalent-backend-tree at 2026-11-03T15:20:41.772Z. Authenticated read-only journeys covered the existing application and upgrade interfaces. Earlier candidate-only statements above describe the original gate; known performance/data/security limitations remain. No production SQL, environment, payment or schedule activation occurred. Phase 6 is separate and local only; see PHASE6_IMPLEMENTATION.md.

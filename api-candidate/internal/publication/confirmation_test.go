@@ -84,7 +84,7 @@ func TestConfirmationValidatesRealPythonBeforeTransaction(t *testing.T) {
 		t.Skip("native Python required")
 	}
 	s, _ := fixture(t)
-	script, _ := filepath.Abs("../../../engine-python/worker.py")
+	script, _ := filepath.Abs("../../../financial-engine/worker.py")
 	s.Worker = engine.NewWorker(python, script)
 	_, err := s.Confirm(context.Background(), "7", json.RawMessage(`{"unitsVerified":false}`))
 	if !errors.Is(err, ErrInvalidConfirmation) {

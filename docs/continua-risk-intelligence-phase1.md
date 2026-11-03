@@ -24,10 +24,10 @@ The feature uses Python for the Engine workload and Go for candidate HTTP/owner/
 ## Authoritative services
 
 - `backend/python/continua_risk.py`: data preparation, exposures, covariance, contributions, correlations, evidence, stock price diagnostics, replay and simulations. Packaged by the **existing** backend Dockerfile's Python directory copy.
-- `engine-python/continua_engine/risk_intelligence.py`: native adapter to that same module. Native portfolio exposure helpers also delegate to the canonical implementation.
+- `financial-engine/continua_engine/risk_intelligence.py`: native adapter to that same module. Native portfolio exposure helpers also delegate to the canonical implementation.
 - `backend/src/services/research/stockRisk.js`: canonical price/action reads, public issuer-history cache, stock research adapter.
 - `engineWorkspace.js` and native `portfolio_workspace.py`: append the risk snapshot to the existing owned portfolio response. Legacy portfolio-risk response fields project the same snapshot rather than running another model.
-- `backend-go/internal/httpapi/stock_risk.go` and `risk_labs.go`: candidate stock and simulation routes; authenticated owner is selected on the server.
+- `api-candidate/internal/httpapi/stock_risk.go` and `risk_labs.go`: candidate stock and simulation routes; authenticated owner is selected on the server.
 
 The old index-aligned browser risk hook was removed. Portfolio Analysis now displays server calculations and no longer uses its separate heuristic risk score. Historical reference calculations remain for compatibility/differential tests, but the active portfolio response uses the canonical model.
 

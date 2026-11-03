@@ -1,5 +1,11 @@
 # Continua implementation preferences
 
+Follow `docs/architecture/REPOSITORY_NAMING_CONVENTIONS.md` for repository layout,
+new file names and moves. Inventory consumers before renaming paths; retain
+production roots, package/module identities, migration history and candidate
+cutover guards. Record evidence before deleting code or dependencies. Never
+activate a changed production/collector launch path as part of local cleanup.
+
 Before implementing a requested feature or migration, research suitable languages
 using current primary documentation. Assess the feature's workload, numerical
 requirements, supported libraries, deployment limits, security, integration and

@@ -1,6 +1,6 @@
 # Native operator tools
 
-`backend-go/cmd/continua-admin` replaces the common SQL migration execution
+`api-candidate/cmd/continua-admin` replaces the common SQL migration execution
 mechanism with Go's transaction and cancellation primitives. SQL remains SQL;
 there is no Node forwarding process. The executable reads only bounded SQL files
 under the repository's migration directories using a rooted filesystem handle.
@@ -52,7 +52,7 @@ or push was performed. They are not counted as passing hosted validation.
 
 ## Data API key operations
 
-`backend-go/cmd/continua-key` supports `--create-name NAME` (optional
+`api-candidate/cmd/continua-key` supports `--create-name NAME` (optional
 `--rate-limit`, default 120/minute) or `--revoke-id UUID`. Without `--apply`, it
 only reports an offline plan. With `--apply`, it uses the configured verified
 database connection and a 15-second operation deadline. Creation preserves the
@@ -119,7 +119,7 @@ read operations contact the configured private native service but do not publish
 
 ## Python collector and offline Engine operators
 
-Use `python scraper-python/scraper_cli.py --operation NAME`. New originals always
+Use `python financial-data-collector/scraper_cli.py --operation NAME`. New originals always
 use private R2; legacy Supabase is a private migration reader, not an implicit
 dual-write target. Collection, registration, archive, recovery, reprocessing and
 source-policy mutations default to offline plans and require `--apply` to run.
@@ -143,7 +143,7 @@ Read-only `inspect-extraction --extraction ID` and
 text requires the separate `--include-source-text` flag and has a strict budget.
 No credentials or user-account data are included.
 
-`python engine-python/engine_cli.py --operation draft-bond-report --input FILE
+`python financial-engine/engine_cli.py --operation draft-bond-report --input FILE
 --source-url URL` is an offline deterministic draft command. It never publishes,
 contacts an AI provider or makes a payment. CLI filenames deliberately avoid
 shadowing standard-library modules such as `operator` or `html`.

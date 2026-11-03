@@ -15,7 +15,7 @@ func worker(t *testing.T) *Worker {
 	if python == "" {
 		t.Skip("NATIVE_PYTHON_BIN is required for real Python integration")
 	}
-	script, err := filepath.Abs("../../../engine-python/worker.py")
+	script, err := filepath.Abs("../../../financial-engine/worker.py")
 	if err != nil {
 		t.Fatal(err)
 	}

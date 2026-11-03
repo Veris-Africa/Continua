@@ -38,7 +38,7 @@ public measurement. Its failed SQL slot remains intact: no restart or manual
 test bypasses the six-hour quota. This remains a collection-configuration restore,
 not proof that all upstream documents succeed or that native cutover is complete.
 
-The new Python entrypoint is `scraper-python/scheduled_collect.py`; the workflow
+The new Python entrypoint is `financial-data-collector/scheduled_collect.py`; the workflow
 is `.github/workflows/scheduled-collector.yml`. It has no Render URL, API call,
 HTTP listener, continuous scheduler, paid AI or Paystack dependency. Go remains
 the API/publication target; Python reuses the existing collector, OCR, source

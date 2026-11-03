@@ -7,22 +7,22 @@ RUN apt-get update \
     && groupadd --gid 10001 continua \
     && useradd --uid 10001 --gid 10001 --create-home continua
 WORKDIR /app
-COPY scraper-python/requirements-lock.txt /app/requirements-lock.txt
+COPY financial-data-collector/requirements-lock.txt /app/requirements-lock.txt
 RUN pip install --no-cache-dir -r /app/requirements-lock.txt
 RUN python -m pip check \
     && apt-get update \
     && apt-get install -y --no-install-recommends chromium-sandbox \
     && rm -rf /var/lib/apt/lists/*
-COPY scraper-python/main.py scraper-python/browser_worker.py scraper-python/scraper_cli.py scraper-python/
-COPY scraper-python/continua_scraper/ scraper-python/continua_scraper/
-COPY engine-python/continua_engine/ engine-python/continua_engine/
+COPY financial-data-collector/main.py financial-data-collector/browser_worker.py financial-data-collector/scraper_cli.py financial-data-collector/
+COPY financial-data-collector/continua_scraper/ financial-data-collector/continua_scraper/
+COPY financial-engine/continua_engine/ financial-engine/continua_engine/
 COPY backend/python/engine_calculations.py backend/python/engine_calculations.py
 COPY scraper/python/pdf_extract.py scraper/python/pdf_extract.py
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app/engine-python \
+    PYTHONPATH=/app/financial-engine \
     CHROMIUM_BIN=/usr/bin/chromium CHROMEDRIVER_BIN=/usr/bin/chromedriver
 USER 10001:10001
 # Do not disable Chromium's sandbox. Linux namespace/sandbox compatibility and
 # the complete service memory budget must pass the final release validation.
 EXPOSE 4081
-ENTRYPOINT ["python", "/app/scraper-python/main.py"]
+ENTRYPOINT ["python", "/app/financial-data-collector/main.py"]

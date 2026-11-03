@@ -60,7 +60,7 @@ func run(args []string) error {
 			return fmt.Errorf("explicit native Python worker required")
 		}
 		if script == "" {
-			script = "engine-python/worker.py"
+			script = "financial-engine/worker.py"
 		}
 		store, err := marketdata.Open(os.Getenv("DATABASE_URL"))
 		if err != nil {
@@ -157,7 +157,7 @@ func run(args []string) error {
 				return fmt.Errorf("native portfolio calculation worker required")
 			}
 			if script == "" {
-				script = "engine-python/worker.py"
+				script = "financial-engine/worker.py"
 			}
 			started := time.Now()
 			positions, err := store.PortfolioPositions(ctx, *owner, "NSE")

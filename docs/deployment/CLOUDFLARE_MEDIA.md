@@ -22,7 +22,7 @@ is used. The server-only financial archive credentials remain separate.
 
 ## Existing images
 
-`scraper-python/migrate_media.py prepare --directory .qa-artifacts/media-migration`
+`financial-data-collector/migrate_media.py prepare --directory .qa-artifacts/media-migration`
 reads the three owned legacy buckets inside a reserved 16 MiB normal collection
 allowance. It creates a local manifest and deterministic destination names;
 source bytes and objects remain intact. The reviewed batch contains 18 images

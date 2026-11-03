@@ -1,8 +1,8 @@
 """Private DB-only NSE coverage CLI. Never reads R2 originals or user workspaces.
 
-python scraper-python/research_status.py
-python scraper-python/research_status.py --ticker CGEN
-python scraper-python/research_status.py --ticker CGEN --retry-failed
+python financial-data-collector/research_status.py
+python financial-data-collector/research_status.py --ticker CGEN
+python financial-data-collector/research_status.py --ticker CGEN --retry-failed
 
 Requires DATABASE_URL for the existing private backend database role and the
 canonical-observations migration. Does not print credentials or database errors.

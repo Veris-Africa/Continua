@@ -11,3 +11,8 @@ Before proposing production activation:
 5. Present before/after evidence and remaining backend/data gaps for approval. Then, and only then, push the approved exact commit and verify GitHub/Cloudflare. A frontend-only deployment should not require a backend restart; verify actual source-tree equivalence if revisions differ.
 
 No production SQL, payment durability, hosted intents, paid AI, new paid service, schedule activation or auth cutover is part of this plan. Existing E01/E04 SQL and E09 recovery-window gaps remain separate approvals/work.
+
+
+## Release follow-up — 2026-11-03
+
+The owner subsequently approved the Phase 5 main release. Commit 9ab1945a7165a866200717a51f6d3fb34d3cf7f1 is on main and all GitHub checks passed. Cloudflare serves that revision (Worker dd40a3bb-70d4-41a5-b237-b6f63c10adae). Render remains at 7dfe140d009ac78db072dc7b2dc4a30c7805e12b; independently verified identical backend trees make a restart unnecessary. The release verifier passed with --allow-equivalent-backend-tree at 2026-11-03T15:20:41.772Z. Authenticated read-only journeys covered the existing application and upgrade interfaces. Earlier candidate-only statements above describe the original gate; known performance/data/security limitations remain. No production SQL, environment, payment or schedule activation occurred. Phase 6 is separate and local only; see PHASE6_IMPLEMENTATION.md.

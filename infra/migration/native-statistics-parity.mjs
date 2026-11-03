@@ -13,7 +13,7 @@ for(const q of [null,quote,{...quote,source:'mock'},{...quote,timestamp:'2027-01
   for(const c of series) {
    const candles=cases%2?c.map(r=>({timestamp:r.date,close:r.close,high:r.close+1,low:r.close-1})):[];
    const args=[q,h,candles,c,now];
-   const child=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url))],{input:JSON.stringify({operation:'market_statistics',args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
+   const child=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../financial-engine/worker.py',import.meta.url))],{input:JSON.stringify({operation:'market_statistics',args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
    assert.equal(child.status,0,child.stderr);
    assert.deepEqual(JSON.parse(child.stdout),marketStatistics(q,h,candles,c,new Date(now)),`statistics case ${cases}`);
    cases++;

@@ -55,8 +55,8 @@ jobs:
         with:
           python-version: '3.13'
           cache: pip
-          cache-dependency-path: scraper-python/requirements-lock.txt
-      - run: python -m pip install -r scraper-python/requirements-lock.txt
+          cache-dependency-path: financial-data-collector/requirements-lock.txt
+      - run: python -m pip install -r financial-data-collector/requirements-lock.txt
       - name: Install document and browser tools
         if: (github.event_name == 'schedule' && github.event.schedule == '43 6,12,20 * * *') || (inputs.apply && inputs.kind != 'news' && inputs.maintenance == 'none')
         run: |
@@ -75,7 +75,7 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.COLLECTOR_R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.COLLECTOR_R2_SECRET_ACCESS_KEY }}
           RAW_STORAGE_DRIVER: r2
-          PYTHONPATH: engine-python
+          PYTHONPATH: financial-engine
           COLLECTOR_PROCESS_RESEARCH: 'true'
           PROCESSED_PAYLOAD_MODE: r2
           R2_DUAL_WRITE: 'false'
@@ -107,4 +107,4 @@ jobs:
           if [ -n "$INPUT_HISTORY_ISSUERS" ]; then args+=(--history-issuers "$INPUT_HISTORY_ISSUERS"); fi
           if [ "$INPUT_FRESH" = true ]; then args+=(--fresh); fi
           if [ -n "$INPUT_MAINTENANCE" ] && [ "$INPUT_MAINTENANCE" != none ]; then args+=(--maintenance "$INPUT_MAINTENANCE"); fi
-          python scraper-python/scheduled_collect.py "${args[@]}"
+          python financial-data-collector/scheduled_collect.py "${args[@]}"

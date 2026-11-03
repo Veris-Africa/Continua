@@ -44,7 +44,7 @@ try {
  // issuer advance. No provider/browser/production credential is involved.
  const claim=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import asyncio,json,sys
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.documents import DocumentJobs
 class DB:
  async def query(self,sql,params=()):
@@ -97,7 +97,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  check(legacyCloses.map(r=>[r.date,r.close,r.open,r.high,r.low,r.volume]),[['2025-10-15','20',null,null,null,null],['2025-10-16','21',null,null,null,120]]);
  // Execute the cleanup worker's actual candidate SQL: a verified copy alone
  // must not authorize removal while any artifact still uses the original.
- const cleanupSQLProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.legacy_cleanup import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ const cleanupSQLProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'financial-data-collector');from continua_scraper.legacy_cleanup import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
  if(cleanupSQLProcess.status!==0)throw Error('Cleanup SQL fixture unavailable');
  const cleanupSQL=cleanupSQLProcess.stdout.replaceAll('%%','%').replace('%s','$1');
  await db.exec('ALTER TABLE storage.objects ADD COLUMN updated_at timestamptz DEFAULT now()');
@@ -118,7 +118,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  check((await db.query(cleanupSQL,[20])).rows.length,1);
  await db.exec('DELETE FROM storage.objects WHERE id=999');
  await db.exec("ALTER TABLE storage.objects ADD COLUMN metadata jsonb DEFAULT '{}'::jsonb");
- const orphanProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.uncatalogued_archive import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ const orphanProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'financial-data-collector');from continua_scraper.uncatalogued_archive import CANDIDATES;print(CANDIDATES)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
  assert.equal(orphanProcess.status,0);
  const orphanSQL=orphanProcess.stdout.replaceAll('%%','%').replace('%s','$1');
  const orphanKey=`fixture/2026/${'e'.repeat(64)}.html`;
@@ -133,7 +133,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  await db.exec('DELETE FROM storage.objects WHERE id=998');
  // Actual light-role SQL: a slot survives restarts, with one delayed recovery.
  await db.exec("CREATE TABLE scraping.scheduled_runs(id text PRIMARY KEY,kind text,status text,receipt jsonb DEFAULT '{}'::jsonb,started_at timestamptz DEFAULT now(),completed_at timestamptz)");
- const lightProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'scraper-python');from continua_scraper.render_light import CLAIM;print(CLAIM)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
+ const lightProcess=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',"import sys;sys.path.insert(0,'financial-data-collector');from continua_scraper.render_light import CLAIM;print(CLAIM)"],{cwd:new URL('../../',import.meta.url),encoding:'utf8'});
  assert.equal(lightProcess.status,0);
  const lightSQL=lightProcess.stdout.replace('%s','$1');
  check((await db.query(lightSQL,['render-index-fixture'])).rows[0].attempt,'1');
@@ -177,7 +177,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
   [2024,'revenue',20.94e9],[2024,'netIncome',526.05e6],[2024,'eps',6.56]]);
  // Exercise the actual worker's checkpoint/receipt CTE, including a losing
  // compare-and-set. No provider objects or production credentials are used.
- const archiveSource=await readFile(new URL('scraper-python/continua_scraper/archive.py',root),'utf8');
+ const archiveSource=await readFile(new URL('financial-data-collector/continua_scraper/archive.py',root),'utf8');
  let archiveParam=0;
  const archiveSQL=archiveSource.match(/updated=await self.database.query\("""([\s\S]*?)"""/)[1].replace(/%s/g,()=>'$'+(++archiveParam));
  const original=(await db.query('SELECT storage_path FROM scraping.raw_artifacts WHERE id=$1',[cgen.artifact])).rows[0].storage_path;
@@ -241,7 +241,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  check((await history('CGEN')).at(-1).eps,6.56);
  await db.exec("UPDATE market.financial_periods SET reported_at=current_date+1 WHERE id='fixture-period'");
  check((await history('CGEN')).at(-1).reportedAt,null);
- const cli=await readFile(new URL('scraper-python/research_status.py',root),'utf8');
+ const cli=await readFile(new URL('financial-data-collector/research_status.py',root),'utf8');
  let param=0;
  const coverageSQL=cli.match(/COVERAGE_SQL="""([\s\S]*?)"""/)[1].replaceAll('%%','%').replace(/%s/g,()=>'$'+(++param));
  const coverage=(await db.query(coverageSQL,[null,null])).rows;
@@ -250,7 +250,7 @@ asyncio.run(DocumentJobs(DB()).claim('kenyanstocks',1,lane='Financials'))
  const beforeProjection=await Promise.all(symbols.map(symbol=>history(symbol)));
  const reports=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import asyncio,json,sys
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.research_processing import ResearchProcessor
 class DB:
  async def query(self,sql,params=()):
@@ -265,7 +265,7 @@ asyncio.run(run())
  const stored=(await db.query('SELECT extraction_id,payload FROM scraping.processed_research ORDER BY extraction_id')).rows;
  const compact=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import json,sys
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.processed_archive import read_projection
 print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin)]))
  `],{cwd:new URL('../../',import.meta.url),encoding:'utf8',input:JSON.stringify(stored)});
@@ -283,7 +283,7 @@ print(json.dumps([read_projection(row['payload']) for row in json.load(sys.stdin
  // predicate at runtime, so extracting the first string literal truncates it.
  const archiveQueries=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import asyncio,json,sys
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.archive import R2Archive
 class DB:
  def __init__(self,rows):self.rows=rows

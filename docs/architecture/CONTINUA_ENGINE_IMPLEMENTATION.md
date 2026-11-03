@@ -1,16 +1,18 @@
+> Historical implementation record. Current service ownership and release status are maintained in ARCHITECTURE.md and docs/engineering/PHASE6_IMPLEMENTATION.md. Earlier test counts below retain their historical scope.
+
 # Continua Engine implementation status
 
 ## Architecture and language decisions
 
 Permitted sources → existing bounded Python collector → immutable private R2
-originals → versioned Python extraction/processing → Supabase
+originals → versioned Python extraction/processing → Neon PostgreSQL
 compact `scraping.processed_research` numerical projections and reviewed `market` statements → shared SQL
 `market.canonical_financial_history` → existing Go and compatibility API readers
 → stock details, expanded fundamentals and Engine. Frontend financial-history
 hooks no longer assemble a separate financial dataset.
 
 Full processed presentations are served from verified private R2 objects;
-Supabase retains queryable facts, account/application records and small archive
+Neon PostgreSQL retains queryable facts, account/application records and small archive
 receipts. Extraction bodies and remaining legacy originals are still moving
 through the separately measured migration. Application images use their own
 `continua-public-media` bucket and scoped Worker routes.
@@ -53,7 +55,7 @@ The existing scheduled collector discovers the NSE universe from
 `market.securities`, uses bounded transfer budgets, job leases, retries,
 `FOR UPDATE SKIP LOCKED`, and versioned processing receipts. Existing Actions
 workflow: `.github/workflows/scheduled-collector.yml`.
-Processing: `python scraper-python/scheduled_collect.py --kind documents --apply
+Processing: `python financial-data-collector/scheduled_collect.py --kind documents --apply
 --maintenance process-research` with the documented collector environment.
 
 ## Protection, atomicity and operations
@@ -69,14 +71,14 @@ proxy trust, owner/entitlement checks, signed billing and body limits are retain
 The compatibility API now also limits unverified public requests; health probes
 and separately signature-verified webhooks remain outside that limiter. The Go
 rewrite remains gated from production; this is not a claim of full production
-security cutover or complete coverage of Supabase Auth endpoints.
+security cutover or complete coverage of Neon PostgreSQL Auth endpoints.
 
 Compatibility statement bundles now use one transaction, an issuer lock, component
 period checks and a reviewed-statement overwrite guard. Parser exceptions have
 sanitized durable dead-letter receipts, exponential retry delays and a five-attempt
 quarantine, so one issuer cannot poison a batch. Existing dead-letter uniqueness
 migration is required. Administrative DB-only coverage/retry CLI:
-`python scraper-python/research_status.py [--ticker CGEN] [--retry-failed]`.
+`python financial-data-collector/research_status.py [--ticker CGEN] [--retry-failed]`.
 Retry requires an explicit ticker. It does not modify financial values.
 
 ## Methods and product scope
@@ -145,7 +147,7 @@ no usable annual history. This label does not certify the full financial
 statement taxonomy, dated valuation eligibility, source licensing or ratings.
 It is not a claim that all 69 companies have completed research.
 
-Initial physical inventory: Supabase `scraper-raw` contained 9,150 objects and
+Initial physical inventory: Neon PostgreSQL `scraper-raw` contained 9,150 objects and
 3,994,020,859 bytes. Archive metadata contained 13,242 legacy pointers and 475 R2
 pointers. Some legacy pointers have no corresponding retained object, including
 two NSE PDFs. Missing objects stay explicit, retry with bounded attempts and
@@ -153,7 +155,7 @@ quarantine after five failures; verified originals are never invented.
 
 The deployed scraper's `R2_DUAL_WRITE` was found true and corrected to false in
 Render, with a successful deployment and persisted-value verification. Both
-runtime startup policies now reject duplicate Supabase file writes. The legacy
+runtime startup policies now reject duplicate Neon PostgreSQL file writes. The legacy
 reader remains solely for verified migration.
 
 `reconcile_cloud.py` automatically scans pending evidence without an issuer
@@ -166,7 +168,7 @@ research objects use separate private namespaces in the existing bucket.
 A new finite Actions workflow runs every six hours using the existing document
 schedule opt-in. User-approved migration limits are 384 MiB/run and 1 GiB/day,
 tracked separately from the unchanged normal collection allowance. The existing
-Supabase legacy reader credential was configured as an encrypted repository
+Neon PostgreSQL legacy reader credential was configured as an encrypted repository
 secret with the user's explicit approval. No secret is committed to the repo.
 
 An initial automatic run processed 2 newly eligible records and verified 75
@@ -267,7 +269,7 @@ manual financial entry. Other archive sources remain in the same durable queue.
 
 The approved image migration is live in `51643b4`: all 18 images were verified
 through Cloudflare, three profile rows and two post rows switched URLs, and the
-18 Supabase image originals were removed after separate explicit approval.
+18 Neon PostgreSQL image originals were removed after separate explicit approval.
 Their source-to-cloud mappings remain in the private migration audit receipt.
 No financial original was deleted. Old-client object inserts/updates are now
 blocked by a restrictive Storage RLS policy; account and application database
@@ -276,7 +278,7 @@ records retain their existing access policies. See `docs/deployment/CLOUDFLARE_M
 Latest measured processed retirement: **225 rows**, no stale/missing current
 R2 receipts, and no bulk presentation fields in those projected rows. The raw
 inventory reports **8,677 retained legacy records**, **4,435 records without a
-retained Supabase source object**, and **11,851 extraction versions still needing
+retained Neon PostgreSQL source object**, and **11,851 extraction versions still needing
 catalogued snapshots**. These are database-record counts, not unique file counts.
 Do not claim archive completion or overall quota compliance from these results.
 
@@ -298,4 +300,4 @@ remaining memory-mode, hosted-auth and production-activation boundaries.
 
 ## 2026-10-18: observed charts and C score release
 
-Persistent chart preferences, evidence-gated price history and backend market statistics are implemented. C score v2 uses one bounded Python calculator with sector-specific evidence requirements, nullable missing scores and atomic snapshot persistence. The additive production migration preserved all 19 existing score rows and verified eight nullable score columns. Registry refresh isolates issuer failures. Browser build auditing rejects server credential patterns while retaining expected public identifiers. Validation: 458 backend tests passed (six optional skipped), 120 frontend tests passed, 74 disposable PostgreSQL checks passed; build/type checks, Python and native parity checks are recorded in docs/deployment/OBSERVED_CHARTS_AND_C_SCORE.md. Financial archive backfill and the guarded native rewrite remain incomplete. Render scraper Supabase file credentials were removed and revision 3a2e4a5 was verified live; encrypted matching edge-origin secrets were configured on Worker and backend.
+Persistent chart preferences, evidence-gated price history and backend market statistics are implemented. C score v2 uses one bounded Python calculator with sector-specific evidence requirements, nullable missing scores and atomic snapshot persistence. The additive production migration preserved all 19 existing score rows and verified eight nullable score columns. Registry refresh isolates issuer failures. Browser build auditing rejects server credential patterns while retaining expected public identifiers. Validation: 458 backend tests passed (six optional skipped), 120 frontend tests passed, 74 disposable PostgreSQL checks passed; build/type checks, Python and native parity checks are recorded in docs/deployment/OBSERVED_CHARTS_AND_C_SCORE.md. Financial archive backfill and the guarded native rewrite remain incomplete. Render scraper Neon PostgreSQL file credentials were removed and revision 3a2e4a5 was verified live; encrypted matching edge-origin secrets were configured on Worker and backend.

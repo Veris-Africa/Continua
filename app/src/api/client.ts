@@ -35,16 +35,11 @@ export const AFRIFINANCE_WS_URL =
   (import.meta.env.VITE_AFRIFINANCE_WS_URL as string | undefined) ??
   deriveWebSocketUrl(endpoints.upstream);
 
-// DEV-ONLY key, read from Vite env (see app/.env). This is a first-party key
-// for Continua's OWN backend, not an upstream NSE credential — but it is
-// still visible in shipped browser JS via import.meta.env. That's an
-// accepted tradeoff for local development only.
-//
-// PRODUCTION TODO: replace this constant with a short-lived token fetched
-// from an authenticated endpoint (e.g. a Supabase Edge Function that holds
-// the real Continua Data API key server-side and mints a scoped,
-// per-user, expiring token). Nothing else in this file or its callers needs
-// to change — swap what `getApiKey()` returns.
+// Public development/configuration hint, never a user entitlement or secret.
+// Production uses the owned same-origin Worker boundary and verified short-lived
+// session headers below; the Worker owns upstream admission credentials. The
+// compatibility transport's `supabase` variable is the Continua client, not a
+// Supabase SDK connection. Private authorization remains server-side.
 function getApiKey(): string {
   return (
     (import.meta.env.VITE_CONTINUA_API_KEY as string | undefined) ??

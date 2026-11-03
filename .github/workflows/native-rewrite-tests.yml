@@ -3,12 +3,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend-go/**'
+      - 'api-candidate/**'
       - 'backend/src/**'
       - 'backend/package-lock.json'
       - 'backend/python/**'
-      - 'engine-python/**'
-      - 'scraper-python/**'
+      - 'financial-engine/**'
+      - 'financial-data-collector/**'
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
@@ -22,12 +22,12 @@ on:
       - '.github/workflows/native-rewrite-tests.yml'
   pull_request:
     paths:
-      - 'backend-go/**'
+      - 'api-candidate/**'
       - 'backend/src/**'
       - 'backend/package-lock.json'
       - 'backend/python/**'
-      - 'engine-python/**'
-      - 'scraper-python/**'
+      - 'financial-engine/**'
+      - 'financial-data-collector/**'
       - 'infra/migration/native-*.mjs'
       - 'infra/migration/native-*.py'
       - 'infra/migration/canonical-financial-fixture.mjs'
@@ -68,8 +68,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: backend-go/go.mod
-          cache-dependency-path: backend-go/go.sum
+          go-version-file: api-candidate/go.mod
+          cache-dependency-path: api-candidate/go.sum
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
@@ -77,11 +77,11 @@ jobs:
         with:
           node-version: '24'
       - run: node scraper/scripts/testRenderLight.mjs
-      - run: go -C backend-go mod verify
-      - run: go -C backend-go test ./...
-      - run: go -C backend-go test -race ./...
+      - run: go -C api-candidate mod verify
+      - run: go -C api-candidate test ./...
+      - run: go -C api-candidate test -race ./...
       - name: Real disposable PostgreSQL migration, authentication and atomicity fixture
-        run: go -C backend-go test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
+        run: go -C api-candidate test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
         env:
           NATIVE_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
       - name: Restore a real disposable database backup
@@ -89,16 +89,16 @@ jobs:
         env:
           CONTINUA_DISPOSABLE_FIXTURE: 'true'
           NATIVE_POSTGRES_CONTAINER: ${{ job.services.native-postgres.id }}
-      - run: go -C backend-go vet ./...
+      - run: go -C api-candidate vet ./...
       - run: python -m pip install -r backend/python/requirements.txt
-      - run: python -m unittest discover -s engine-python/tests -v
-      - run: python -m pip install -r scraper-python/requirements-lock.txt
+      - run: python -m unittest discover -s financial-engine/tests -v
+      - run: python -m pip install -r financial-data-collector/requirements-lock.txt
       - run: python -m pip check
       - name: Collector PostgreSQL lease, recovery and artifact persistence fixture
-        run: python -m unittest discover -s scraper-python/tests -p 'test_postgres_collector.py' -v
+        run: python -m unittest discover -s financial-data-collector/tests -p 'test_postgres_collector.py' -v
         env:
           NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL: postgresql://postgres:continua-fixture-only@127.0.0.1:5432/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture
-      - run: python -m unittest discover -s scraper-python/tests -v
+      - run: python -m unittest discover -s financial-data-collector/tests -v
       - run: node --test infra/cloudflare/*.test.mjs
       - run: npm ci --prefix backend
       - name: Payment durability and renewal regression tests (synthetic only)

@@ -35,7 +35,7 @@ def rss(pid):
 def run(request):
     env={key:os.environ[key] for key in ('PATH','SystemRoot','WINDIR') if key in os.environ};env['PYTHONUTF8']='1'
     encoded=json.dumps(request,separators=(',',':')).encode();start=time.monotonic()
-    process=subprocess.Popen([sys.executable,str(ROOT/'engine-python/worker.py'),'--research'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env,**({'creationflags':subprocess.CREATE_NO_WINDOW} if os.name=='nt' else {}))
+    process=subprocess.Popen([sys.executable,str(ROOT/'financial-engine/worker.py'),'--research'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env,**({'creationflags':subprocess.CREATE_NO_WINDOW} if os.name=='nt' else {}))
     result={}
     def collect():
         try:result['output'],result['error']=process.communicate(encoded,timeout=10)

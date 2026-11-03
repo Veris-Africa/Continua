@@ -1,0 +1,1370 @@
+{
+  "baseRevision": "9ab1945a7165a866200717a51f6d3fb34d3cf7f1",
+  "scope": "Tracked plus authorized new source; directories through depth three; ignored dependencies/caches are excluded",
+  "sourceFiles": 2361,
+  "directories": [
+    {
+      "path": ".github",
+      "trackedAndNewSourceFiles": 9,
+      "responsibility": "CI, guarded collection/reconciliation, existing operational schedules and dependency scanning",
+      "status": "deployment-sensitive",
+      "knownConsumers": [
+        "docs/architecture/REPOSITORY_NAMING_CONVENTIONS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": ".github/workflows",
+      "trackedAndNewSourceFiles": 8,
+      "responsibility": "CI, guarded collection/reconciliation, existing operational schedules and dependency scanning",
+      "status": "deployment-sensitive",
+      "knownConsumers": [
+        "docs/architecture/REPOSITORY_NAMING_CONVENTIONS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate",
+      "trackedAndNewSourceFiles": 278,
+      "responsibility": "Native API replacement candidate with guarded startup; not a production cutover",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/cmd",
+      "trackedAndNewSourceFiles": 8,
+      "responsibility": "Native API and operator command entrypoints",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/cmd/continua",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Native API and operator command entrypoints",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/cmd/continua-admin",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Native API and operator command entrypoints",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/cmd/continua-key",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Native API and operator command entrypoints",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/cmd/continua-review",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Native API and operator command entrypoints",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal",
+      "trackedAndNewSourceFiles": 265,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/auth",
+      "trackedAndNewSourceFiles": 4,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/billing",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/cache",
+      "trackedAndNewSourceFiles": 13,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/config",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/diagnostics",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/engine",
+      "trackedAndNewSourceFiles": 25,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/httpapi",
+      "trackedAndNewSourceFiles": 66,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/ingestion",
+      "trackedAndNewSourceFiles": 23,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/jobs",
+      "trackedAndNewSourceFiles": 5,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/maintenance",
+      "trackedAndNewSourceFiles": 11,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/marketdata",
+      "trackedAndNewSourceFiles": 75,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/objectstore",
+      "trackedAndNewSourceFiles": 4,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/publication",
+      "trackedAndNewSourceFiles": 11,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "api-candidate/internal/streaming",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Candidate API/auth/billing/storage/worker domain packages with co-located tests",
+      "status": "candidate",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml",
+        ".github/workflows/codeql.yml",
+        ".github/dependabot.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app",
+      "trackedAndNewSourceFiles": 575,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public",
+      "trackedAndNewSourceFiles": 23,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public/brand",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public/developers",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public/landing",
+      "trackedAndNewSourceFiles": 10,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public/licenses",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/public/reactions",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Public assets and hosting headers/redirect configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src",
+      "trackedAndNewSourceFiles": 466,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/api",
+      "trackedAndNewSourceFiles": 33,
+      "responsibility": "Typed owned data API and transport contracts",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/assets",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/components",
+      "trackedAndNewSourceFiles": 232,
+      "responsibility": "Application UI and financial/social presentation",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/config",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/data",
+      "trackedAndNewSourceFiles": 5,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/hooks",
+      "trackedAndNewSourceFiles": 61,
+      "responsibility": "Account-aware query and UI state hooks",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/integrations",
+      "trackedAndNewSourceFiles": 10,
+      "responsibility": "Owned identity/data transport and retained schema type contracts",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/lib",
+      "trackedAndNewSourceFiles": 80,
+      "responsibility": "Browser domain utilities, cache and evidence transforms",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/pages",
+      "trackedAndNewSourceFiles": 36,
+      "responsibility": "Explicitly routed React screens",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/styles",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/src/utils",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Cloudflare React/Vite application",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/tests",
+      "trackedAndNewSourceFiles": 72,
+      "responsibility": "Synthetic browser/unit/contract tests",
+      "status": "fixture",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "app/tests/fixtures",
+      "trackedAndNewSourceFiles": 7,
+      "responsibility": "Synthetic browser/unit/contract tests",
+      "status": "production",
+      "knownConsumers": [
+        "package.json",
+        "infra/cloudflare/wrangler.jsonc"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend",
+      "trackedAndNewSourceFiles": 694,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/migration",
+      "trackedAndNewSourceFiles": 7,
+      "responsibility": "Market/ingestion migration history; not automatically applied",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/python",
+      "trackedAndNewSourceFiles": 6,
+      "responsibility": "Shipped numerical worker and parity reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/scripts",
+      "trackedAndNewSourceFiles": 46,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src",
+      "trackedAndNewSourceFiles": 494,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/adapters",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/api",
+      "trackedAndNewSourceFiles": 117,
+      "responsibility": "REST routes, middleware and API composition",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/auth",
+      "trackedAndNewSourceFiles": 33,
+      "responsibility": "Managed and compatibility identity/session verification",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/config",
+      "trackedAndNewSourceFiles": 7,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/data",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Owned browser query/RPC and authorization contracts",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/domain",
+      "trackedAndNewSourceFiles": 4,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/ingestion",
+      "trackedAndNewSourceFiles": 64,
+      "responsibility": "Evidence-aware normalization, validation and publication",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/monitoring",
+      "trackedAndNewSourceFiles": 15,
+      "responsibility": "Bounded observability, dependency/pool/query metrics and redaction",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/normalization",
+      "trackedAndNewSourceFiles": 10,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/services",
+      "trackedAndNewSourceFiles": 117,
+      "responsibility": "Financial/research/payment domain services",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/storage",
+      "trackedAndNewSourceFiles": 40,
+      "responsibility": "Bounded PostgreSQL pools/repositories/cache storage",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/streaming",
+      "trackedAndNewSourceFiles": 6,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/types",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Node API/auth/billing/jobs and shipped Python calculations; compatibility reference",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/src/workers",
+      "trackedAndNewSourceFiles": 33,
+      "responsibility": "Existing ingestion/renewal/background worker entrypoints",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/tests",
+      "trackedAndNewSourceFiles": 132,
+      "responsibility": "Synthetic API/auth/payment/concurrency/security regressions",
+      "status": "fixture",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "backend/tests/integration",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Synthetic API/auth/payment/concurrency/security regressions",
+      "status": "production-and-rollback",
+      "knownConsumers": [
+        "render.yaml",
+        "app/src/api/client.ts"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs",
+      "trackedAndNewSourceFiles": 157,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/api",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/architecture",
+      "trackedAndNewSourceFiles": 17,
+      "responsibility": "Service boundaries, language choices, ledgers and naming/move policy",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/data",
+      "trackedAndNewSourceFiles": 8,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/data-model",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/deployment",
+      "trackedAndNewSourceFiles": 29,
+      "responsibility": "Operator and provider deployment runbooks",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/design",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/engineering",
+      "trackedAndNewSourceFiles": 49,
+      "responsibility": "Audit, phase/release/performance/security/test evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/neon-migration",
+      "trackedAndNewSourceFiles": 16,
+      "responsibility": "Historical provider migration and verification records",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/operations",
+      "trackedAndNewSourceFiles": 3,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/quality",
+      "trackedAndNewSourceFiles": 3,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "docs/security",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Architecture, API, deployment, historical migration and engineering evidence",
+      "status": "documentation",
+      "knownConsumers": [
+        "README.md",
+        "AGENTS.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-data-collector",
+      "trackedAndNewSourceFiles": 124,
+      "responsibility": "Finite document/news/market-evidence collection with R2 and database checkpoints; separate guarded HTTP candidate",
+      "status": "configured-actions-runner-and-candidate",
+      "knownConsumers": [
+        ".github/workflows/scheduled-collector.yml",
+        ".github/workflows/cloud-reconciliation.yml",
+        "infra/neon/source-connection.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-data-collector/continua_scraper",
+      "trackedAndNewSourceFiles": 62,
+      "responsibility": "Collector runtime, source policy, budgets, leases, checkpoints, persistence and extraction",
+      "status": "configured-actions-runner-and-candidate",
+      "knownConsumers": [
+        ".github/workflows/scheduled-collector.yml",
+        ".github/workflows/cloud-reconciliation.yml",
+        "infra/neon/source-connection.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-data-collector/tests",
+      "trackedAndNewSourceFiles": 50,
+      "responsibility": "Collector unit, recovery and explicit disposable-PostgreSQL integration tests",
+      "status": "fixture",
+      "knownConsumers": [
+        ".github/workflows/scheduled-collector.yml",
+        ".github/workflows/cloud-reconciliation.yml",
+        "infra/neon/source-connection.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-engine",
+      "trackedAndNewSourceFiles": 84,
+      "responsibility": "Bounded numerical/research worker and evidence-processing package used by the collector",
+      "status": "shared-library-and-candidate-worker",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "financial-data-collector/Dockerfile",
+        ".github/workflows/scheduled-collector.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-engine/continua_engine",
+      "trackedAndNewSourceFiles": 45,
+      "responsibility": "Numerical/research/evidence processing library",
+      "status": "shared-library-and-candidate-worker",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "financial-data-collector/Dockerfile",
+        ".github/workflows/scheduled-collector.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "financial-engine/tests",
+      "trackedAndNewSourceFiles": 36,
+      "responsibility": "Numerical/evidence/validation/compatibility tests",
+      "status": "fixture",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "financial-data-collector/Dockerfile",
+        ".github/workflows/scheduled-collector.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra",
+      "trackedAndNewSourceFiles": 144,
+      "responsibility": "Repository metadata/configuration",
+      "status": "metadata",
+      "knownConsumers": [],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/cloudflare",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Worker identity/media/security/cache entrypoints and static frontend configuration",
+      "status": "production",
+      "knownConsumers": [
+        "package.json"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/deployment",
+      "trackedAndNewSourceFiles": 9,
+      "responsibility": "Read-only release compatibility/revision verification",
+      "status": "operator-and-fixture",
+      "knownConsumers": [
+        ".github/workflows/operational-health.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/migration",
+      "trackedAndNewSourceFiles": 35,
+      "responsibility": "Native/reference/SQL/browser/resource compatibility and recovery fixtures",
+      "status": "fixture-and-operator",
+      "knownConsumers": [
+        ".github/workflows/native-rewrite-tests.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/neon",
+      "trackedAndNewSourceFiles": 55,
+      "responsibility": "Neon migration, privileges, pending SQL, permissions and operator preflight",
+      "status": "operator-and-fixture",
+      "knownConsumers": [
+        "docs/engineering/PHASE4_IMPLEMENTATION.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/neon/security",
+      "trackedAndNewSourceFiles": 8,
+      "responsibility": "Neon migration, privileges, pending SQL, permissions and operator preflight",
+      "status": "operator-and-fixture",
+      "knownConsumers": [
+        "docs/engineering/PHASE4_IMPLEMENTATION.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/performance",
+      "trackedAndNewSourceFiles": 3,
+      "responsibility": "Loopback synthetic browser lab; never deployed or forwarded to providers",
+      "status": "fixture-only",
+      "knownConsumers": [
+        "docs/engineering/PHASE5_PERFORMANCE_BASELINE.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/repository",
+      "trackedAndNewSourceFiles": 5,
+      "responsibility": "Repository metadata/configuration",
+      "status": "metadata",
+      "knownConsumers": [],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "infra/security",
+      "trackedAndNewSourceFiles": 15,
+      "responsibility": "Credential/dependency/route/SQL/restore checks",
+      "status": "fixture-and-release-gate",
+      "knownConsumers": [
+        ".github/workflows/security-checks.yml"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper",
+      "trackedAndNewSourceFiles": 182,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/data",
+      "trackedAndNewSourceFiles": 14,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/data/raw",
+      "trackedAndNewSourceFiles": 14,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/migrations",
+      "trackedAndNewSourceFiles": 6,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/python",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/scripts",
+      "trackedAndNewSourceFiles": 6,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src",
+      "trackedAndNewSourceFiles": 113,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/adapters",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Approved publisher/source discovery and extraction adapters",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/api",
+      "trackedAndNewSourceFiles": 4,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/config",
+      "trackedAndNewSourceFiles": 6,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/crawler",
+      "trackedAndNewSourceFiles": 22,
+      "responsibility": "Bounded fetching, browser routing, robots and discovery policies",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/extraction",
+      "trackedAndNewSourceFiles": 21,
+      "responsibility": "PDF/OCR/HTML/source table extraction",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/monitoring",
+      "trackedAndNewSourceFiles": 7,
+      "responsibility": "Node collection/read adapter, Render service and discovery/extraction oracle",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/scheduler",
+      "trackedAndNewSourceFiles": 5,
+      "responsibility": "Bounded scheduler/Render light-work policies",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/src/storage",
+      "trackedAndNewSourceFiles": 23,
+      "responsibility": "Immutable originals, R2 and compatibility storage contracts",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/tests",
+      "trackedAndNewSourceFiles": 34,
+      "responsibility": "Publisher/storage/recovery fixtures",
+      "status": "fixture",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/tests/extraction",
+      "trackedAndNewSourceFiles": 18,
+      "responsibility": "Publisher/storage/recovery fixtures",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "scraper/tests/storage",
+      "trackedAndNewSourceFiles": 7,
+      "responsibility": "Publisher/storage/recovery fixtures",
+      "status": "production-compatible-and-reference",
+      "knownConsumers": [
+        "render.yaml",
+        "infra/migration/native-source-parity.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase",
+      "trackedAndNewSourceFiles": 98,
+      "responsibility": "Historical SQL, provider-compatible edge interfaces and recovery references",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/.temp",
+      "trackedAndNewSourceFiles": 8,
+      "responsibility": "Historical SQL, provider-compatible edge interfaces and recovery references",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions",
+      "trackedAndNewSourceFiles": 9,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/ai-stock-analysis",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/check-indicator-alerts",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/check-price-alerts",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/delete-account",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/run-price-alerts",
+      "trackedAndNewSourceFiles": 2,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/stock-thesis",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/functions/upgrade-subscription",
+      "trackedAndNewSourceFiles": 1,
+      "responsibility": "Provider-compatible legacy/recovery entrypoints; retain until explicitly retired",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "supabase/migrations",
+      "trackedAndNewSourceFiles": 80,
+      "responsibility": "Historical schema/policy/constraint migration history",
+      "status": "historical-and-compatibility",
+      "knownConsumers": [
+        "api-candidate/Dockerfile",
+        "infra/migration/build-native-ledger.mjs"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "tools",
+      "trackedAndNewSourceFiles": 5,
+      "responsibility": "Read-only service audit and storage-migration operator/test tooling",
+      "status": "operator-and-fixture",
+      "knownConsumers": [
+        "README.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    },
+    {
+      "path": "tools/storage_migration",
+      "trackedAndNewSourceFiles": 4,
+      "responsibility": "Read-only service audit and storage-migration operator/test tooling",
+      "status": "operator-and-fixture",
+      "knownConsumers": [
+        "README.md"
+      ],
+      "decision": "retain unless explicitly mapped or in deletion ledger"
+    }
+  ]
+}

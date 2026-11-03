@@ -5,7 +5,7 @@ import logging
 import os
 import pathlib
 import sys
-sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[2]/"scraper-python"))
+sys.path.insert(0,str(pathlib.Path(__file__).resolve().parents[2]/"financial-data-collector"))
 from continua_scraper.database import Database
 
 async def main():

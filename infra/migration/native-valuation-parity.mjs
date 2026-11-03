@@ -15,7 +15,7 @@ const {financialsRepository}=await import('../../backend/src/storage/repositorie
 const {corporateActionsRepository}=await import('../../backend/src/storage/repositories/corporateActionsRepository.js');
 let count=0;
 function check(operation,args,expected){
- const execution=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url))],{
+ const execution=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../financial-engine/worker.py',import.meta.url))],{
   input:JSON.stringify({operation,args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,
   env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
  assert.equal(execution.status,0,`Native valuation failed: ${operation}`);

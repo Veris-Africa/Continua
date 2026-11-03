@@ -3,7 +3,7 @@
   "asOf": "2026-10-19",
   "scope": "Full native-runtime rewrite; not the already-deployed TS-to-JS migration.",
   "productionCutoverAllowed": false,
-  "nativeCandidate": "backend-go/cmd/continua (loopback only; readiness deliberately 503)",
+  "nativeCandidate": "api-candidate/cmd/continua (loopback only; readiness deliberately 503)",
   "features": [
     {
       "legacyFile": "infra/cloudflare/session.mjs",
@@ -13,14 +13,14 @@
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/render_light.py",
+      "legacyFile": "financial-data-collector/continua_scraper/render_light.py",
       "legacySha256": "0edb9bda33d6881c05808d6255e3edcf6b1e983d7660318d2d4e9c54b63e0b54",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "backend-go/internal/marketdata/registry_refresh.go",
+      "legacyFile": "api-candidate/internal/marketdata/registry_refresh.go",
       "legacySha256": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f",
       "targetLanguage": "Go",
       "status": "partial",
@@ -28,14 +28,14 @@
       "remaining": "Native full-registry durable queue is implemented; SQL and real PostgreSQL lease-preservation fixtures pass. Hosted native scheduler/recovery gates remain outstanding."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/uncatalogued_archive.py",
+      "legacyFile": "financial-data-collector/continua_scraper/uncatalogued_archive.py",
       "legacySha256": "68fbbf12eb83d36f9da0e92c6c2735669611fc9ef8dbfde14ecc9b90d39196c1",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "backend-go/internal/httpapi/statistics.go",
+      "legacyFile": "api-candidate/internal/httpapi/statistics.go",
       "legacySha256": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c",
       "targetLanguage": "Go",
       "status": "partial",
@@ -43,14 +43,14 @@
       "remaining": "Native candidate statistics handler is implemented and its validation/cache/error fixtures pass; hosted native and final release gates remain outstanding."
     },
     {
-      "legacyFile": "engine-python/continua_engine/market_statistics.py",
+      "legacyFile": "financial-engine/continua_engine/market_statistics.py",
       "legacySha256": "65ab6a6b9d5456f238a4fdb409d0295ab740a34c56650e5707cbc98c205306d9",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/legacy_cleanup.py",
+      "legacyFile": "financial-data-collector/continua_scraper/legacy_cleanup.py",
       "legacySha256": "1ceda2f17f3d53e0712df09cf657639c96674d5d28e5d4a029a4ada4bcb6ef37",
       "targetLanguage": "Python",
       "status": "retained",
@@ -76,7 +76,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/market_statistics.py",
+      "replacement": "financial-engine/continua_engine/market_statistics.py",
       "validation": "216 full-response compatibility comparisons cover missing/mock/future quotes, zero volume, filing availability/currency, invalid shares, sparse/gapped/conflicting closes and observed OHLC ranges. No fabricated values."
     },
     {
@@ -126,21 +126,21 @@
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
-      "legacyFile": "scraper-python/migrate_media.py",
+      "legacyFile": "financial-data-collector/migrate_media.py",
       "legacySha256": "f0179a4ece5732f3747156e3eb2e0e5de2aa1547cb72fef2c35e4e44c99e2bed",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/archive.py",
+      "legacyFile": "financial-data-collector/continua_scraper/archive.py",
       "legacySha256": "3585e431faed2a295645038461b565563800877948c0454c3c719af4deea290e",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/processed_archive.py",
+      "legacyFile": "financial-data-collector/continua_scraper/processed_archive.py",
       "legacySha256": "398fe4a9d3af340e5c48279ea6322db3d79d0a177bad588b4ce78fa932486966",
       "targetLanguage": "Python",
       "status": "retained",
@@ -155,14 +155,14 @@
       "remaining": "Native private Go R2 reader passes owned prepared-object read/cache/issuer-identity verification plus bounded concurrency, corruption, decompression and body/slot cleanup fixtures. Full reader/permission/hosted resource release gates remain outstanding."
     },
     {
-      "legacyFile": "scraper-python/reconcile_cloud.py",
+      "legacyFile": "financial-data-collector/reconcile_cloud.py",
       "legacySha256": "f31003b3e83471dea6843c68e5cb7d45232ca6ef46e892c94f0847e9e7380d44",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "backend-go/internal/cache/rate.go",
+      "legacyFile": "api-candidate/internal/cache/rate.go",
       "legacySha256": "a7050107f0436b7f23ad8110cab7a181b523bd8fa692067d44c6ac3f39e65e83",
       "targetLanguage": "Go",
       "status": "partial",
@@ -177,21 +177,21 @@
       "rationale": "Retain authoritative SQL or provider-compatible entrypoint."
     },
     {
-      "legacyFile": "engine-python/continua_engine/company_context.py",
+      "legacyFile": "financial-engine/continua_engine/company_context.py",
       "legacySha256": "8ff6702878120817928706824614e05c5c65f9eef6bab4622eb43b0854f2a562",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "engine-python/continua_engine/publisher_context.py",
+      "legacyFile": "financial-engine/continua_engine/publisher_context.py",
       "legacySha256": "c7244fa97b6b2851e3775f1ee143c2b867c7271155a1d945dbc4875f3ea2b365",
       "targetLanguage": "Python",
       "status": "retained",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required."
     },
     {
-      "legacyFile": "scraper-python/scheduled_collect.py",
+      "legacyFile": "financial-data-collector/scheduled_collect.py",
       "legacySha256": "ee8903c5f6e166d0fc0a5e5d9d32ef5c611e814c0fd0dce181988c0a42960030",
       "targetLanguage": "Python",
       "status": "retained",
@@ -205,7 +205,7 @@
       "rationale": "Legacy development-only build/inventory/oracle/sandbox or one-off evidence verification reference. Not included or executed in either native container. Native Go/Python commands and tests replace production execution; retaining a comparison fixture is not a Node production dependency."
     },
     {
-      "legacyFile": "engine-python/continua_engine/collected.py",
+      "legacyFile": "financial-engine/continua_engine/collected.py",
       "legacySha256": "559c25a6c4bb6a3283fd1e1b4d59a0d1b07c594bdc3cf5e19f45fc9a16dd2f3d",
       "targetLanguage": "Python",
       "status": "retained",
@@ -220,7 +220,7 @@
       "remaining": "Native Go extraction leases, single-body reads, savepoints and immutable audit, Python registered-template plans, candidate scheduler, cache-invalidation/recompute callback and transactional versioned research-refresh outbox are implemented. Outbox claims release row locks before issuer computation, use lease/version CAS and retain failed retries. Fixtures pass. Apply/verify the new SQL migration, full admin-route, real concurrent/restart/resource and hosted checks before cutover."
     },
     {
-      "legacyFile": "scraper-python/continua_scraper/browser_controls.py",
+      "legacyFile": "financial-data-collector/continua_scraper/browser_controls.py",
       "legacySha256": "41f0c6c7375c9d8d2a8cffea27b509bf709b2a4ad29ac10159e3be241249228f",
       "targetLanguage": "Python",
       "status": "retained",
@@ -296,8 +296,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/internal/maintenance/workflows.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/internal/maintenance/workflows.go"
+      "remaining": "Explicit native operator replacement in api-candidate/internal/maintenance/workflows.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/internal/maintenance/workflows.go"
     },
     {
       "legacyFile": "backend/scripts/applyNativePaymentsMigration.js",
@@ -321,8 +321,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/internal/maintenance/workflows.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/internal/maintenance/workflows.go"
+      "remaining": "Explicit native operator replacement in api-candidate/internal/maintenance/workflows.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/internal/maintenance/workflows.go"
     },
     {
       "legacyFile": "backend/scripts/auditHistoryCoverage.js",
@@ -369,8 +369,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/diagnoseIndexFreshness.js",
@@ -386,8 +386,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-admin/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-admin/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-admin/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-admin/main.go"
     },
     {
       "legacyFile": "backend/scripts/diagnosePublisherCollection.js",
@@ -403,8 +403,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in engine-python/engine_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "engine-python/engine_cli.py"
+      "remaining": "Explicit native operator replacement in financial-engine/engine_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-engine/engine_cli.py"
     },
     {
       "legacyFile": "backend/scripts/draftFinancialStatementCandidate.js",
@@ -412,8 +412,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/enableLicensedNse.js",
@@ -421,8 +421,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in scraper-python/continua_scraper/source_operations.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/continua_scraper/source_operations.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/continua_scraper/source_operations.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/continua_scraper/source_operations.py"
     },
     {
       "legacyFile": "backend/scripts/exportMigrationInventory.js",
@@ -437,7 +437,7 @@
       "targetLanguage": "Go",
       "status": "ported",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "replacement": "backend-go/cmd/continua-key/main.go",
+      "replacement": "api-candidate/cmd/continua-key/main.go",
       "validation": "Native --create-name operator workflow has offline-plan/no-secret/default-no-mutation and invalid/configuration tests. Explicit create uses the real-PostgreSQL-tested hash-only function and one-time operator output; no existing keys changed."
     },
     {
@@ -446,8 +446,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/internal/maintenance/inspection.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/internal/maintenance/inspection.go"
+      "remaining": "Explicit native operator replacement in api-candidate/internal/maintenance/inspection.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/internal/maintenance/inspection.go"
     },
     {
       "legacyFile": "backend/scripts/importHistoricalPrices.js",
@@ -471,8 +471,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in scraper-python/continua_scraper/inspection.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/continua_scraper/inspection.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/continua_scraper/inspection.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/continua_scraper/inspection.py"
     },
     {
       "legacyFile": "backend/scripts/inspectFilingPublication.js",
@@ -480,8 +480,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/internal/maintenance/inspection.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/internal/maintenance/inspection.go"
+      "remaining": "Explicit native operator replacement in api-candidate/internal/maintenance/inspection.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/internal/maintenance/inspection.go"
     },
     {
       "legacyFile": "backend/scripts/listFinancialStatementCandidates.js",
@@ -489,8 +489,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/publishReviewedFiling.js",
@@ -506,8 +506,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in scraper-python/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/scraper_cli.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/scraper_cli.py"
     },
     {
       "legacyFile": "backend/scripts/rejectFinancialStatementCandidate.js",
@@ -515,8 +515,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/removenewssource.js",
@@ -532,8 +532,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/internal/publication/repair.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/internal/publication/repair.go"
+      "remaining": "Explicit native operator replacement in api-candidate/internal/publication/repair.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/internal/publication/repair.go"
     },
     {
       "legacyFile": "backend/scripts/revalidateNews.js",
@@ -541,8 +541,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-admin/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-admin/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-admin/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-admin/main.go"
     },
     {
       "legacyFile": "backend/scripts/revokeApiKey.js",
@@ -550,7 +550,7 @@
       "targetLanguage": "Go",
       "status": "ported",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "replacement": "backend-go/cmd/continua-key/main.go",
+      "replacement": "api-candidate/cmd/continua-key/main.go",
       "validation": "Native --revoke-id requires an exact UUID and explicit --apply; invalid/ambiguous/unconfigured command tests and real PostgreSQL revocation/new-instance rejection pass. Short cache semantics preserved."
     },
     {
@@ -559,8 +559,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/runAutomaticDocumentPublication.js",
@@ -568,8 +568,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/runFinancialCandidatesBridgeOnce.js",
@@ -577,8 +577,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/runNewsBridgeOnce.js",
@@ -586,8 +586,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Explicit native operator replacement in backend-go/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "backend-go/cmd/continua-review/main.go"
+      "remaining": "Explicit native operator replacement in api-candidate/cmd/continua-review/main.go. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "api-candidate/cmd/continua-review/main.go"
     },
     {
       "legacyFile": "backend/scripts/serveNativeCheckoutSandbox.js",
@@ -648,7 +648,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Registered publisher/SQL issuer discovery replaces the static fallback list; no source prices or listing dates are invented. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/ingestion/source_sync.go"
+      "replacement": "api-candidate/internal/ingestion/source_sync.go"
     },
     {
       "legacyFile": "backend/src/adapters/nse/nseAdapter.js",
@@ -665,7 +665,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native private collector transport selects rights-checked MyStocks/AFX observed inputs. Synthetic legacy market fixtures are not exposed as a production feed. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "scraper-python/continua_scraper/market_source.py"
+      "replacement": "financial-data-collector/continua_scraper/market_source.py"
     },
     {
       "legacyFile": "backend/src/adapters/nse/nseIndices.js",
@@ -719,8 +719,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/actions.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/actions.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/actions.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/actions.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/backtest.controller.js",
@@ -736,8 +736,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_extras.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_extras.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_extras.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_extras.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/corporateActions.controller.js",
@@ -745,8 +745,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/actions.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/actions.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/actions.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/actions.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/financials.controller.js",
@@ -754,8 +754,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/health.controller.js",
@@ -763,8 +763,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/pipeline_health.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/pipeline_health.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/pipeline_health.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/pipeline_health.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/historical.controller.js",
@@ -772,8 +772,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/indicators.controller.js",
@@ -781,8 +781,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/indicators.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/indicators.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/indicators.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/indicators.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/instruments.controller.js",
@@ -790,8 +790,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/movers.controller.js",
@@ -799,8 +799,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_extras.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_extras.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_extras.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_extras.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/news.controller.js",
@@ -808,8 +808,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/news.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/news.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/news.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/news.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/quotes.controller.js",
@@ -817,8 +817,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/research.controller.js",
@@ -826,8 +826,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/research.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/research.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/research.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/research.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/screener.controller.js",
@@ -843,8 +843,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/valuation.controller.js",
@@ -852,8 +852,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/valuation.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/valuation.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/valuation.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/valuation.go"
     },
     {
       "legacyFile": "backend/src/api/controllers/volumeProfile.controller.js",
@@ -869,8 +869,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/server.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/server.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/middleware/apiKeyAuth.js",
@@ -886,8 +886,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/request_runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/request_runtime.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/request_runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/request_runtime.go"
     },
     {
       "legacyFile": "backend/src/api/middleware/preAuthenticationRateLimit.js",
@@ -895,8 +895,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/rate_config.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/rate_config.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/rate_config.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/rate_config.go"
     },
     {
       "legacyFile": "backend/src/api/middleware/rateLimit.js",
@@ -904,8 +904,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/rate_config.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/rate_config.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/rate_config.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/rate_config.go"
     },
     {
       "legacyFile": "backend/src/api/middleware/requestLogger.js",
@@ -913,8 +913,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/request_runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/request_runtime.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/request_runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/request_runtime.go"
     },
     {
       "legacyFile": "backend/src/api/middleware/requireAdminKey.js",
@@ -938,8 +938,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/api/routes/admin.routes.js",
@@ -948,7 +948,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native candidate admin/announcement implementation and security/atomic-review fixtures exist. Single-column confirmation deliberately requires the same explicit units/page/column review as history; unsafe unbalanced legacy publication is not retained. Owned DB, caller integration, restart and hosted validation remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/announcements.routes.js",
@@ -957,7 +957,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/backtest.routes.js",
@@ -966,7 +966,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native candidate calculation/API/streaming exists with isolated fixtures and 29 historical-research/draft oracle comparisons. Missing OHLCV remains unavailable; no real trading or synthetic volume added. WebSockets require authenticated nonempty matching subscriptions, reject credential URLs, bound fanout/slow clients and suppress exact duplicate payloads. Collector-to-event integration, owned/hosted comparisons and resource/restart gates remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/billing.routes.js",
@@ -975,7 +975,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go account HTTP handlers and signed raw-body webhook exist; middleware delegate tests pass. Candidate startup intentionally does not activate billing/webhooks/renewals until configuration and end-to-end validation pass.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/companies.routes.js",
@@ -984,7 +984,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/corporateActions.routes.js",
@@ -993,7 +993,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "All six native Go routes exist behind API authentication, including literal upcoming/recent calendar paths, covered-security checks, safe bounded limits and null-preserving responses. API fixtures pass; legacy error-query goldens and hosted tests remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/engine.routes.js",
@@ -1002,7 +1002,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go full/basic company research handlers preserve subscriber guards, symbol checks and basic response filtering. Loopback candidate wires native company providers and observer; no background publication/payment starts. Full account/provider/schema, owned/hosted release checks remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/engineNotebook.routes.js",
@@ -1011,7 +1011,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go authenticated persistence/API and Python numerical validation/calculation are implemented. Owner-locked forecast creation/revision/resolution, calibration, market snapshots, six advanced research models and source-linked workbench reads have local fixtures; notebook has 23 reference comparisons and advanced/market models 17 including maximum bootstrap bounds. Owned DB concurrency, full caller/error, restart/resource and hosted checks remain pending; no production activation.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/engineWorkbench.routes.js",
@@ -1020,7 +1020,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go owner-scoped portfolio snapshots/consistent cash-flow reads, bounded history/dividend/company collection, peers, assistant, usage and pipeline-health routes are wired. Python workspace assembly/stress/calculated evidence and 16 answer comparisons pass; 86 Engine tests pass on Windows/Linux. Large portfolio IPC resource fixture passes under 512MB. Owned-database full workspace/API goldens, concurrency/recovery and hosted gates remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/financials.routes.js",
@@ -1029,7 +1029,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/health.routes.js",
@@ -1038,7 +1038,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/historical.routes.js",
@@ -1047,7 +1047,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/index.js",
@@ -1056,7 +1056,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/indicators.routes.js",
@@ -1065,7 +1065,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go indicator route validates type, optional periods, date and duplicate parameters before storage/calculation, with exact daily basis and missing-history 404. Full query golden coverage and owned/hosted tests remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/indices.routes.js",
@@ -1074,7 +1074,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/instruments.routes.js",
@@ -1083,7 +1083,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/marketResearch.routes.js",
@@ -1092,7 +1092,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go authenticated persistence/API and Python numerical validation/calculation are implemented. Owner-locked forecast creation/revision/resolution, calibration, market snapshots, six advanced research models and source-linked workbench reads have local fixtures; notebook has 23 reference comparisons and advanced/market models 17 including maximum bootstrap bounds. Owned DB concurrency, full caller/error, restart/resource and hosted checks remain pending; no production activation.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/movers.routes.js",
@@ -1101,7 +1101,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/news.routes.js",
@@ -1110,7 +1110,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "All three native news routes preserve API authentication, categories including top, source-only readers, symbol/item checks, bounded limits, missing 404 and transient failures. Fixture tests pass; complete owned/hosted comparisons remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/quotes.routes.js",
@@ -1119,7 +1119,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/research.routes.js",
@@ -1128,7 +1128,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/screener.routes.js",
@@ -1137,7 +1137,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native candidate calculation/API/streaming exists with isolated fixtures and 29 historical-research/draft oracle comparisons. Missing OHLCV remains unavailable; no real trading or synthetic volume added. WebSockets require authenticated nonempty matching subscriptions, reject credential URLs, bound fanout/slow clients and suppress exact duplicate payloads. Collector-to-event integration, owned/hosted comparisons and resource/restart gates remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/sectors.routes.js",
@@ -1146,7 +1146,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/valuation.routes.js",
@@ -1155,7 +1155,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/volumeProfile.routes.js",
@@ -1164,7 +1164,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native candidate calculation/API/streaming exists with isolated fixtures and 29 historical-research/draft oracle comparisons. Missing OHLCV remains unavailable; no real trading or synthetic volume added. WebSockets require authenticated nonempty matching subscriptions, reject credential URLs, bound fanout/slow clients and suppress exact duplicate payloads. Collector-to-event integration, owned/hosted comparisons and resource/restart gates remain pending.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/server.js",
@@ -1172,8 +1172,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/server.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/server.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/validators/querySchemas.js",
@@ -1181,8 +1181,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/httpapi/market_reads.go"
+      "remaining": "Native implementation is present in api-candidate/internal/httpapi/market_reads.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/httpapi/market_reads.go"
     },
     {
       "legacyFile": "backend/src/config/env.js",
@@ -1190,8 +1190,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/config/environment.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/config/environment.go"
+      "remaining": "Native implementation is present in api-candidate/internal/config/environment.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/config/environment.go"
     },
     {
       "legacyFile": "backend/src/config/index.js",
@@ -1199,8 +1199,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/config/environment.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/config/environment.go"
+      "remaining": "Native implementation is present in api-candidate/internal/config/environment.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/config/environment.go"
     },
     {
       "legacyFile": "backend/src/config/tradingCalendar.js",
@@ -1216,7 +1216,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/news.py",
+      "replacement": "financial-engine/continua_engine/news.py",
       "validation": "479-case reference suite includes linked business activity, financial consequences, off-topic incident exclusion and source-prose filtering."
     },
     {
@@ -1225,7 +1225,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/news.py",
+      "replacement": "financial-engine/continua_engine/news.py",
       "validation": "479-case reference suite includes article cleaning and URL/headline duplicate receipts without unioning obsolete issuer tags."
     },
     {
@@ -1234,8 +1234,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/cmd/continua/main.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/cmd/continua/main.go"
+      "remaining": "Native implementation is present in api-candidate/cmd/continua/main.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/cmd/continua/main.go"
     },
     {
       "legacyFile": "backend/src/ingestion/collectors/corporateActionsCollector.js",
@@ -1244,7 +1244,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native adapter/registry and bounded source synchronization retain per-source available action capabilities. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/ingestion/nse_adapter.go"
+      "replacement": "api-candidate/internal/ingestion/nse_adapter.go"
     },
     {
       "legacyFile": "backend/src/ingestion/collectors/fundamentalsCollector.js",
@@ -1284,7 +1284,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/news.py",
+      "replacement": "financial-engine/continua_engine/news.py",
       "validation": "491-case Engine reference suite includes 12 category score/tie/no-keyword comparisons; literal keyword priority preserved."
     },
     {
@@ -1294,7 +1294,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Conservative exact/unique normalized company resolution is called by the native candidate bridge. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "engine-python/continua_engine/publication.py"
+      "replacement": "financial-engine/continua_engine/publication.py"
     },
     {
       "legacyFile": "backend/src/ingestion/entityResolution/resolveStockMentions.js",
@@ -1303,7 +1303,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native issuer-evidence matching and bounded Go directory caching preserve conservative source relationships. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "engine-python/continua_engine/news.py"
+      "replacement": "financial-engine/continua_engine/news.py"
     },
     {
       "legacyFile": "backend/src/ingestion/financialsDraft.js",
@@ -1319,7 +1319,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/cbk.py",
+      "replacement": "financial-engine/continua_engine/cbk.py",
       "validation": "38-case registered-report reference suite includes accepted (not market) auction yields, ISIN, maturity/date columns and corruption rejection."
     },
     {
@@ -1328,7 +1328,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/safaricom.py",
+      "replacement": "financial-engine/continua_engine/safaricom.py",
       "validation": "38-case registered-report reference suite includes source-page/date/units/group columns and rejection of corrupted/reversed/mixed/unreconciled financials."
     },
     {
@@ -1345,7 +1345,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/publisher.py",
+      "replacement": "financial-engine/continua_engine/publisher.py",
       "validation": "177-case native parity suite including exact legal suffix and masthead boundaries"
     },
     {
@@ -1354,7 +1354,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/registered_reports.py",
+      "replacement": "financial-engine/continua_engine/registered_reports.py",
       "validation": "38-case registered-report reference suite includes gross assets/liabilities reconstruction, cash, unscaled EPS and corruption rejection."
     },
     {
@@ -1363,7 +1363,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/registered_reports.py",
+      "replacement": "financial-engine/continua_engine/registered_reports.py",
       "validation": "38-case registered-report reference suite includes exact five-year column order, signed losses, unscaled EPS, numeric-cell guards and conservative availability."
     },
     {
@@ -1372,7 +1372,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/registered_reports.py",
+      "replacement": "financial-engine/continua_engine/registered_reports.py",
       "validation": "38-case registered-report reference suite includes final-two consolidated columns, source page, approval date and accounting reconciliation."
     },
     {
@@ -1389,7 +1389,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/reports.py",
+      "replacement": "financial-engine/continua_engine/reports.py",
       "validation": "Generic annual report source comparison and strict issuer/scope/date/unit/year/EPS/accounting rejection unit fixtures pass."
     },
     {
@@ -1398,7 +1398,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/safaricom.py",
+      "replacement": "financial-engine/continua_engine/safaricom.py",
       "validation": "38-case registered-report reference suite includes billion-unit comparative fields and conservative observed availability without invented EPS/CFO."
     },
     {
@@ -1432,7 +1432,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native durable bridge preserves candidate uniqueness, confirmed rows, per-table identity and audit boundaries. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/publication/candidates.go"
+      "replacement": "api-candidate/internal/publication/candidates.go"
     },
     {
       "legacyFile": "backend/src/ingestion/pipelines/fundamentalsIngestionPipeline.js",
@@ -1480,7 +1480,7 @@
       "targetLanguage": "Go",
       "status": "ported",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "replacement": "backend-go/internal/ingestion/retry.go",
+      "replacement": "api-candidate/internal/ingestion/retry.go",
       "validation": "Native Go bounded retry preserves default three attempts, 300/600ms backoff and permanent 401/403/404/429 handling. Tests cover wrapped provider errors, exhaustion, success, cancellation and fail-before-call policy budgets. Provider exception text is not logged; callback cancellation remains explicit."
     },
     {
@@ -1490,7 +1490,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native typed quote/candle/action/financial/security validation and Python literal feed normalization replace runtime schemas. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/actions_validate.go"
+      "replacement": "api-candidate/internal/marketdata/actions_validate.go"
     },
     {
       "legacyFile": "backend/src/ingestion/validators/validate.js",
@@ -1499,7 +1499,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native pipelines validate before SQL, record bounded source failures and retain missing values. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/ingestion/source_sync.go"
+      "replacement": "api-candidate/internal/ingestion/source_sync.go"
     },
     {
       "legacyFile": "backend/src/monitoring/dataQuality.js",
@@ -1508,7 +1508,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native freshness diagnostics and quote/candle ingestion validation retain stale/future and duplicate checks. Per-read warning equivalence remains to verify. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/health.go"
+      "replacement": "api-candidate/internal/marketdata/health.go"
     },
     {
       "legacyFile": "backend/src/monitoring/healthCheck.js",
@@ -1524,8 +1524,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/cmd/continua/main.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/cmd/continua/main.go"
+      "remaining": "Native implementation is present in api-candidate/cmd/continua/main.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/cmd/continua/main.go"
     },
     {
       "legacyFile": "backend/src/monitoring/runtimeDiagnostics.js",
@@ -1533,8 +1533,8 @@
       "targetLanguage": "Go",
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "remaining": "Native implementation is present in backend-go/internal/diagnostics/runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "backend-go/internal/diagnostics/runtime.go"
+      "remaining": "Native implementation is present in api-candidate/internal/diagnostics/runtime.go. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "api-candidate/internal/diagnostics/runtime.go"
     },
     {
       "legacyFile": "backend/src/normalization/companies/normalizeCompany.js",
@@ -1582,7 +1582,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/candles.py",
+      "replacement": "financial-engine/continua_engine/candles.py",
       "validation": "177-case numerical/schema parity suite plus 28 owned-database read comparisons; all supported calendar intervals"
     },
     {
@@ -1592,7 +1592,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native verified API-key authentication uses bounded scrypt and constant-time comparison. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/auth/auth.go"
+      "replacement": "api-candidate/internal/auth/auth.go"
     },
     {
       "legacyFile": "backend/src/services/marketData/historicalService.js",
@@ -1625,7 +1625,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native parameterized quote reads bypass symbol-set caches; committed ingestion invalidates research and streaming output. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/services/paystackCommon.js",
@@ -1659,7 +1659,7 @@
       "legacyReferenceRetired": "Unused runtime module removed after import audit; historical feature and native release gates preserved",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native AdjustmentsSince and ShareAdjustmentFactor preserve split/bonus/dividend selection and reject invalid source ratios. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/actions.go"
+      "replacement": "api-candidate/internal/marketdata/actions.go"
     },
     {
       "legacyFile": "backend/src/services/research/advancedResearch.js",
@@ -1675,7 +1675,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/research_components.py",
+      "replacement": "financial-engine/continua_engine/research_components.py",
       "validation": "414-case reference suite includes descending/ascending anchors, clamping, neutral missing-input compatibility, sparse weights and growth boundaries."
     },
     {
@@ -1685,7 +1685,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native cancellable optional enrichment preserves ordered nullable results and shared concurrency/byte budgets. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/engine/bounded_research.go"
+      "replacement": "api-candidate/internal/engine/bounded_research.go"
     },
     {
       "legacyFile": "backend/src/services/research/calculatedAnswer.js",
@@ -1693,7 +1693,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/calculated_answer.py",
+      "replacement": "financial-engine/continua_engine/calculated_answer.py",
       "validation": "16 original deterministic-answer reference comparisons and citation/order/missing-field unit tests pass. No provider requests, invented calculations or source IDs."
     },
     {
@@ -1702,7 +1702,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/research_components.py",
+      "replacement": "financial-engine/continua_engine/research_components.py",
       "validation": "414-case reference suite includes unknown checks, nonconsecutive history, zero/negative figures and raw source evidence."
     },
     {
@@ -1711,7 +1711,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/dividends.py",
+      "replacement": "financial-engine/continua_engine/dividends.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1721,7 +1721,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native deterministic earnings sensitivity preserves validated user assumptions and unavailable source inputs. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "engine-python/continua_engine/labs.py"
+      "replacement": "financial-engine/continua_engine/labs.py"
     },
     {
       "legacyFile": "backend/src/services/research/engineAnalytics.js",
@@ -1729,7 +1729,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/analytics.py",
+      "replacement": "financial-engine/continua_engine/analytics.py",
       "validation": "414-case reference suite includes annual diagnostics, quality, scenarios, exact wire snapshot hashes and source-state/ownership/news change detection."
     },
     {
@@ -1746,7 +1746,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/briefing.py",
+      "replacement": "financial-engine/continua_engine/briefing.py",
       "validation": "347-case native reference suite includes consecutive-year, missing/zero, negative earnings and explicit decimal tie rounding."
     },
     {
@@ -1764,7 +1764,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native shared bundle/read/publication cache generations and invalidation replace legacy cache keys. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/engine/bundle.go"
+      "replacement": "api-candidate/internal/engine/bundle.go"
     },
     {
       "legacyFile": "backend/src/services/research/engineLabSchemas.js",
@@ -1773,7 +1773,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native advanced/lab/stress schema validation rejects unknown/nonfinite/invalid inputs before calculations. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "engine-python/continua_engine/advanced.py"
+      "replacement": "financial-engine/continua_engine/advanced.py"
     },
     {
       "legacyFile": "backend/src/services/research/engineMonitoring.js",
@@ -1781,7 +1781,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/monitoring.py",
+      "replacement": "financial-engine/continua_engine/monitoring.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1790,7 +1790,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/portfolio.py",
+      "replacement": "financial-engine/continua_engine/portfolio.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1799,7 +1799,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/risk.py",
+      "replacement": "financial-engine/continua_engine/risk.py",
       "validation": "Native observed-return risk, covariance attribution and gap exclusion pass the expanded reference suite; no fabricated rates, prices or actual-account returns."
     },
     {
@@ -1808,7 +1808,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/preferences.py",
+      "replacement": "financial-engine/continua_engine/preferences.py",
       "validation": "177-case schema/opt-in calculation parity suite; native Go owner-scoped persistence and HTTP tests"
     },
     {
@@ -1825,7 +1825,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/briefing.py",
+      "replacement": "financial-engine/continua_engine/briefing.py",
       "validation": "347-case native reference suite includes indicator boundaries, missing observations, timestamp preservation and non-recommendation wording."
     },
     {
@@ -1866,7 +1866,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/research_components.py",
+      "replacement": "financial-engine/continua_engine/research_components.py",
       "validation": "414-case reference suite includes extractive negation preservation, headline/excerpt fallback, relevance ranking, HTML and UTF-16 limits."
     },
     {
@@ -1875,7 +1875,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/news.py",
+      "replacement": "financial-engine/continua_engine/news.py",
       "validation": "479-case reference suite preserves topic priority, unavailable links and explicit non-directional relevance wording."
     },
     {
@@ -1884,7 +1884,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/news.py",
+      "replacement": "financial-engine/continua_engine/news.py",
       "validation": "479-case reference suite excludes price rails/related links, generic words, erroneous Safaricom tickers and market-wide NSE mentions; retains direct brand/issuer evidence."
     },
     {
@@ -1910,7 +1910,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native secret-free bounded Go/Python IPC replaces Node process orchestration. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/engine/worker.go"
+      "replacement": "api-candidate/internal/engine/worker.go"
     },
     {
       "legacyFile": "backend/src/services/research/ratiosEngine.js",
@@ -1918,7 +1918,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/ratios.py",
+      "replacement": "financial-engine/continua_engine/ratios.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1927,7 +1927,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/reported.py",
+      "replacement": "financial-engine/continua_engine/reported.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1936,7 +1936,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/readiness.py",
+      "replacement": "financial-engine/continua_engine/readiness.py",
       "validation": "414-case reference suite includes evidence snapshot SHA, dated/missing/zero provenance, sparse/duplicate annual history, stale/mock quotes and readiness capabilities."
     },
     {
@@ -1977,7 +1977,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/indicators.py",
+      "replacement": "financial-engine/continua_engine/indicators.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -1994,7 +1994,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "engine-python/continua_engine/valuation.py",
+      "replacement": "financial-engine/continua_engine/valuation.py",
       "validation": "127-case native Python parity suite"
     },
     {
@@ -2004,7 +2004,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native stored-evidence valuation inputs and Python historical calculation retain available-at-date denominators. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/engine/native_inputs.go"
+      "replacement": "api-candidate/internal/engine/native_inputs.go"
     },
     {
       "legacyFile": "backend/src/services/technical/valuationService.js",
@@ -2037,7 +2037,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native SQL date rendering preserves explicit civil dates rather than implicit driver timezone conversions. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/financials.go"
+      "replacement": "api-candidate/internal/marketdata/financials.go"
     },
     {
       "legacyFile": "backend/src/storage/db.js",
@@ -2046,7 +2046,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native bounded pgx/database/sql pool uses transaction-pool-compatible protocol and verified remote TLS. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/store.go"
+      "replacement": "api-candidate/internal/marketdata/store.go"
     },
     {
       "legacyFile": "backend/src/storage/repositories/apiKeyRepository.js",
@@ -2054,7 +2054,7 @@
       "targetLanguage": "Go",
       "status": "ported",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
-      "replacement": "backend-go/internal/maintenance/keys.go",
+      "replacement": "api-candidate/internal/maintenance/keys.go",
       "validation": "Native Go lookup/touch, legacy-compatible scrypt hashing, OS-random hash-only creation and exact-ID revocation pass SQL-driver fixtures and a real dedicated PostgreSQL create/lookup/auth/revoke test. Existing short auth-cache behavior is preserved; no user/admin/Premium rights added."
     },
     {
@@ -2112,7 +2112,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native reviewed candidate reads, rejection and atomic publication replace the legacy repository. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/marketdata/admin.go"
+      "replacement": "api-candidate/internal/marketdata/admin.go"
     },
     {
       "legacyFile": "backend/src/storage/repositories/indicesRepository.js",
@@ -2272,7 +2272,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native index job reads dated publisher evidence outside market hours and uses bounded scheduler coordination. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/cmd/continua/publication.go"
+      "replacement": "api-candidate/cmd/continua/publication.go"
     },
     {
       "legacyFile": "backend/src/workers/newsWorker.js",
@@ -2289,7 +2289,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native rights-checked R2 publication receipts, monotonic quote writes and committed-event fanout replace price polling publication. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/ingestion/quote_pipeline.go"
+      "replacement": "api-candidate/internal/ingestion/quote_pipeline.go"
     },
     {
       "legacyFile": "backend/src/workers/scheduler.js",
@@ -2298,7 +2298,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native serial bounded scheduler coalesces triggers with explicit UTC cron and cancellation. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/internal/jobs/runner.go"
+      "replacement": "api-candidate/internal/jobs/runner.go"
     },
     {
       "legacyFile": "backend/src/workers/serialBootstrap.js",
@@ -2307,7 +2307,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native serial job registration and startup dependency checks replace Node bootstrap orchestration. Native implementation coverage is recorded separately from final behavioral, hosted and resource release validation.",
-      "replacement": "backend-go/cmd/continua/publication.go"
+      "replacement": "api-candidate/cmd/continua/publication.go"
     },
     {
       "legacyFile": "scraper/python/pdf_extract.py",
@@ -2322,8 +2322,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Explicit native operator replacement in scraper-python/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/scraper_cli.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/scraper_cli.py"
     },
     {
       "legacyFile": "scraper/scripts/backfillKenyanStocks.js",
@@ -2331,8 +2331,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Explicit native operator replacement in scraper-python/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/scraper_cli.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/scraper_cli.py"
     },
     {
       "legacyFile": "scraper/scripts/build.mjs",
@@ -2347,8 +2347,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Explicit native operator replacement in scraper-python/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/scraper_cli.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/scraper_cli.py"
     },
     {
       "legacyFile": "scraper/scripts/seedSource.js",
@@ -2356,8 +2356,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Explicit native operator replacement in scraper-python/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
-      "replacement": "scraper-python/scraper_cli.py"
+      "remaining": "Explicit native operator replacement in financial-data-collector/scraper_cli.py. Mutation requires an explicit apply action; private originals stay in R2, source/issuer evidence is preserved, and diagnostic operations are read-only. Command mapping and final behavior validation remain required; no operator command was executed during implementation.",
+      "replacement": "financial-data-collector/scraper_cli.py"
     },
     {
       "legacyFile": "scraper/src/adapters/afx/afxAdapter.js",
@@ -2366,7 +2366,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/afx.py"
+      "replacement": "financial-data-collector/continua_scraper/afx.py"
     },
     {
       "legacyFile": "scraper/src/adapters/kenyanstocks/archiveLinks.js",
@@ -2375,7 +2375,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/adapters/kenyanstocks/kenyanstocksAdapter.js",
@@ -2384,7 +2384,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python source-scoped browser and durable tab collector exist. Actual fresh Chromium/ChromeDriver 155 tests now pass all five COOP financial categories and the 2015 historical window (2940 rows), retaining source TLS/robots/sandbox boundaries and verifying selected category/DOM settlement. Intercepted controls are scrolled clear; package-safe dependency imports and shared page-wide transfer budgets have fixtures. All-issuer coverage, immutable R2/SQL end-to-end publication, Linux Chromium/OCR, restart and combined 512MB resource tests remain required; no production activation.",
-      "replacement": "scraper-python/continua_scraper/kenyanstocks.py"
+      "replacement": "financial-data-collector/continua_scraper/kenyanstocks.py"
     },
     {
       "legacyFile": "scraper/src/adapters/kenyanstocks/stockTables.js",
@@ -2393,7 +2393,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/tables.py"
+      "replacement": "financial-data-collector/continua_scraper/tables.py"
     },
     {
       "legacyFile": "scraper/src/adapters/kenyanstocks/tabPlan.js",
@@ -2410,7 +2410,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/nse.py"
+      "replacement": "financial-data-collector/continua_scraper/nse.py"
     },
     {
       "legacyFile": "scraper/src/adapters/nse/archiveDiscovery.js",
@@ -2419,7 +2419,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/adapters/registry.js",
@@ -2428,7 +2428,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/registry.py"
+      "replacement": "financial-data-collector/continua_scraper/registry.py"
     },
     {
       "legacyFile": "scraper/src/adapters/rss/createRssFeedAdapter.js",
@@ -2437,7 +2437,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/rss.py"
+      "replacement": "financial-data-collector/continua_scraper/rss.py"
     },
     {
       "legacyFile": "scraper/src/adapters/runAdapter.js",
@@ -2446,7 +2446,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/runner.py"
+      "replacement": "financial-data-collector/continua_scraper/runner.py"
     },
     {
       "legacyFile": "scraper/src/adapters/types.js",
@@ -2462,7 +2462,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/api.py"
+      "replacement": "financial-data-collector/continua_scraper/api.py"
     },
     {
       "legacyFile": "scraper/src/api/server.js",
@@ -2471,7 +2471,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/api.py"
+      "replacement": "financial-data-collector/continua_scraper/api.py"
     },
     {
       "legacyFile": "scraper/src/config/defaultSources.js",
@@ -2480,7 +2480,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/default_sources.json"
+      "replacement": "financial-data-collector/continua_scraper/default_sources.json"
     },
     {
       "legacyFile": "scraper/src/config/env.js",
@@ -2488,8 +2488,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native implementation is present in scraper-python/continua_scraper/config.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "scraper-python/continua_scraper/config.py"
+      "remaining": "Native implementation is present in financial-data-collector/continua_scraper/config.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "financial-data-collector/continua_scraper/config.py"
     },
     {
       "legacyFile": "scraper/src/config/index.js",
@@ -2497,8 +2497,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native implementation is present in scraper-python/continua_scraper/config.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "scraper-python/continua_scraper/config.py"
+      "remaining": "Native implementation is present in financial-data-collector/continua_scraper/config.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "financial-data-collector/continua_scraper/config.py"
     },
     {
       "legacyFile": "scraper/src/crawler/crawlSource.js",
@@ -2507,7 +2507,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/crawler.py"
+      "replacement": "financial-data-collector/continua_scraper/crawler.py"
     },
     {
       "legacyFile": "scraper/src/crawler/discoveryPolicy.js",
@@ -2516,7 +2516,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/crawler/hash.js",
@@ -2524,8 +2524,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native implementation is present in scraper-python/continua_scraper/hashing.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "scraper-python/continua_scraper/hashing.py"
+      "remaining": "Native implementation is present in financial-data-collector/continua_scraper/hashing.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "financial-data-collector/continua_scraper/hashing.py"
     },
     {
       "legacyFile": "scraper/src/crawler/htmlExtract.js",
@@ -2534,7 +2534,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/crawler/httpClient.js",
@@ -2543,7 +2543,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/download.py"
+      "replacement": "financial-data-collector/continua_scraper/download.py"
     },
     {
       "legacyFile": "scraper/src/crawler/rateLimiter.js",
@@ -2552,7 +2552,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/download.py"
+      "replacement": "financial-data-collector/continua_scraper/download.py"
     },
     {
       "legacyFile": "scraper/src/crawler/renderWithBrowser.js",
@@ -2561,7 +2561,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python source-scoped browser and durable tab collector exist. Actual fresh Chromium/ChromeDriver 155 tests now pass all five COOP financial categories and the 2015 historical window (2940 rows), retaining source TLS/robots/sandbox boundaries and verifying selected category/DOM settlement. Intercepted controls are scrolled clear; package-safe dependency imports and shared page-wide transfer budgets have fixtures. All-issuer coverage, immutable R2/SQL end-to-end publication, Linux Chromium/OCR, restart and combined 512MB resource tests remain required; no production activation.",
-      "replacement": "scraper-python/continua_scraper/browser.py"
+      "replacement": "financial-data-collector/continua_scraper/browser.py"
     },
     {
       "legacyFile": "scraper/src/crawler/retry.js",
@@ -2569,8 +2569,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native implementation is present in scraper-python/continua_scraper/retry.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "scraper-python/continua_scraper/retry.py"
+      "remaining": "Native implementation is present in financial-data-collector/continua_scraper/retry.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "financial-data-collector/continua_scraper/retry.py"
     },
     {
       "legacyFile": "scraper/src/crawler/robotsCheck.js",
@@ -2579,7 +2579,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/download.py"
+      "replacement": "financial-data-collector/continua_scraper/download.py"
     },
     {
       "legacyFile": "scraper/src/crawler/urlNormalize.js",
@@ -2588,7 +2588,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/crawler/urlSafety.js",
@@ -2605,7 +2605,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/extraction/extractByContentType.js",
@@ -2614,7 +2614,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/extraction.py"
+      "replacement": "financial-data-collector/continua_scraper/extraction.py"
     },
     {
       "legacyFile": "scraper/src/extraction/extractionSweep.js",
@@ -2623,7 +2623,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/extraction.py"
+      "replacement": "financial-data-collector/continua_scraper/extraction.py"
     },
     {
       "legacyFile": "scraper/src/extraction/htmlFinancialTables.js",
@@ -2632,7 +2632,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/tables.py"
+      "replacement": "financial-data-collector/continua_scraper/tables.py"
     },
     {
       "legacyFile": "scraper/src/extraction/nseIndexSummary.js",
@@ -2641,7 +2641,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/html.py"
+      "replacement": "financial-data-collector/continua_scraper/html.py"
     },
     {
       "legacyFile": "scraper/src/extraction/ocrText.js",
@@ -2650,7 +2650,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/pdf.py"
+      "replacement": "financial-data-collector/continua_scraper/pdf.py"
     },
     {
       "legacyFile": "scraper/src/extraction/pdfText.js",
@@ -2659,7 +2659,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/pdf.py"
+      "replacement": "financial-data-collector/continua_scraper/pdf.py"
     },
     {
       "legacyFile": "scraper/src/extraction/reprocessArtifact.js",
@@ -2668,7 +2668,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/extraction.py"
+      "replacement": "financial-data-collector/continua_scraper/extraction.py"
     },
     {
       "legacyFile": "scraper/src/extraction/serialWorkQueue.js",
@@ -2685,7 +2685,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/tables.py"
+      "replacement": "financial-data-collector/continua_scraper/tables.py"
     },
     {
       "legacyFile": "scraper/src/index.js",
@@ -2694,7 +2694,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/main.py"
+      "replacement": "financial-data-collector/main.py"
     },
     {
       "legacyFile": "scraper/src/monitoring/crawlStatus.js",
@@ -2703,7 +2703,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/diagnostics.py"
+      "replacement": "financial-data-collector/continua_scraper/diagnostics.py"
     },
     {
       "legacyFile": "scraper/src/monitoring/healthCheck.js",
@@ -2712,7 +2712,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/diagnostics.py"
+      "replacement": "financial-data-collector/continua_scraper/diagnostics.py"
     },
     {
       "legacyFile": "scraper/src/monitoring/logger.js",
@@ -2720,8 +2720,8 @@
       "targetLanguage": "Python",
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "remaining": "Native implementation is present in scraper-python/continua_scraper/diagnostics.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
-      "replacement": "scraper-python/continua_scraper/diagnostics.py"
+      "remaining": "Native implementation is present in financial-data-collector/continua_scraper/diagnostics.py. Preserve the final route/security/configuration differential, restart and resource gates; new implementation-only changes have not yet been validated. No production cutover.",
+      "replacement": "financial-data-collector/continua_scraper/diagnostics.py"
     },
     {
       "legacyFile": "scraper/src/monitoring/memoryDiagnostics.js",
@@ -2730,7 +2730,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/diagnostics.py"
+      "replacement": "financial-data-collector/continua_scraper/diagnostics.py"
     },
     {
       "legacyFile": "scraper/src/scheduler/newsSchedule.js",
@@ -2739,7 +2739,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/scheduler.py"
+      "replacement": "financial-data-collector/continua_scraper/scheduler.py"
     },
     {
       "legacyFile": "scraper/src/scheduler/scheduler.js",
@@ -2748,7 +2748,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/scheduler.py"
+      "replacement": "financial-data-collector/continua_scraper/scheduler.py"
     },
     {
       "legacyFile": "scraper/src/storage/archiveCheckpointsRepository.js",
@@ -2757,7 +2757,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/archive_checkpoints.py"
+      "replacement": "financial-data-collector/continua_scraper/archive_checkpoints.py"
     },
     {
       "legacyFile": "scraper/src/storage/crawlStateRepository.js",
@@ -2782,7 +2782,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/dead_letters.py"
+      "replacement": "financial-data-collector/continua_scraper/dead_letters.py"
     },
     {
       "legacyFile": "scraper/src/storage/documentJobsRepository.js",
@@ -2831,7 +2831,7 @@
       "status": "partial",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
       "remaining": "Native Python candidate replacement implemented with source/queue/process/API fixture coverage and 52 pure parser reference comparisons. Actual Chromium/OCR, owned-cloud integration, concurrent restart and Render-equivalent memory/recovery release checks remain pending. No production activation.",
-      "replacement": "scraper-python/continua_scraper/storage.py"
+      "replacement": "financial-data-collector/continua_scraper/storage.py"
     },
     {
       "legacyFile": "scraper/src/storage/sourcesRepository.js",
@@ -3401,7 +3401,7 @@
       "status": "partial",
       "rationale": "Native bounded HTTP/database/security/job runtime; no Node forwarding.",
       "remaining": "Native Go route dispatch, owner/entitlement checks, body/query validation and request middleware are implemented. Explicit route/mount resolution and final differential/security validation remain release requirements.",
-      "replacement": "backend-go/internal/httpapi/server.go"
+      "replacement": "api-candidate/internal/httpapi/server.go"
     },
     {
       "legacyFile": "backend/src/api/routes/statistics.routes.js",
@@ -3448,7 +3448,7 @@
       "targetLanguage": "Python",
       "status": "ported",
       "rationale": "Evidence/numerical/document tooling and asynchronous collection; bounded work required.",
-      "replacement": "scraper-python/continua_scraper/storage.py",
+      "replacement": "financial-data-collector/continua_scraper/storage.py",
       "validation": "Native storage tests enforce R2-only writes even when legacy credentials are present, reject non-R2 production/local fallback and preserve bounded read-only migration access. Full collector suite passes."
     },
     {

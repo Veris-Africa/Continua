@@ -8,7 +8,7 @@ import {normalizeIncomeStatement,normalizeCashFlow,checkBalanceSheetIntegrity} f
 import {normalizeCompany,normalizeSecurity,canonicalizeSector} from '../../backend/src/normalization/companies/normalizeCompany.js';
 let count=0;
 function check(operation,args,expected){
- const p=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url))],{input:JSON.stringify({operation,args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
+ const p=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../financial-engine/worker.py',import.meta.url))],{input:JSON.stringify({operation,args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
  assert.equal(p.status,0,operation);assert.deepEqual(JSON.parse(p.stdout),JSON.parse(JSON.stringify(expected)));count++;
 }
 const security={Symbol:'KCB',ISIN:'KE0000000067',CompanyName:'KCB Group PLC',Sector:' Banking ',TradingStatus:'ACTIVE',ListingDate:'1990-01-01'};

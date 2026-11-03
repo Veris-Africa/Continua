@@ -80,7 +80,7 @@ try {
  check((await db.query('SELECT count(*)::integer AS n FROM market.investment_simulations WHERE user_id=$1 AND id=$2',['22222222-2222-4222-8222-222222222222',privateID])).rows[0].n,0);
  const capture=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import asyncio,json,sys
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.investment import publish_investment_evidence
 class DB:
  def __init__(self):self.calls=[]
@@ -98,7 +98,7 @@ db=DB();asyncio.run(publish_investment_evidence(db));print(json.dumps(db.calls))
  const historyCapture=spawnSync(process.env.NATIVE_PYTHON_BIN||(process.platform==='win32'?'python':'python3'),['-c',`
 import asyncio,json,sys
 from datetime import datetime,timezone
-sys.path.insert(0,'scraper-python')
+sys.path.insert(0,'financial-data-collector')
 from continua_scraper.investment import _publish_artifact
 class DB:
  def __init__(self):self.calls=[]

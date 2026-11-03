@@ -1,6 +1,6 @@
 /** Native publisher parser comparisons. No network, database or provider calls. */
 import {spawnSync} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
+import {componentPath} from '../repository/component-paths.mjs';
 process.env.NODE_ENV='test';
 process.env.DATABASE_URL='postgresql://fixture:fixture@127.0.0.1:1/fixture';
 const {afxProfileFacts,afxCloseCandidates}=await import('../../scraper/src/adapters/afx/afxAdapter.js');
@@ -38,7 +38,7 @@ add('kenyan_file_links','<div class="file-content"><h3>Annual report</h3><link i
 const table='<table><tr><th>Metric</th><th>2025</th><th>2024</th></tr><tr class="group-header-row"><td>Group</td></tr><tr><td>Revenue</td><td>KES 100 B</td><td>KES 90 B</td></tr><tr><td>Total net income</td><td>20 B</td><td>19 B</td></tr></table>';
 add('stock_tables',table,'Financials','Profit/Loss');add('stock_tables','<table><tr><th>Date</th><th>Open</th><th>Low</th><th>High</th><th>Close</th><th>Volume</th></tr><tr><td>12/10/26</td><td>36.6</td><td>36.5</td><td>37</td><td>36.6</td><td>126.28K</td></tr></table>','Historical Data',null);
 add('html_financial_tables','<table><caption>Reported</caption><tr><th>Metric</th><th>2025</th><th>2024</th></tr><tr><td>Revenue</td><td>100</td><td>90</td></tr><tr><td>Net profit</td><td>20</td><td>(10)</td></tr></table>');
-const root=fileURLToPath(new URL('../../scraper-python/',import.meta.url));
+const root=componentPath('collector');
 const program="import json,sys;sys.path.insert(0,sys.argv[1]);from continua_scraper import html,tables;ops={name:getattr(module,name) for module in (html,tables) for name in dir(module) if not name.startswith('_') and callable(getattr(module,name))};r=json.load(sys.stdin);print(json.dumps(ops[r['operation']](*r['args']),allow_nan=False,ensure_ascii=True))";
 function compare(a,b,where){if(typeof a==='number'&&typeof b==='number'){if(Math.abs(a-b)>1e-8*Math.max(1,Math.abs(a)))throw Error('Numeric mismatch '+where);return;}if(a===null||b===null||typeof a!=='object'||typeof b!=='object'){if(a!==b)throw Error('Value mismatch '+where);return;}if(JSON.stringify(Object.keys(a).sort())!==JSON.stringify(Object.keys(b).sort()))throw Error('Shape mismatch '+where);for(const k of Object.keys(a))compare(a[k],b[k],where+'.'+k);}
 for(const item of cases){const expected=JSON.parse(JSON.stringify(operations[item.operation](...item.args)));const run=spawnSync(process.env.NATIVE_SCRAPER_PYTHON_BIN??'python3',['-c',program,root],{input:JSON.stringify(item),encoding:'utf8',timeout:10000,maxBuffer:4194304,env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});if(run.status!==0)throw Error('Native source parser failed '+item.operation);compare(expected,JSON.parse(run.stdout),item.operation);}

@@ -20,7 +20,7 @@
       ]
     },
     {
-      "file": "scraper-python/reconcile_cloud.py",
+      "file": "financial-data-collector/reconcile_cloud.py",
       "category": "Neon bandwidth incident remediation and result-volume observability",
       "language": "Existing Python collector, JavaScript compatibility API, React TypeScript frontend and PostgreSQL JSON projections",
       "runtime": "Existing GitHub Actions, Render, Cloudflare and optional existing Upstash; no new production runtime or paid service",
@@ -286,7 +286,7 @@
       ]
     },
     {
-      "file": "scraper-python/continua_scraper/render_light.py",
+      "file": "financial-data-collector/continua_scraper/render_light.py",
       "category": "Free-instance native index-only workload role",
       "language": "Python",
       "runtime": "Existing collector, asyncio scheduler and PostgreSQL slot receipt",
@@ -297,7 +297,7 @@
       ]
     },
     {
-      "file": "backend-go/internal/marketdata/registry_refresh.go",
+      "file": "api-candidate/internal/marketdata/registry_refresh.go",
       "category": "Automatic live-registry C score refresh",
       "language": "Go",
       "runtime": "Existing native serial job runner and PostgreSQL outbox",
@@ -308,7 +308,7 @@
       ]
     },
     {
-      "file": "scraper-python/continua_scraper/uncatalogued_archive.py",
+      "file": "financial-data-collector/continua_scraper/uncatalogued_archive.py",
       "category": "Preservation of uncatalogued legacy raw files",
       "language": "Python",
       "runtime": "Existing finite migration worker and private R2 client",
@@ -319,7 +319,7 @@
       ]
     },
     {
-      "file": "backend-go/internal/httpapi/statistics.go",
+      "file": "api-candidate/internal/httpapi/statistics.go",
       "category": "Native statistics API and evidence reads",
       "language": "Go",
       "runtime": "Existing native backend and bounded Python worker",
@@ -330,7 +330,7 @@
       ]
     },
     {
-      "file": "engine-python/continua_engine/market_statistics.py",
+      "file": "financial-engine/continua_engine/market_statistics.py",
       "category": "Observed market statistics native calculation",
       "language": "Python",
       "runtime": "Existing bounded Engine subprocess",
@@ -341,7 +341,7 @@
       ]
     },
     {
-      "file": "scraper-python/continua_scraper/legacy_cleanup.py",
+      "file": "financial-data-collector/continua_scraper/legacy_cleanup.py",
       "category": "Verified legacy duplicate retirement",
       "language": "Python",
       "runtime": "Existing finite collector, private R2 and owned Supabase Storage API",
@@ -464,7 +464,7 @@
       ]
     },
     {
-      "file": "scraper-python/migrate_media.py",
+      "file": "financial-data-collector/migrate_media.py",
       "category": "Cloudflare profile and community media storage",
       "language": "JavaScript at the existing Cloudflare platform entrypoint; Python for bounded migration",
       "runtime": "Existing Worker with an isolated media R2 binding",
@@ -476,7 +476,7 @@
       ]
     },
     {
-      "file": "scraper-python/continua_scraper/archive.py",
+      "file": "financial-data-collector/continua_scraper/archive.py",
       "category": "Per-version verified extraction receipts",
       "language": "Python and PostgreSQL",
       "runtime": "Existing finite migration worker",
@@ -488,7 +488,7 @@
       ]
     },
     {
-      "file": "scraper-python/continua_scraper/processed_archive.py",
+      "file": "financial-data-collector/continua_scraper/processed_archive.py",
       "category": "Verified processed-payload retirement and atomic context publication",
       "language": "Python with SQL transaction guarantees; Go and compatibility API guards",
       "runtime": "Existing finite collector process, no new service",
@@ -511,7 +511,7 @@
       ]
     },
     {
-      "file": "scraper-python/reconcile_cloud.py",
+      "file": "financial-data-collector/reconcile_cloud.py",
       "category": "Full-registry automatic processing and separate private processed objects",
       "language": "Python and SQL checkpoint guarantees",
       "runtime": "Finite existing collector runtime; no additional always-on service",
@@ -523,7 +523,7 @@
       ]
     },
     {
-      "file": "backend-go/internal/cache/rate.go",
+      "file": "api-candidate/internal/cache/rate.go",
       "category": "Distributed request protection and private coverage operations",
       "language": "Go, Redis Lua and existing Python operational CLI",
       "runtime": "Existing bounded Redis/Upstash connections and native API; compatibility public-request limiter repair",
@@ -548,7 +548,7 @@
       ]
     },
     {
-      "file": "engine-python/continua_engine/company_context.py",
+      "file": "financial-engine/continua_engine/company_context.py",
       "category": "Automatic matching-year cross-statement research assembly and durable chart reads",
       "language": "Python decimal and SQL; existing Go and compatibility JavaScript API readers",
       "runtime": "Existing bounded post-collection Engine; no additional service",
@@ -559,7 +559,7 @@
       ]
     },
     {
-      "file": "engine-python/continua_engine/publisher_context.py",
+      "file": "financial-engine/continua_engine/publisher_context.py",
       "category": "All-stock publisher research field and ownership projection",
       "language": "Python and SQL; existing React frontend consumers",
       "runtime": "Existing bounded automatic post-collection Engine",
@@ -570,7 +570,7 @@
       ]
     },
     {
-      "file": "scraper-python/scheduled_collect.py",
+      "file": "financial-data-collector/scheduled_collect.py",
       "category": "Fresh issuer financials and automatic delivery receipts",
       "language": "Python and SQL",
       "runtime": "Existing bounded Actions collector and Engine package",
@@ -592,7 +592,7 @@
       "classificationBasis": "Cleanup tooling only; no new backend TypeScript implementation or production runtime migration"
     },
     {
-      "file": "engine-python/continua_engine/collected.py",
+      "file": "financial-engine/continua_engine/collected.py",
       "category": "All-tab observation processing and document layout triage",
       "language": "Python and SQL",
       "runtime": "Bounded existing GitHub Actions collector; existing API readers with native Go counterpart",
@@ -617,7 +617,7 @@
       "classificationBasis": "Reliability repair, no new TypeScript runtime, paid service or production native cutover"
     },
     {
-      "file": "scraper-python/continua_scraper/browser_controls.py",
+      "file": "financial-data-collector/continua_scraper/browser_controls.py",
       "category": "KenyanStocks dynamic content coverage",
       "language": "Python",
       "runtime": "Existing isolated Selenium worker in bounded GitHub Actions",
@@ -5359,11 +5359,11 @@
     "featureDecisions": [
       {
         "features": [
-          "backend-go/internal/publication/reviewed.go",
-          "backend-go/internal/marketdata/history_import.go",
-          "backend-go/internal/marketdata/research_import.go",
-          "backend-go/internal/maintenance/inspection.go",
-          "scraper-python/continua_scraper/source_operations.py"
+          "api-candidate/internal/publication/reviewed.go",
+          "api-candidate/internal/marketdata/history_import.go",
+          "api-candidate/internal/marketdata/research_import.go",
+          "api-candidate/internal/maintenance/inspection.go",
+          "financial-data-collector/continua_scraper/source_operations.py"
         ],
         "language": "Go for reviewed transactional imports and bounded SQL diagnostics; Python for scraper source policy operations",
         "runtime": "Existing native operator commands only; no Node runtime, paid provider or startup mutation",
@@ -5376,8 +5376,8 @@
       },
       {
         "features": [
-          "backend-go/Dockerfile",
-          "scraper-python/Dockerfile"
+          "api-candidate/Dockerfile",
+          "financial-data-collector/Dockerfile"
         ],
         "language": "Native Go binary plus Python Engine; Python collector and system Chromium/Poppler/Tesseract",
         "runtime": "Separate candidate images, not activated production blueprints",
@@ -5389,8 +5389,8 @@
       },
       {
         "features": [
-          "backend-go/internal/maintenance/behavior.go",
-          "backend-go/internal/maintenance/workflows.go"
+          "api-candidate/internal/maintenance/behavior.go",
+          "api-candidate/internal/maintenance/workflows.go"
         ],
         "language": "Go and retained SQL",
         "runtime": "Explicit native operator CLI; no startup or background fixture writes",
@@ -5403,9 +5403,9 @@
       },
       {
         "features": [
-          "backend-go/internal/marketdata/observed_closes.go",
-          "backend-go/internal/ingestion/close_publication.go",
-          "backend-go/internal/httpapi/close_history.go"
+          "api-candidate/internal/marketdata/observed_closes.go",
+          "api-candidate/internal/ingestion/close_publication.go",
+          "api-candidate/internal/httpapi/close_history.go"
         ],
         "language": "Go canonical publication/API and retained PostgreSQL constraints; Python source extraction",
         "runtime": "Existing backend/collector and private R2 evidence, no new paid service",
@@ -5418,12 +5418,12 @@
       },
       {
         "features": [
-          "backend-go/internal/ingestion/nse_adapter.go",
-          "backend-go/internal/ingestion/source_sync.go",
-          "backend-go/internal/ingestion/corporate_pipeline.go",
-          "backend-go/internal/ingestion/fundamentals_pipeline.go",
-          "backend-go/internal/ingestion/candle_pipeline.go",
-          "backend-go/internal/ingestion/index_pipeline.go"
+          "api-candidate/internal/ingestion/nse_adapter.go",
+          "api-candidate/internal/ingestion/source_sync.go",
+          "api-candidate/internal/ingestion/corporate_pipeline.go",
+          "api-candidate/internal/ingestion/fundamentals_pipeline.go",
+          "api-candidate/internal/ingestion/candle_pipeline.go",
+          "api-candidate/internal/ingestion/index_pipeline.go"
         ],
         "language": "Go persistence/transport coordination and Python source/numerical mapping",
         "runtime": "Existing native backend and secret-free bounded Python worker",
@@ -5437,8 +5437,8 @@
       },
       {
         "features": [
-          "backend-go/internal/ingestion/quote_pipeline.go",
-          "backend-go/cmd/continua/publication.go"
+          "api-candidate/internal/ingestion/quote_pipeline.go",
+          "api-candidate/cmd/continua/publication.go"
         ],
         "language": "Go",
         "runtime": "Existing bounded native publication job; no new service",
@@ -5450,8 +5450,8 @@
       },
       {
         "features": [
-          "backend-go/internal/ingestion/retry.go",
-          "backend-go/internal/ingestion/collectors.go"
+          "api-candidate/internal/ingestion/retry.go",
+          "api-candidate/internal/ingestion/collectors.go"
         ],
         "language": "Go",
         "runtime": "Existing native backend, two provider calls maximum; no additional runtime",
@@ -5463,8 +5463,8 @@
       },
       {
         "features": [
-          "backend-go/internal/maintenance/keys.go",
-          "backend-go/cmd/continua-key/main.go"
+          "api-candidate/internal/maintenance/keys.go",
+          "api-candidate/cmd/continua-key/main.go"
         ],
         "language": "Go",
         "runtime": "Standalone native operator command and existing Go authentication runtime",
@@ -5476,8 +5476,8 @@
       },
       {
         "features": [
-          "backend-go/internal/maintenance/migration.go",
-          "backend-go/cmd/continua-admin/main.go"
+          "api-candidate/internal/maintenance/migration.go",
+          "api-candidate/cmd/continua-admin/main.go"
         ],
         "language": "Go orchestration and retained SQL",
         "runtime": "Standalone native operator command; no persistent service",
@@ -5489,8 +5489,8 @@
       },
       {
         "features": [
-          "engine-python/continua_engine/feed_mapping.py",
-          "backend-go/internal/marketdata/quotes_write.go"
+          "financial-engine/continua_engine/feed_mapping.py",
+          "api-candidate/internal/marketdata/quotes_write.go"
         ],
         "language": "Python literal feed extraction/mapping; Go canonical validation, batch persistence and committed-event delivery",
         "runtime": "Existing native Engine/collector and backend; no additional service",
@@ -5503,12 +5503,12 @@
       },
       {
         "features": [
-          "engine-python/continua_engine/notebook.py",
-          "engine-python/continua_engine/advanced.py",
-          "engine-python/continua_engine/factor_research.py",
-          "engine-python/continua_engine/market_intelligence.py",
-          "backend-go/internal/engine/notebook.go",
-          "backend-go/internal/marketdata/market_research.go"
+          "financial-engine/continua_engine/notebook.py",
+          "financial-engine/continua_engine/advanced.py",
+          "financial-engine/continua_engine/factor_research.py",
+          "financial-engine/continua_engine/market_intelligence.py",
+          "api-candidate/internal/engine/notebook.go",
+          "api-candidate/internal/marketdata/market_research.go"
         ],
         "language": "Python bounded validation/numerical research; Go owner-verified HTTP and transactional SQL",
         "runtime": "Existing native services, serial bounded advanced worker; no extra paid provider",
@@ -5522,7 +5522,7 @@
       },
       {
         "features": [
-          "backend-go/internal/streaming/hub.go"
+          "api-candidate/internal/streaming/hub.go"
         ],
         "language": "Go",
         "runtime": "Existing backend; pinned coder/websocket v1.8.15",
@@ -5534,9 +5534,9 @@
       },
       {
         "features": [
-          "engine-python/continua_engine/execution.py",
-          "backend-go/internal/httpapi/technical_research.go",
-          "backend-go/internal/marketdata/screening.go"
+          "financial-engine/continua_engine/execution.py",
+          "api-candidate/internal/httpapi/technical_research.go",
+          "api-candidate/internal/marketdata/screening.go"
         ],
         "language": "Python deterministic historical math; Go verified HTTP and parameterized screening SQL",
         "runtime": "Existing bounded Engine worker and Go backend",
@@ -5549,9 +5549,9 @@
       },
       {
         "features": [
-          "backend-go/internal/httpapi/admin.go",
-          "backend-go/internal/marketdata/admin.go",
-          "engine-python/continua_engine/filing_draft.py"
+          "api-candidate/internal/httpapi/admin.go",
+          "api-candidate/internal/marketdata/admin.go",
+          "financial-engine/continua_engine/filing_draft.py"
         ],
         "language": "Go access/persistence; Python review-only drafts",
         "runtime": "Existing native backend and bounded Engine worker",
@@ -5580,9 +5580,9 @@
       },
       {
         "features": [
-          "backend-go/internal/httpapi/public_transfer.go",
-          "scraper-python/continua_scraper/storage.py",
-          "scraper-python/continua_scraper/archive.py",
+          "api-candidate/internal/httpapi/public_transfer.go",
+          "financial-data-collector/continua_scraper/storage.py",
+          "financial-data-collector/continua_scraper/archive.py",
           "infra/cloudflare/worker.mjs"
         ],
         "language": "Go backend / Python collector / provider-native JavaScript edge",
@@ -5728,7 +5728,7 @@
   ],
   "nativeComponentDecisions": [
     {
-      "file": "backend-go/internal/objectstore",
+      "file": "api-candidate/internal/objectstore",
       "category": "Private Cloudflare prepared-object readers",
       "language": "Go for native readers; JavaScript compatibility adapter during existing production cutover gates",
       "runtime": "Existing API processes with bounded immutable-object caches and provider SDK clients",
@@ -5773,6 +5773,19 @@
         "https://react.dev/reference/react/Suspense",
         "https://tanstack.com/query/latest/docs/framework/react/guides/prefetching",
         "https://web.dev/articles/vitals"
+      ]
+    },
+    {
+      "file": "infra/repository",
+      "category": "Phase 6 responsibility-based repository organization",
+      "language": "Retain existing Go, Python, Node JavaScript, React TypeScript and SQL; JavaScript tooling only",
+      "runtime": "No service or language changes",
+      "reason": "Rename component roots by verified responsibility while retaining Go module identity, Python package imports, production Render roots, SQL history and guarded native startup. Shared path metadata and checks use existing Node tooling without a dependency or new runtime.",
+      "references": [
+        "https://go.dev/doc/modules/managing-source",
+        "https://docs.python.org/3/tutorial/modules.html",
+        "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+        "https://docs.docker.com/build/concepts/context/"
       ]
     }
   ]

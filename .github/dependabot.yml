@@ -6,11 +6,11 @@ updates:
     open-pull-requests-limit: 3
     commit-message: {prefix: "chore(deps)"}
   - package-ecosystem: gomod
-    directory: /backend-go
+    directory: /api-candidate
     schedule: {interval: weekly}
     open-pull-requests-limit: 2
   - package-ecosystem: pip
-    directory: /scraper-python
+    directory: /financial-data-collector
     schedule: {interval: weekly}
     open-pull-requests-limit: 2
   - package-ecosystem: github-actions

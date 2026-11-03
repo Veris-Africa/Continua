@@ -5,8 +5,8 @@ import json
 from contextlib import asynccontextmanager
 from datetime import datetime,timezone
 ROOT=pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT/'scraper-python'))
-sys.path.insert(0,str(ROOT/'engine-python'))
+sys.path.insert(0,str(ROOT/'financial-data-collector'))
+sys.path.insert(0,str(ROOT/'financial-engine'))
 from continua_scraper.research_processing import ResearchProcessor
 from continua_scraper.research_processing import reparse_archived_views
 from continua_scraper import transfer_budget

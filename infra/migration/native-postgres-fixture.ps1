@@ -1,11 +1,14 @@
 # Disposable development fixture only. Never reads DATABASE_URL or existing DBs.
 param(
-    [string]$DockerPath = 'C:/Users/cypri/AppData/Local/Programs/DockerDesktop/resources/bin/docker.exe'
+    [string]$DockerPath = 'docker',
+    [string]$GoPath = 'go',
+    [string]$PythonPath = 'python'
 )
 $ErrorActionPreference = 'Stop'
 $nativeRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
-$nativeGo = Join-Path $nativeRoot '.qa-artifacts/toolchains/go/bin/go.exe'
-if (-not (Test-Path -LiteralPath $nativeGo)) { throw 'Local Go toolchain missing' }
+$DockerPath = (Get-Command -Name $DockerPath -CommandType Application -ErrorAction Stop).Source
+$nativeGo = (Get-Command -Name $GoPath -CommandType Application -ErrorAction Stop).Source
+$nativePython = (Get-Command -Name $PythonPath -CommandType Application -ErrorAction Stop).Source
 $nativeID = ''
 $nativeName = 'continua-native-pg-fixture-' + [guid]::NewGuid().ToString('N')
 $nativePreviousURL = $env:NATIVE_POSTGRES_FIXTURE_URL
@@ -34,10 +37,10 @@ try {
     $env:NATIVE_POSTGRES_FIXTURE_URL = "postgresql://postgres:continua-fixture-only@127.0.0.1:$nativePort/continua_native_fixture?sslmode=disable&application_name=continua-native-fixture"
     $env:GOCACHE = Join-Path $nativeRoot '.qa-artifacts/go-cache'
     $env:GOPATH = Join-Path $nativeRoot '.qa-artifacts/go-path'
-    & $nativeGo -C (Join-Path $nativeRoot 'backend-go') test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
+    & $nativeGo -C (Join-Path $nativeRoot 'api-candidate') test ./internal/marketdata -run '^TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox$' -count=1 -v
     if ($LASTEXITCODE -ne 0) { throw 'Native PostgreSQL fixture failed' }
     $env:NATIVE_COLLECTOR_POSTGRES_FIXTURE_URL=$env:NATIVE_POSTGRES_FIXTURE_URL
-    & (Join-Path $nativeRoot '.qa-artifacts/native-scraper-venv/Scripts/python.exe') -m unittest discover -s (Join-Path $nativeRoot 'scraper-python/tests') -p 'test_postgres_collector.py' -v
+    & $nativePython -m unittest discover -s (Join-Path $nativeRoot 'financial-data-collector/tests') -p 'test_postgres_collector.py' -v
     if ($LASTEXITCODE -ne 0) { throw 'Native collector PostgreSQL fixture failed' }
 }
 finally {

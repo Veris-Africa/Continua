@@ -106,7 +106,7 @@
     ]
   },
   {
-    "file": "CONTINUA_ENGINE_IMPLEMENTATION.md",
+    "file": "docs/architecture/CONTINUA_ENGINE_IMPLEMENTATION.md",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1518,7 +1518,7 @@
     ]
   },
   {
-    "file": "backend-go/cmd/continua-admin/main_test.go",
+    "file": "api-candidate/cmd/continua-admin/main_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1528,7 +1528,7 @@
     ]
   },
   {
-    "file": "backend-go/cmd/continua/main.go",
+    "file": "api-candidate/cmd/continua/main.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1550,7 +1550,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/auth/user.go",
+    "file": "api-candidate/internal/auth/user.go",
     "category": "Authentication and identity",
     "matches": [
       {
@@ -1560,7 +1560,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/auth/user_test.go",
+    "file": "api-candidate/internal/auth/user_test.go",
     "category": "Authentication and identity",
     "matches": [
       {
@@ -1578,7 +1578,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/billing/http.go",
+    "file": "api-candidate/internal/billing/http.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1588,7 +1588,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/httpapi/public_transfer.go",
+    "file": "api-candidate/internal/httpapi/public_transfer.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1598,7 +1598,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/httpapi/server.go",
+    "file": "api-candidate/internal/httpapi/server.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1608,7 +1608,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/httpapi/server_test.go",
+    "file": "api-candidate/internal/httpapi/server_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1618,7 +1618,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/maintenance/behavior.go",
+    "file": "api-candidate/internal/maintenance/behavior.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1632,7 +1632,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/maintenance/migration.go",
+    "file": "api-candidate/internal/maintenance/migration.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1650,7 +1650,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/maintenance/transaction_test.go",
+    "file": "api-candidate/internal/maintenance/transaction_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1664,7 +1664,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/maintenance/workflows.go",
+    "file": "api-candidate/internal/maintenance/workflows.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1714,7 +1714,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/marketdata/database_tls.go",
+    "file": "api-candidate/internal/marketdata/database_tls.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1756,7 +1756,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/marketdata/database_tls_test.go",
+    "file": "api-candidate/internal/marketdata/database_tls_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1782,7 +1782,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/marketdata/postgres_financial_fixture_test.go",
+    "file": "api-candidate/internal/marketdata/postgres_financial_fixture_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1804,7 +1804,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/marketdata/postgres_fixture_test.go",
+    "file": "api-candidate/internal/marketdata/postgres_fixture_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -1830,7 +1830,7 @@
     ]
   },
   {
-    "file": "backend-go/internal/marketdata/postgres_import_fixture_test.go",
+    "file": "api-candidate/internal/marketdata/postgres_import_fixture_test.go",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4706,7 +4706,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/archive.py",
+    "file": "financial-data-collector/continua_scraper/archive.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4724,7 +4724,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/artifacts.py",
+    "file": "financial-data-collector/continua_scraper/artifacts.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4738,7 +4738,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/config.py",
+    "file": "financial-data-collector/continua_scraper/config.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4748,7 +4748,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/database_tls.py",
+    "file": "financial-data-collector/continua_scraper/database_tls.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4766,7 +4766,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/legacy_cleanup.py",
+    "file": "financial-data-collector/continua_scraper/legacy_cleanup.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4780,7 +4780,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/storage.py",
+    "file": "financial-data-collector/continua_scraper/storage.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4806,7 +4806,7 @@
     ]
   },
   {
-    "file": "scraper-python/continua_scraper/uncatalogued_archive.py",
+    "file": "financial-data-collector/continua_scraper/uncatalogued_archive.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4820,7 +4820,7 @@
     ]
   },
   {
-    "file": "scraper-python/migrate_media.py",
+    "file": "financial-data-collector/migrate_media.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4846,7 +4846,7 @@
     ]
   },
   {
-    "file": "scraper-python/scheduled_collect.py",
+    "file": "financial-data-collector/scheduled_collect.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4860,7 +4860,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_archive.py",
+    "file": "financial-data-collector/tests/test_archive.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4870,7 +4870,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_database_tls.py",
+    "file": "financial-data-collector/tests/test_database_tls.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4892,7 +4892,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_evidence_repository.py",
+    "file": "financial-data-collector/tests/test_evidence_repository.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4902,7 +4902,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_legacy_cleanup.py",
+    "file": "financial-data-collector/tests/test_legacy_cleanup.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4912,7 +4912,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_media_migration.py",
+    "file": "financial-data-collector/tests/test_media_migration.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4922,7 +4922,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_storage_driver.py",
+    "file": "financial-data-collector/tests/test_storage_driver.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4944,7 +4944,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_storage_policy.py",
+    "file": "financial-data-collector/tests/test_storage_policy.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {
@@ -4962,7 +4962,7 @@
     ]
   },
   {
-    "file": "scraper-python/tests/test_uncatalogued_archive.py",
+    "file": "financial-data-collector/tests/test_uncatalogued_archive.py",
     "category": "Backend/ingestion data access",
     "matches": [
       {

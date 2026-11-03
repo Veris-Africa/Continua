@@ -1,6 +1,6 @@
 /** Source-layout goldens, including rejection parity. No database or provider calls. */
 import {readFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
+import {componentPath} from '../repository/component-paths.mjs';
 import {spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 process.env.NODE_ENV='test';
@@ -39,7 +39,7 @@ function check(operation,oracle,args,shouldReject){
  let expected,rejected=false;
  try{expected=JSON.parse(JSON.stringify(oracle(...args)));}catch{rejected=true;}
  assert.equal(rejected,shouldReject,`${operation}: invalid test fixture`);
- const execution=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url))],{
+ const execution=spawnSync(process.env.NATIVE_PYTHON_BIN??'python3',[componentPath('financial-engine','worker.py')],{
   input:JSON.stringify({operation,args}),encoding:'utf8',timeout:5000,maxBuffer:4194304,
   env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
  assert.equal(execution.status!==0,rejected,`${operation}: rejection parity`);

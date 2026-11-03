@@ -182,12 +182,12 @@ publisher regression fixture validates both idempotence and partial recovery.
 
 | Area | Files |
 |---|---|
-| Shared numerical models | `backend/python/investment_intelligence.py`, `financial_extensions.py`, `continua_risk.py`; `engine-python/continua_engine/investment.py` |
+| Shared numerical models | `backend/python/investment_intelligence.py`, `financial_extensions.py`, `continua_risk.py`; `financial-engine/continua_engine/investment.py` |
 | Compatibility API | `backend/src/api/routes/engineWorkbench.routes.js`, `services/research/investmentResearch.js`, `services/research/stockRisk.js`, `workers/engineMonitorWorker.js` |
-| Native candidate | `backend-go/internal/httpapi/investment.go`, `internal/marketdata/investment.go`, `internal/engine/worker.go` and existing workbench/history handlers |
+| Native candidate | `api-candidate/internal/httpapi/investment.go`, `internal/marketdata/investment.go`, `internal/engine/worker.go` and existing workbench/history handlers |
 | Research views | `app/src/components/engine/InvestmentResearch.tsx`, `EvidenceImportLab.tsx`, `MacroScenario.tsx`, `EventPreferences.tsx`, `SavedSimulations.tsx`, `InvestmentCoverage.tsx`; `app/src/pages/Engine.tsx` |
 | Expanded details | `app/src/components/stock/DetailEvidence.tsx`, `FundamentalDetail.tsx`, `FinancialStatementExplorer.tsx`, `PublisherFinancialTables.tsx`; evidence/reliability/portfolio desks |
-| Collection | `scraper-python/continua_scraper/investment.py`, `cbk_macro.py`, `tabular.py`, `download.py`, `adapter_io.py`, `crawler.py`, `runner.py`, `registry.py`, `default_sources.json`; `scraper-python/scheduled_collect.py` |
+| Collection | `financial-data-collector/continua_scraper/investment.py`, `cbk_macro.py`, `tabular.py`, `download.py`, `adapter_io.py`, `crawler.py`, `runner.py`, `registry.py`, `default_sources.json`; `financial-data-collector/scheduled_collect.py` |
 | Schema and fixture | `supabase/migrations/20261021150000_investment_evidence.sql`, `20261021200000_investment_history_identity.sql`; `infra/migration/investment-evidence-fixture.mjs` |
 
 ## Recommended next development phase
@@ -229,17 +229,17 @@ recovery and behavioral gates pass.
 - `app/src/pages/Engine.tsx`
 - `app/tests/investmentConfiguration.test.ts`
 - `app/tests/subscription.test.ts`
-- `backend-go/Dockerfile`
-- `backend-go/go.mod`
-- `backend-go/internal/engine/monitor_worker.go`
-- `backend-go/internal/engine/worker.go`
-- `backend-go/internal/httpapi/investment.go`
-- `backend-go/internal/httpapi/investment_test.go`
-- `backend-go/internal/httpapi/server.go`
-- `backend-go/internal/httpapi/stock_risk.go`
-- `backend-go/internal/httpapi/workbench_reads.go`
-- `backend-go/internal/marketdata/investment.go`
-- `backend-go/internal/marketdata/market_research.go`
+- `api-candidate/Dockerfile`
+- `api-candidate/go.mod`
+- `api-candidate/internal/engine/monitor_worker.go`
+- `api-candidate/internal/engine/worker.go`
+- `api-candidate/internal/httpapi/investment.go`
+- `api-candidate/internal/httpapi/investment_test.go`
+- `api-candidate/internal/httpapi/server.go`
+- `api-candidate/internal/httpapi/stock_risk.go`
+- `api-candidate/internal/httpapi/workbench_reads.go`
+- `api-candidate/internal/marketdata/investment.go`
+- `api-candidate/internal/marketdata/market_research.go`
 - `backend/Dockerfile`
 - `backend/package-lock.json`
 - `backend/python/continua_risk.py`
@@ -254,11 +254,11 @@ recovery and behavioral gates pass.
 - `backend/src/services/research/stockRisk.js`
 - `backend/src/workers/engineMonitorWorker.js`
 - `backend/tests/enginePortfolioAccess.test.ts`
-- `engine-python/continua_engine/investment.py`
-- `engine-python/tests/test_financial_extensions.py`
-- `engine-python/tests/test_investment_intelligence.py`
-- `engine-python/tests/test_risk_intelligence.py`
-- `engine-python/worker.py`
+- `financial-engine/continua_engine/investment.py`
+- `financial-engine/tests/test_financial_extensions.py`
+- `financial-engine/tests/test_investment_intelligence.py`
+- `financial-engine/tests/test_risk_intelligence.py`
+- `financial-engine/worker.py`
 
 ## Live rollout outcome
 

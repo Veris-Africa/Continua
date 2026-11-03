@@ -7,7 +7,7 @@ import pathlib
 import sys
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT/'scraper-python'))
+sys.path.insert(0,str(ROOT/'financial-data-collector'))
 from continua_scraper.database import Database
 from continua_scraper.event_loop import database_event_loop
 from continua_scraper.artifacts import EvidenceRepository

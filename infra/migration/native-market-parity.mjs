@@ -29,7 +29,7 @@ const {pool}=await import('../../backend/src/storage/db.js');
 const revision='native-read-contract-'+randomUUID();
 const python=process.env.NATIVE_PYTHON_BIN;
 if(!python)throw new Error('Set NATIVE_PYTHON_BIN to the existing Python runtime');
-const child=spawn(fileURLToPath(new URL('../../.qa-artifacts/continua-native.exe',import.meta.url)),[],{windowsHide:true,stdio:'ignore',env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,DATABASE_URL:connection,DEV_API_KEY:'fixture-native-read-only',NODE_ENV:'development',NATIVE_PYTHON_BIN:python,NATIVE_PYTHON_SCRIPT:fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url)),NATIVE_CANDIDATE_REVISION:revision}});
+const child=spawn(fileURLToPath(new URL('../../.qa-artifacts/continua-native.exe',import.meta.url)),[],{windowsHide:true,stdio:'ignore',env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,DATABASE_URL:connection,DEV_API_KEY:'fixture-native-read-only',NODE_ENV:'development',NATIVE_PYTHON_BIN:python,NATIVE_PYTHON_SCRIPT:fileURLToPath(new URL('../../financial-engine/worker.py',import.meta.url)),NATIVE_CANDIDATE_REVISION:revision}});
 let failedStart=false;child.once('error',()=>{failedStart=true;});child.once('exit',()=>{failedStart=true;});
 const origin='http://127.0.0.1:4080';
 const checks=[];

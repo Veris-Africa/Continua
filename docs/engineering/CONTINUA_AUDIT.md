@@ -452,7 +452,7 @@ strong foundation; add a maintained route-level security ledger as Phase 2 proof
 
 ### Background work and deployment/recovery
 
-`scraper-python/continua_scraper/documents.py` uses durable lease/attempt recovery;
+`financial-data-collector/continua_scraper/documents.py` uses durable lease/attempt recovery;
 GitHub collectors share non-cancelling concurrency and finite time/transfer
 reservations. Do not replace these with an in-memory queue. Backend calculator
 queue is appropriately bounded for short work but not restart-durable; use a

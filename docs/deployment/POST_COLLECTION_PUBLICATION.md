@@ -20,7 +20,7 @@ download on Render. Old audit rows without these flags are not retroactively sch
 
 ## All-tab processing
 
-`engine-python/continua_engine/collected.py` processes collected views into:
+`financial-engine/continua_engine/collected.py` processes collected views into:
 
 | Publisher view | Destination and processing |
 | --- | --- |

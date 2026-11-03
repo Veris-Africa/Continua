@@ -33,7 +33,7 @@ const {sourceFinancialTables}=await import('../../backend/src/services/research/
 const {HistoricalConfirmSchema}=await import('../../backend/src/ingestion/confirmHistoricalColumns.js');
 const {validateNativeAnnualReport}=await import('../../backend/src/ingestion/normalizers/nativeAnnualReport.js');
 const python=process.env.NATIVE_PYTHON_BIN??'python3';
-const worker=fileURLToPath(new URL('../../engine-python/worker.py',import.meta.url));
+const worker=fileURLToPath(new URL('../../financial-engine/worker.py',import.meta.url));
 const operations={ratios:computeRatios,yoy:yoyGrowth,annual_ratio:annualRatioAt,sma,ema,rsi,macd,crossover:latestCrossover,
  analyze_financials:analyzeFinancials,data_quality:(quote,rows,now)=>dataQuality(quote,rows,new Date(now)),scenarios,company_briefing:buildCompanyBriefing,research_synthesis:buildResearchSynthesis,
  research_readiness:(input,now)=>researchReadiness(input,new Date(now)),evidence_fingerprint:fingerprint,changes_between:changesBetween,
@@ -166,9 +166,9 @@ if(requestedOperation&&!Object.hasOwn(operations,requestedOperation))throw Error
 const selectedCases=requestedOperation?cases.filter(c=>c.operation===requestedOperation):cases;
 for(const [index,c] of selectedCases.entries()){
  const expected=JSON.parse(JSON.stringify((await operations[c.operation](...c.args))??null));
- const execution=spawnSync(python,[worker],{input:JSON.stringify(c),encoding:'utf8',timeout:5000,maxBuffer:4194304,
+ const execution=spawnSync(python,[worker],{input:JSON.stringify(c),encoding:'utf8',windowsHide:true,timeout:5000,maxBuffer:4194304,
   env:{PATH:process.env.PATH,SystemRoot:process.env.SystemRoot,WINDIR:process.env.WINDIR,PYTHONUTF8:'1'}});
- if(execution.status!==0)throw new Error(`Python calculation failed: ${c.operation}`);
+ if(execution.status!==0)throw new Error(`Python calculation failed: ${c.operation}; exit=${execution.status}; signal=${execution.signal??"none"}; processError=${execution.error?.code??"none"}`);
  try { compare(expected,JSON.parse(execution.stdout),c.operation); }
  catch(error){throw new Error(`${error.message}; fixture ${index}`);}
 }

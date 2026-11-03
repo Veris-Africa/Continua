@@ -138,7 +138,7 @@ func main() {
 	if python := os.Getenv("NATIVE_PYTHON_BIN"); python != "" {
 		script := os.Getenv("NATIVE_PYTHON_SCRIPT")
 		if script == "" {
-			script = "engine-python/worker.py"
+			script = "financial-engine/worker.py"
 		}
 		worker := engine.NewWorker(python, script)
 		// Key reuse does not authorize spending. This explicit opt-in stays off

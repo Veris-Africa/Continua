@@ -1,6 +1,6 @@
-# Render Blueprint — deploys continua-data (backend/) and continua-scraper
-# (scraper/) as two Docker-based Web Services. The frontend (app/) stays on
-# Vercel and isn't part of this file.
+# Render Blueprint — existing Node API (backend/) and compatibility collector
+# (scraper/). Cloudflare deploys the frontend (app/) separately. Native candidate
+# and finite Actions collector directories are not new services in this file.
 #
 # Both services are single-process apps that run their own HTTP server AND
 # their own internal cron-scheduled workers (see backend/src/index.js and
@@ -16,8 +16,8 @@
 #      services (Render won't have real values for these — it just
 #      reserves the slot). See the deployment runbook for exactly what
 #      goes in each one: docs/deployment/RENDER_DEPLOY.md
-#   5. Once both services are live, update the Vercel frontend's env vars
-#      to point at the new *.onrender.com URLs (also covered in that doc).
+#   5. Review the existing owned Cloudflare API boundary and allowed origins;
+#      provider/environment changes are separately approved, not part of cleanup.
 #
 # Both are on the free plan, per the reason this migration is happening —
 # see the runbook for the tradeoffs that come with that (cold starts after
@@ -37,14 +37,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      # Same Supabase Postgres instance the app already uses (backend
-      # writes into its `market` schema — see backend/src/storage/db.ts).
-      # Use the Session pooler connection string from Supabase's Project
-      # Settings → Database, not the Transaction pooler — see the runbook.
+      # Existing Neon PostgreSQL database; backend/src/storage/db.js owns the
+      # bounded pool and TLS policy. Credentials stay in provider settings.
       - key: DATABASE_URL
         sync: false
-      # Comma-separated, no spaces — must include the Vercel production
-      # domain(s) or the browser app's requests will be blocked by CORS.
+      # Comma-separated approved app origins, including the owned Cloudflare
+      # origin. Do not broaden CORS or remove existing approved origins here.
       - key: ALLOWED_ORIGINS
         sync: false
       - key: CACHE_DRIVER
@@ -65,7 +63,7 @@ services:
         value: "30000"
       - key: INDEX_POLL_INTERVAL_MS
         value: "1800000"
-      # Deliberately NOT included: DEV_API_KEY. The code (config/env.ts)
+      # Deliberately NOT included: DEV_API_KEY. The code (config/env.js)
       # explicitly warns against setting this in production — issue a real
       # DB-backed key instead via `npm run apikey:create` (see the runbook,
       # step 3). Railway had DEV_API_KEY set; don't carry that habit over.

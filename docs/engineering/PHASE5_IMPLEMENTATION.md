@@ -34,3 +34,8 @@ Primary references: [React Suspense](https://react.dev/reference/react/Suspense)
 The lab has synthetic identity/profile and empty positions/feed, not realistic market fixtures. Performance results cannot establish full-data latency, production p75, field INP, mid-range-device behavior or all cross-tab mutation races. Do not claim those gates passed. See the results and deployment plan before approval.
 
 Profile per-post count enrichment, complete historical pagination and shared aggregation need backend contracts; do not download every user's votes to simulate an aggregate. Data dated 23 October, ingestion freshness and missing historical observations belong in the post-Phase-6 backend/data backlog. No chart formulas, filters or prices were changed.
+
+
+## Release follow-up — 2026-11-03
+
+The owner subsequently approved the Phase 5 main release. Commit 9ab1945a7165a866200717a51f6d3fb34d3cf7f1 is on main and all GitHub checks passed. Cloudflare serves that revision (Worker dd40a3bb-70d4-41a5-b237-b6f63c10adae). Render remains at 7dfe140d009ac78db072dc7b2dc4a30c7805e12b; independently verified identical backend trees make a restart unnecessary. The release verifier passed with --allow-equivalent-backend-tree at 2026-11-03T15:20:41.772Z. Authenticated read-only journeys covered the existing application and upgrade interfaces. Earlier candidate-only statements above describe the original gate; known performance/data/security limitations remain. No production SQL, environment, payment or schedule activation occurred. Phase 6 is separate and local only; see PHASE6_IMPLEMENTATION.md.

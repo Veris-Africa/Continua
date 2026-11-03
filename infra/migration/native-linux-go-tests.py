@@ -13,7 +13,7 @@ def main():
     # hand-maintained allowlist. Colliding binary names fail closed.
     package_directories={}
     for tree in ('internal','cmd'):
-        for source in (root/'backend-go'/tree).rglob('*_test.go'):
+        for source in (root/'api-candidate'/tree).rglob('*_test.go'):
             directory=source.parent;name=directory.name
             if name in package_directories and package_directories[name]!=directory:
                 raise RuntimeError('Ambiguous native fixture binary name')
@@ -32,10 +32,13 @@ def main():
             skips=[line.strip() for line in output.splitlines() if line.strip().startswith('--- SKIP:')]
             allowed={'cache':['--- SKIP: TestRedisOwnedFixtureRoundTripTTLAndOversizedReplyGuard '],
                      'marketdata':['--- SKIP: TestPostgresOwnedFixtureMigrationAndAtomicQuoteOutbox '],
-                     'engine':['--- SKIP: TestOwnedReadOnlyNewsDeadline ']}
+                     'engine':['--- SKIP: TestOwnedReadOnlyNewsDeadline '],
+                     # Requires an explicitly configured owned prepared object;
+                     # network-disabled fixtures must never inherit provider keys.
+                     'objectstore':['--- SKIP: TestOwnedPreparedObjectReadOnly ']}
             unexpected=[line for line in skips if not any(line.startswith(prefix) for prefix in allowed.get(package,[]))]
             if execution.returncode!=0 or unexpected:
-                print(output,flush=True);raise RuntimeError('Native Linux Go fixture failed: '+package)
+                print(output,flush=True);raise RuntimeError('Native Linux Go fixture failed: '+package+'; exit='+str(execution.returncode)+'; unexpected_skips='+repr(unexpected))
             results.append({'package':package,'passed':True,'separateFixtureRequired':skips})
     cgroup={}
     for name in ('memory.max','memory.peak','memory.swap.max','memory.events'):

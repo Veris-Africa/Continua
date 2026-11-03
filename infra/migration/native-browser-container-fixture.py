@@ -10,7 +10,7 @@ import sys
 from urllib.parse import quote
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT/'scraper-python'))
+sys.path.insert(0,str(ROOT/'financial-data-collector'))
 from continua_scraper.browser_worker import render
 
 result=render({'url':'data:text/html,'+quote('<title>Continua native fixture</title><main>isolated document</main>'),

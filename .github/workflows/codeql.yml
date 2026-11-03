@@ -72,7 +72,7 @@ jobs:
     - uses: actions/setup-go@v5
       if: matrix.language == 'go'
       with:
-        go-version-file: backend-go/go.mod
+        go-version-file: api-candidate/go.mod
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -95,7 +95,7 @@ jobs:
     - name: Run manual build steps
       if: matrix.build-mode == 'manual'
       shell: bash
-      working-directory: backend-go
+      working-directory: api-candidate
       run: go build -a ./...
 
     - name: Perform CodeQL Analysis

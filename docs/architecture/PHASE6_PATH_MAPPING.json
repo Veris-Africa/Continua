@@ -1,0 +1,2927 @@
+{
+  "baseRevision": "9ab1945a7165a866200717a51f6d3fb34d3cf7f1",
+  "roots": {
+    "backend-go": "api-candidate",
+    "scraper-python": "financial-data-collector",
+    "engine-python": "financial-engine"
+  },
+  "entries": [
+    {
+      "from": "backend-go/Dockerfile",
+      "to": "api-candidate/Dockerfile",
+      "sha256Before": "41cd15a5c1ad5fa67c32113fbb6f0f57be616bbc7cc5bee5e7201c97a47a0fb5",
+      "sha256AfterPathRewrite": "7d4968ed0ae316f31464bbc95c1bf7eec722e9b8d7c69f03d7937cc6e4192975"
+    },
+    {
+      "from": "backend-go/Dockerfile.dockerignore",
+      "to": "api-candidate/Dockerfile.dockerignore",
+      "sha256Before": "b520905585ef2d91d9059748bf37e89b0ad77dbd266c92ad460dee65d7db0d09",
+      "sha256AfterPathRewrite": "25e32d9868ded8c71530391bcd413b6d3cb962911522bdf0d1d820f64ca871ee"
+    },
+    {
+      "from": "backend-go/cmd/continua-admin/main.go",
+      "to": "api-candidate/cmd/continua-admin/main.go",
+      "sha256Before": "94694b5b9c58fa94a37850704a5a2369107f6e2d65d910e073516dae4a15bfc3",
+      "sha256AfterPathRewrite": "83b0193ce5ad9d1f6475d286b66a6879bf721282f9f17fd3fda5ffda62d7bfc2"
+    },
+    {
+      "from": "backend-go/cmd/continua-admin/main_test.go",
+      "to": "api-candidate/cmd/continua-admin/main_test.go",
+      "sha256Before": "4a1320aec2ec6b2cf802865c26bddba225dba1de0811e45b9588190a1c1131ad",
+      "sha256AfterPathRewrite": "4a1320aec2ec6b2cf802865c26bddba225dba1de0811e45b9588190a1c1131ad"
+    },
+    {
+      "from": "backend-go/cmd/continua-key/main.go",
+      "to": "api-candidate/cmd/continua-key/main.go",
+      "sha256Before": "02b276cafd58c82190ad0c2dbbda43e5610b8e331d18dd309f4d83c0b9b7aa23",
+      "sha256AfterPathRewrite": "02b276cafd58c82190ad0c2dbbda43e5610b8e331d18dd309f4d83c0b9b7aa23"
+    },
+    {
+      "from": "backend-go/cmd/continua-key/main_test.go",
+      "to": "api-candidate/cmd/continua-key/main_test.go",
+      "sha256Before": "62a4225099c734329d211ac851912fb30121c6719150ce53b7d7fe458301d279",
+      "sha256AfterPathRewrite": "62a4225099c734329d211ac851912fb30121c6719150ce53b7d7fe458301d279"
+    },
+    {
+      "from": "backend-go/cmd/continua-review/main.go",
+      "to": "api-candidate/cmd/continua-review/main.go",
+      "sha256Before": "46fa02d3f034b7083651dbea3a9255d2466b96c29fe0c77d8bed6e742046951c",
+      "sha256AfterPathRewrite": "46fa02d3f034b7083651dbea3a9255d2466b96c29fe0c77d8bed6e742046951c"
+    },
+    {
+      "from": "backend-go/cmd/continua-review/main_test.go",
+      "to": "api-candidate/cmd/continua-review/main_test.go",
+      "sha256Before": "688d802c462cc4b920a53bad590184df3517c107e5cf690c3b28773e6746ef3c",
+      "sha256AfterPathRewrite": "688d802c462cc4b920a53bad590184df3517c107e5cf690c3b28773e6746ef3c"
+    },
+    {
+      "from": "backend-go/cmd/continua/main.go",
+      "to": "api-candidate/cmd/continua/main.go",
+      "sha256Before": "a270c0fa2a606f6bc0c0fc40ae4593cf2b76e6a8d35bc97fc28282b0fd84d19e",
+      "sha256AfterPathRewrite": "011cc9b8fbe26f31104945a4d694e53aed463598295fae3813768e465a9cef90"
+    },
+    {
+      "from": "backend-go/cmd/continua/publication.go",
+      "to": "api-candidate/cmd/continua/publication.go",
+      "sha256Before": "637036bb43c79feaf4b3e033acd8978d1758c84e750491a9f99693a443d46d90",
+      "sha256AfterPathRewrite": "637036bb43c79feaf4b3e033acd8978d1758c84e750491a9f99693a443d46d90"
+    },
+    {
+      "from": "backend-go/go.mod",
+      "to": "api-candidate/go.mod",
+      "sha256Before": "8bb09167276b24884f88b659cc5fc63cce7b8ddf7498c2c76c821375ede274a0",
+      "sha256AfterPathRewrite": "8bb09167276b24884f88b659cc5fc63cce7b8ddf7498c2c76c821375ede274a0"
+    },
+    {
+      "from": "backend-go/go.sum",
+      "to": "api-candidate/go.sum",
+      "sha256Before": "982981b324dbe49f2097d3920f04993917fab9298b905463ba29626d9c0192f1",
+      "sha256AfterPathRewrite": "982981b324dbe49f2097d3920f04993917fab9298b905463ba29626d9c0192f1"
+    },
+    {
+      "from": "backend-go/internal/auth/auth.go",
+      "to": "api-candidate/internal/auth/auth.go",
+      "sha256Before": "a8160c636b3594fded55c32abae15c14362d0a3bdd35cac17098a2d28981dffb",
+      "sha256AfterPathRewrite": "a8160c636b3594fded55c32abae15c14362d0a3bdd35cac17098a2d28981dffb"
+    },
+    {
+      "from": "backend-go/internal/auth/auth_test.go",
+      "to": "api-candidate/internal/auth/auth_test.go",
+      "sha256Before": "fcd67dbaa0507c44bbb9b1c2ee37cb1201b8b6f7e57ca07e0f108a57dca2986c",
+      "sha256AfterPathRewrite": "fcd67dbaa0507c44bbb9b1c2ee37cb1201b8b6f7e57ca07e0f108a57dca2986c"
+    },
+    {
+      "from": "backend-go/internal/auth/user.go",
+      "to": "api-candidate/internal/auth/user.go",
+      "sha256Before": "2a8feef7a994382aad97cdea366df41af923096650ea33c70b262800fa0cf781",
+      "sha256AfterPathRewrite": "2a8feef7a994382aad97cdea366df41af923096650ea33c70b262800fa0cf781"
+    },
+    {
+      "from": "backend-go/internal/auth/user_test.go",
+      "to": "api-candidate/internal/auth/user_test.go",
+      "sha256Before": "7f8ef77d9211ca0d67573029a2f3d08ab2e8930d27a12d5ea41c82de2426418d",
+      "sha256AfterPathRewrite": "7f8ef77d9211ca0d67573029a2f3d08ab2e8930d27a12d5ea41c82de2426418d"
+    },
+    {
+      "from": "backend-go/internal/billing/config.go",
+      "to": "api-candidate/internal/billing/config.go",
+      "sha256Before": "64fa4ec47877e8aa95db950994cbe61d1e4d83b921fffcc168ef40056ff5a4af",
+      "sha256AfterPathRewrite": "64fa4ec47877e8aa95db950994cbe61d1e4d83b921fffcc168ef40056ff5a4af"
+    },
+    {
+      "from": "backend-go/internal/billing/config_test.go",
+      "to": "api-candidate/internal/billing/config_test.go",
+      "sha256Before": "63ed6af7c63010ceef701f92a9ac319328fb798c01616b14cb278dcb88cad245",
+      "sha256AfterPathRewrite": "63ed6af7c63010ceef701f92a9ac319328fb798c01616b14cb278dcb88cad245"
+    },
+    {
+      "from": "backend-go/internal/billing/contracts.go",
+      "to": "api-candidate/internal/billing/contracts.go",
+      "sha256Before": "618ff211d36c35a71b8570d8d9fd15bb6751e6717eb2f8f141aacd3d6873b183",
+      "sha256AfterPathRewrite": "618ff211d36c35a71b8570d8d9fd15bb6751e6717eb2f8f141aacd3d6873b183"
+    },
+    {
+      "from": "backend-go/internal/billing/contracts_test.go",
+      "to": "api-candidate/internal/billing/contracts_test.go",
+      "sha256Before": "8ac36963a71d711c1d63b9b696e650d46f95028c2d3f1a245415667d98d092d7",
+      "sha256AfterPathRewrite": "8ac36963a71d711c1d63b9b696e650d46f95028c2d3f1a245415667d98d092d7"
+    },
+    {
+      "from": "backend-go/internal/billing/http.go",
+      "to": "api-candidate/internal/billing/http.go",
+      "sha256Before": "affa712155d16cd2d67d7b17cb467f552a30f1fd152462f990a3869087250418",
+      "sha256AfterPathRewrite": "affa712155d16cd2d67d7b17cb467f552a30f1fd152462f990a3869087250418"
+    },
+    {
+      "from": "backend-go/internal/billing/http_test.go",
+      "to": "api-candidate/internal/billing/http_test.go",
+      "sha256Before": "785e6684323d5f5ce2bc8716283b82126594a56423ef7f104943d6010c3617ed",
+      "sha256AfterPathRewrite": "785e6684323d5f5ce2bc8716283b82126594a56423ef7f104943d6010c3617ed"
+    },
+    {
+      "from": "backend-go/internal/billing/live.go",
+      "to": "api-candidate/internal/billing/live.go",
+      "sha256Before": "e42a2cd1639b310e19e1358fe83ffb5732b1370d11d765782cd29d44c2716e55",
+      "sha256AfterPathRewrite": "e42a2cd1639b310e19e1358fe83ffb5732b1370d11d765782cd29d44c2716e55"
+    },
+    {
+      "from": "backend-go/internal/billing/live_store.go",
+      "to": "api-candidate/internal/billing/live_store.go",
+      "sha256Before": "299920e542cb90d28589518e4c2e4f73e1089bdeb317fbf7d54a4778b5deab15",
+      "sha256AfterPathRewrite": "299920e542cb90d28589518e4c2e4f73e1089bdeb317fbf7d54a4778b5deab15"
+    },
+    {
+      "from": "backend-go/internal/billing/live_test.go",
+      "to": "api-candidate/internal/billing/live_test.go",
+      "sha256Before": "04f7d2d0ff7459a7d6433b318adcee88e5a545a3a8ad0137b3a04b18942ea095",
+      "sha256AfterPathRewrite": "04f7d2d0ff7459a7d6433b318adcee88e5a545a3a8ad0137b3a04b18942ea095"
+    },
+    {
+      "from": "backend-go/internal/billing/provider.go",
+      "to": "api-candidate/internal/billing/provider.go",
+      "sha256Before": "1aba588a23c77ceb2c4a93984a4df4e0e89c7f1c9bbe9fff4f12253aeeea8819",
+      "sha256AfterPathRewrite": "1aba588a23c77ceb2c4a93984a4df4e0e89c7f1c9bbe9fff4f12253aeeea8819"
+    },
+    {
+      "from": "backend-go/internal/billing/provider_test.go",
+      "to": "api-candidate/internal/billing/provider_test.go",
+      "sha256Before": "8da8ccc17e4bfc362410f886f5aa65984aeaec8aaf0d3c76b72c6856886e3c01",
+      "sha256AfterPathRewrite": "8da8ccc17e4bfc362410f886f5aa65984aeaec8aaf0d3c76b72c6856886e3c01"
+    },
+    {
+      "from": "backend-go/internal/billing/renewal_store.go",
+      "to": "api-candidate/internal/billing/renewal_store.go",
+      "sha256Before": "93aa7132ea02a5a97494649a5526d9193c0e8c5c2b41b176a0b78358dd1ddc91",
+      "sha256AfterPathRewrite": "93aa7132ea02a5a97494649a5526d9193c0e8c5c2b41b176a0b78358dd1ddc91"
+    },
+    {
+      "from": "backend-go/internal/billing/renewals.go",
+      "to": "api-candidate/internal/billing/renewals.go",
+      "sha256Before": "818d8df5dcb5d5f85e71fd6aea3f665bf289bd262a73652b600d2e0bf96be921",
+      "sha256AfterPathRewrite": "818d8df5dcb5d5f85e71fd6aea3f665bf289bd262a73652b600d2e0bf96be921"
+    },
+    {
+      "from": "backend-go/internal/billing/renewals_test.go",
+      "to": "api-candidate/internal/billing/renewals_test.go",
+      "sha256Before": "7d718bc6b15307cf0f61452f0dbdee373f9ab6215987100b3f02782039560a99",
+      "sha256AfterPathRewrite": "7d718bc6b15307cf0f61452f0dbdee373f9ab6215987100b3f02782039560a99"
+    },
+    {
+      "from": "backend-go/internal/billing/service.go",
+      "to": "api-candidate/internal/billing/service.go",
+      "sha256Before": "0a3ee997665b5c056f4d4361822a7fd2b3cd12cef99fe09b34a953f4a928b5cf",
+      "sha256AfterPathRewrite": "0a3ee997665b5c056f4d4361822a7fd2b3cd12cef99fe09b34a953f4a928b5cf"
+    },
+    {
+      "from": "backend-go/internal/billing/service_test.go",
+      "to": "api-candidate/internal/billing/service_test.go",
+      "sha256Before": "41484c51ea701243280760f3fd0602d77bdb0b189b2e436f2a42d5b62bff4b22",
+      "sha256AfterPathRewrite": "41484c51ea701243280760f3fd0602d77bdb0b189b2e436f2a42d5b62bff4b22"
+    },
+    {
+      "from": "backend-go/internal/billing/store.go",
+      "to": "api-candidate/internal/billing/store.go",
+      "sha256Before": "6d3fece84946f4f612b9000c06ff9982fe5732d55a43782d063f41483500acff",
+      "sha256AfterPathRewrite": "6d3fece84946f4f612b9000c06ff9982fe5732d55a43782d063f41483500acff"
+    },
+    {
+      "from": "backend-go/internal/billing/store_test.go",
+      "to": "api-candidate/internal/billing/store_test.go",
+      "sha256Before": "53d2b9dc6e837ea1c206defc6ee644eebcc1439e5869cd25215b0f8a694c6b0b",
+      "sha256AfterPathRewrite": "53d2b9dc6e837ea1c206defc6ee644eebcc1439e5869cd25215b0f8a694c6b0b"
+    },
+    {
+      "from": "backend-go/internal/billing/verification.go",
+      "to": "api-candidate/internal/billing/verification.go",
+      "sha256Before": "d83ceb98bbce4f5742a95419f6bf2e2082faae98ed0f34020629e952ffca3b4a",
+      "sha256AfterPathRewrite": "d83ceb98bbce4f5742a95419f6bf2e2082faae98ed0f34020629e952ffca3b4a"
+    },
+    {
+      "from": "backend-go/internal/billing/verification_test.go",
+      "to": "api-candidate/internal/billing/verification_test.go",
+      "sha256Before": "6d24f243bfe0ec9af0a2d91822e39a5eb054c9819afdce29f93d42956c150853",
+      "sha256AfterPathRewrite": "6d24f243bfe0ec9af0a2d91822e39a5eb054c9819afdce29f93d42956c150853"
+    },
+    {
+      "from": "backend-go/internal/billing/webhook.go",
+      "to": "api-candidate/internal/billing/webhook.go",
+      "sha256Before": "649058cbb350378461b1bbbaf437eacd7fe72462be44c1eb9521749e443623d0",
+      "sha256AfterPathRewrite": "649058cbb350378461b1bbbaf437eacd7fe72462be44c1eb9521749e443623d0"
+    },
+    {
+      "from": "backend-go/internal/billing/webhook_test.go",
+      "to": "api-candidate/internal/billing/webhook_test.go",
+      "sha256Before": "18aa1f51805a488cc31b49073a323c651c2b7c17fbd804eafeb7a63bfa6ced72",
+      "sha256AfterPathRewrite": "18aa1f51805a488cc31b49073a323c651c2b7c17fbd804eafeb7a63bfa6ced72"
+    },
+    {
+      "from": "backend-go/internal/cache/client.go",
+      "to": "api-candidate/internal/cache/client.go",
+      "sha256Before": "109ce92c8cd8b98dfbbe8646531bbbf898e3780bb87b2718231daf92870ce56b",
+      "sha256AfterPathRewrite": "109ce92c8cd8b98dfbbe8646531bbbf898e3780bb87b2718231daf92870ce56b"
+    },
+    {
+      "from": "backend-go/internal/cache/config.go",
+      "to": "api-candidate/internal/cache/config.go",
+      "sha256Before": "db8eab874fac3b6180ffd7d725c15059fba484684850e2d86016f5641ff718b9",
+      "sha256AfterPathRewrite": "db8eab874fac3b6180ffd7d725c15059fba484684850e2d86016f5641ff718b9"
+    },
+    {
+      "from": "backend-go/internal/cache/distributed.go",
+      "to": "api-candidate/internal/cache/distributed.go",
+      "sha256Before": "289d645119a167ac1768818d9877561b34906903cbf7ae792ecf21561b0d2ef9",
+      "sha256AfterPathRewrite": "289d645119a167ac1768818d9877561b34906903cbf7ae792ecf21561b0d2ef9"
+    },
+    {
+      "from": "backend-go/internal/cache/distributed_test.go",
+      "to": "api-candidate/internal/cache/distributed_test.go",
+      "sha256Before": "5545911dc895707244d1d1a88be2ee217456ac961261fd50e451cc6c566fdefb",
+      "sha256AfterPathRewrite": "5545911dc895707244d1d1a88be2ee217456ac961261fd50e451cc6c566fdefb"
+    },
+    {
+      "from": "backend-go/internal/cache/invalidation_test.go",
+      "to": "api-candidate/internal/cache/invalidation_test.go",
+      "sha256Before": "a0445c1c28dc3607dcac4e8f2e4f67ca1c3d578c618f967fdaf355edf5d54eaf",
+      "sha256AfterPathRewrite": "a0445c1c28dc3607dcac4e8f2e4f67ca1c3d578c618f967fdaf355edf5d54eaf"
+    },
+    {
+      "from": "backend-go/internal/cache/memory.go",
+      "to": "api-candidate/internal/cache/memory.go",
+      "sha256Before": "0dcabefb3f372115ada1341896b6f774e3e40ffb2d4ee3f5e98f30b69fc4a741",
+      "sha256AfterPathRewrite": "0dcabefb3f372115ada1341896b6f774e3e40ffb2d4ee3f5e98f30b69fc4a741"
+    },
+    {
+      "from": "backend-go/internal/cache/memory_test.go",
+      "to": "api-candidate/internal/cache/memory_test.go",
+      "sha256Before": "07c636daf15aa082db66d10c04a189fde32ec614f08cb41d708d20cc65b751ca",
+      "sha256AfterPathRewrite": "07c636daf15aa082db66d10c04a189fde32ec614f08cb41d708d20cc65b751ca"
+    },
+    {
+      "from": "backend-go/internal/cache/rate.go",
+      "to": "api-candidate/internal/cache/rate.go",
+      "sha256Before": "7a80eba340635f8ae5ab6a60999d77944b7e7204c10b173fd1175730bb8ff388",
+      "sha256AfterPathRewrite": "7a80eba340635f8ae5ab6a60999d77944b7e7204c10b173fd1175730bb8ff388"
+    },
+    {
+      "from": "backend-go/internal/cache/rate_test.go",
+      "to": "api-candidate/internal/cache/rate_test.go",
+      "sha256Before": "e957af5a2130a469cfd71e061bfbbecd116648eb43173ae91a6b601bde1294aa",
+      "sha256AfterPathRewrite": "e957af5a2130a469cfd71e061bfbbecd116648eb43173ae91a6b601bde1294aa"
+    },
+    {
+      "from": "backend-go/internal/cache/redis.go",
+      "to": "api-candidate/internal/cache/redis.go",
+      "sha256Before": "72782f69c00bf8658e6925e2855df5db2c2bf544a614215a5042b3feb159ccc7",
+      "sha256AfterPathRewrite": "72782f69c00bf8658e6925e2855df5db2c2bf544a614215a5042b3feb159ccc7"
+    },
+    {
+      "from": "backend-go/internal/cache/redis_test.go",
+      "to": "api-candidate/internal/cache/redis_test.go",
+      "sha256Before": "df7debf89c7cfa7bf58d5359e4a3aafd5421df38c6ca1720632f3ab3125c605a",
+      "sha256AfterPathRewrite": "df7debf89c7cfa7bf58d5359e4a3aafd5421df38c6ca1720632f3ab3125c605a"
+    },
+    {
+      "from": "backend-go/internal/cache/upstash.go",
+      "to": "api-candidate/internal/cache/upstash.go",
+      "sha256Before": "e231b6922f7dc76623c0d065d4533d2b42931f45e279fcbdd1ff05483c10bfd5",
+      "sha256AfterPathRewrite": "e231b6922f7dc76623c0d065d4533d2b42931f45e279fcbdd1ff05483c10bfd5"
+    },
+    {
+      "from": "backend-go/internal/cache/upstash_test.go",
+      "to": "api-candidate/internal/cache/upstash_test.go",
+      "sha256Before": "3df6d17e2617c1c5c88194d9b17567dacefa1f8071a017ba96295eb937b9b12c",
+      "sha256AfterPathRewrite": "3df6d17e2617c1c5c88194d9b17567dacefa1f8071a017ba96295eb937b9b12c"
+    },
+    {
+      "from": "backend-go/internal/config/environment.go",
+      "to": "api-candidate/internal/config/environment.go",
+      "sha256Before": "3ba4e60f291b44c2052e84e539596e4dcd42c00c9ea5bcb559130f46208f6cc8",
+      "sha256AfterPathRewrite": "3ba4e60f291b44c2052e84e539596e4dcd42c00c9ea5bcb559130f46208f6cc8"
+    },
+    {
+      "from": "backend-go/internal/config/environment_test.go",
+      "to": "api-candidate/internal/config/environment_test.go",
+      "sha256Before": "95598d01c199409ede276ae13c23bc705acac829030216b7d248328ce0545ef0",
+      "sha256AfterPathRewrite": "95598d01c199409ede276ae13c23bc705acac829030216b7d248328ce0545ef0"
+    },
+    {
+      "from": "backend-go/internal/diagnostics/runtime.go",
+      "to": "api-candidate/internal/diagnostics/runtime.go",
+      "sha256Before": "a5928ce5d3f9bd25f11aa497180d109793b1f632a3aa431b30f0960baf0f95aa",
+      "sha256AfterPathRewrite": "a5928ce5d3f9bd25f11aa497180d109793b1f632a3aa431b30f0960baf0f95aa"
+    },
+    {
+      "from": "backend-go/internal/diagnostics/runtime_test.go",
+      "to": "api-candidate/internal/diagnostics/runtime_test.go",
+      "sha256Before": "8d038edb5e74e37faf7740014d038aa4e9a36229ec1c4dd38a4f98b3b31f5cfe",
+      "sha256AfterPathRewrite": "8d038edb5e74e37faf7740014d038aa4e9a36229ec1c4dd38a4f98b3b31f5cfe"
+    },
+    {
+      "from": "backend-go/internal/engine/assistant.go",
+      "to": "api-candidate/internal/engine/assistant.go",
+      "sha256Before": "3c49e0908a8cd83dea0122807f0a5cb960dd8bd8114b0011b28260c55f0a4e08",
+      "sha256AfterPathRewrite": "3c49e0908a8cd83dea0122807f0a5cb960dd8bd8114b0011b28260c55f0a4e08"
+    },
+    {
+      "from": "backend-go/internal/engine/assistant_test.go",
+      "to": "api-candidate/internal/engine/assistant_test.go",
+      "sha256Before": "ba8e19ca1ac5de73e56b15bc07dce4c3c98f5e58d62096c80451186c06b6543c",
+      "sha256AfterPathRewrite": "ba8e19ca1ac5de73e56b15bc07dce4c3c98f5e58d62096c80451186c06b6543c"
+    },
+    {
+      "from": "backend-go/internal/engine/bounded_research.go",
+      "to": "api-candidate/internal/engine/bounded_research.go",
+      "sha256Before": "9496633fcc2291e201e3f4cda93b6c761d2075fa559f7763a40675bce2ba5133",
+      "sha256AfterPathRewrite": "9496633fcc2291e201e3f4cda93b6c761d2075fa559f7763a40675bce2ba5133"
+    },
+    {
+      "from": "backend-go/internal/engine/bundle.go",
+      "to": "api-candidate/internal/engine/bundle.go",
+      "sha256Before": "a8881e11e964989b8c29e16fe3128ed725568577528aa3c24a88db70eaadfbe7",
+      "sha256AfterPathRewrite": "a8881e11e964989b8c29e16fe3128ed725568577528aa3c24a88db70eaadfbe7"
+    },
+    {
+      "from": "backend-go/internal/engine/bundle_test.go",
+      "to": "api-candidate/internal/engine/bundle_test.go",
+      "sha256Before": "cb41827981ff2aca39885287a43f925f559dff1d2cc35c119d972fd2d7469564",
+      "sha256AfterPathRewrite": "cb41827981ff2aca39885287a43f925f559dff1d2cc35c119d972fd2d7469564"
+    },
+    {
+      "from": "backend-go/internal/engine/evidence_session.go",
+      "to": "api-candidate/internal/engine/evidence_session.go",
+      "sha256Before": "ed1138e7d880c93ca23d73e38c0ed9aa8d163b74a3e7787769ec6d12d5604290",
+      "sha256AfterPathRewrite": "ed1138e7d880c93ca23d73e38c0ed9aa8d163b74a3e7787769ec6d12d5604290"
+    },
+    {
+      "from": "backend-go/internal/engine/monitor_worker.go",
+      "to": "api-candidate/internal/engine/monitor_worker.go",
+      "sha256Before": "9db887232c2656799edfb768080a5d6164d742d4dccedd097239ef68114de777",
+      "sha256AfterPathRewrite": "9db887232c2656799edfb768080a5d6164d742d4dccedd097239ef68114de777"
+    },
+    {
+      "from": "backend-go/internal/engine/monitor_worker_test.go",
+      "to": "api-candidate/internal/engine/monitor_worker_test.go",
+      "sha256Before": "7469a77aff04ba374695194d919dc44ac937ee730a741bf3b9102987b5ed35d1",
+      "sha256AfterPathRewrite": "7469a77aff04ba374695194d919dc44ac937ee730a741bf3b9102987b5ed35d1"
+    },
+    {
+      "from": "backend-go/internal/engine/native_inputs.go",
+      "to": "api-candidate/internal/engine/native_inputs.go",
+      "sha256Before": "43e9d5c20b2689c3fd25345b43100e3843f75b984873ade8974959d856ddffbb",
+      "sha256AfterPathRewrite": "43e9d5c20b2689c3fd25345b43100e3843f75b984873ade8974959d856ddffbb"
+    },
+    {
+      "from": "backend-go/internal/engine/news_reader.go",
+      "to": "api-candidate/internal/engine/news_reader.go",
+      "sha256Before": "535ee81a624c4c65fa1c8eee532ac10fc90d85d5bae24620851b1fcb2b44fb3e",
+      "sha256AfterPathRewrite": "535ee81a624c4c65fa1c8eee532ac10fc90d85d5bae24620851b1fcb2b44fb3e"
+    },
+    {
+      "from": "backend-go/internal/engine/news_reader_test.go",
+      "to": "api-candidate/internal/engine/news_reader_test.go",
+      "sha256Before": "a98ea9fdedd06cc280b0fcafd13a005a811e597dda853242c8f8d9a85476fd0b",
+      "sha256AfterPathRewrite": "a98ea9fdedd06cc280b0fcafd13a005a811e597dda853242c8f8d9a85476fd0b"
+    },
+    {
+      "from": "backend-go/internal/engine/notebook.go",
+      "to": "api-candidate/internal/engine/notebook.go",
+      "sha256Before": "fb3f5ef94a0dc82a962ce54179392e30772a32280cd32ffbd3d1ecb30c544429",
+      "sha256AfterPathRewrite": "fb3f5ef94a0dc82a962ce54179392e30772a32280cd32ffbd3d1ecb30c544429"
+    },
+    {
+      "from": "backend-go/internal/engine/notebook_test.go",
+      "to": "api-candidate/internal/engine/notebook_test.go",
+      "sha256Before": "d544db89d0801b58bf4e046424ca928527c9b7423bef703f0b678fe0d13eb737",
+      "sha256AfterPathRewrite": "d544db89d0801b58bf4e046424ca928527c9b7423bef703f0b678fe0d13eb737"
+    },
+    {
+      "from": "backend-go/internal/engine/observations.go",
+      "to": "api-candidate/internal/engine/observations.go",
+      "sha256Before": "711e5402e2a5f396f6bc19101424be2d3e7a721086367e93612c3d89a785eb87",
+      "sha256AfterPathRewrite": "711e5402e2a5f396f6bc19101424be2d3e7a721086367e93612c3d89a785eb87"
+    },
+    {
+      "from": "backend-go/internal/engine/observations_test.go",
+      "to": "api-candidate/internal/engine/observations_test.go",
+      "sha256Before": "c98b52e8d90503f17c566c6aeb06612d4bcab1ca5111054faf606d4cbbb0130a",
+      "sha256AfterPathRewrite": "c98b52e8d90503f17c566c6aeb06612d4bcab1ca5111054faf606d4cbbb0130a"
+    },
+    {
+      "from": "backend-go/internal/engine/owned_news_fixture_test.go",
+      "to": "api-candidate/internal/engine/owned_news_fixture_test.go",
+      "sha256Before": "84b62701afabfa62ab8cf15b3c2aa5a9a7d845da28027bb54f40f286c81842c4",
+      "sha256AfterPathRewrite": "84b62701afabfa62ab8cf15b3c2aa5a9a7d845da28027bb54f40f286c81842c4"
+    },
+    {
+      "from": "backend-go/internal/engine/portfolio_workspace.go",
+      "to": "api-candidate/internal/engine/portfolio_workspace.go",
+      "sha256Before": "a73f40f3bff2d5dc3917200d8425b7ea0448838848df5bc9be8a386b4b2cc177",
+      "sha256AfterPathRewrite": "a73f40f3bff2d5dc3917200d8425b7ea0448838848df5bc9be8a386b4b2cc177"
+    },
+    {
+      "from": "backend-go/internal/engine/portfolio_workspace_test.go",
+      "to": "api-candidate/internal/engine/portfolio_workspace_test.go",
+      "sha256Before": "52fbfb865a2cb0b969d0e61e2dd8a85b1ac22184e02fbc8eafad0cb6e52b5cde",
+      "sha256AfterPathRewrite": "52fbfb865a2cb0b969d0e61e2dd8a85b1ac22184e02fbc8eafad0cb6e52b5cde"
+    },
+    {
+      "from": "backend-go/internal/engine/preferences.go",
+      "to": "api-candidate/internal/engine/preferences.go",
+      "sha256Before": "bb29f7ea6574849b59f73e0a8fe066cae1ca4b11dcd8e88abceee5b1d02d183d",
+      "sha256AfterPathRewrite": "bb29f7ea6574849b59f73e0a8fe066cae1ca4b11dcd8e88abceee5b1d02d183d"
+    },
+    {
+      "from": "backend-go/internal/engine/preferences_test.go",
+      "to": "api-candidate/internal/engine/preferences_test.go",
+      "sha256Before": "92a0120489a8b41b832571bae25a6953de230d1d6ee0b7fafab237fec2b8083d",
+      "sha256AfterPathRewrite": "92a0120489a8b41b832571bae25a6953de230d1d6ee0b7fafab237fec2b8083d"
+    },
+    {
+      "from": "backend-go/internal/engine/recompute.go",
+      "to": "api-candidate/internal/engine/recompute.go",
+      "sha256Before": "96bd8e3daa33378cbcd801f5a80bde3b6a0da56c8ab72792f9858485883b0fdd",
+      "sha256AfterPathRewrite": "96bd8e3daa33378cbcd801f5a80bde3b6a0da56c8ab72792f9858485883b0fdd"
+    },
+    {
+      "from": "backend-go/internal/engine/recompute_test.go",
+      "to": "api-candidate/internal/engine/recompute_test.go",
+      "sha256Before": "f94151f2bb1e99bc0c89298697ec65968d05306eae612cb84b6eaaf3aa7733f0",
+      "sha256AfterPathRewrite": "f94151f2bb1e99bc0c89298697ec65968d05306eae612cb84b6eaaf3aa7733f0"
+    },
+    {
+      "from": "backend-go/internal/engine/statistics.go",
+      "to": "api-candidate/internal/engine/statistics.go",
+      "sha256Before": "2d9e9b1b31db54e598f362c92f34047419d7ca6a46ddb09411599e1265688189",
+      "sha256AfterPathRewrite": "2d9e9b1b31db54e598f362c92f34047419d7ca6a46ddb09411599e1265688189"
+    },
+    {
+      "from": "backend-go/internal/engine/worker.go",
+      "to": "api-candidate/internal/engine/worker.go",
+      "sha256Before": "1630f55bdf1c44e12b4233dffc4ba3647fc6bb5630c91bafe6f50f3d06c65f32",
+      "sha256AfterPathRewrite": "1630f55bdf1c44e12b4233dffc4ba3647fc6bb5630c91bafe6f50f3d06c65f32"
+    },
+    {
+      "from": "backend-go/internal/engine/worker_test.go",
+      "to": "api-candidate/internal/engine/worker_test.go",
+      "sha256Before": "60854950eeec4d70cbefea5776bb7066300b5b0a74723a708019e0991faf1535",
+      "sha256AfterPathRewrite": "013ebf62c6dac00f2c4ff8be385597657263ef47d09863c9bb0bfb46792709e2"
+    },
+    {
+      "from": "backend-go/internal/httpapi/actions.go",
+      "to": "api-candidate/internal/httpapi/actions.go",
+      "sha256Before": "c733b0d91a812361df3d254345e6bafd6e38e4132c68c208c6d77b9e3c7c9bc3",
+      "sha256AfterPathRewrite": "c733b0d91a812361df3d254345e6bafd6e38e4132c68c208c6d77b9e3c7c9bc3"
+    },
+    {
+      "from": "backend-go/internal/httpapi/actions_test.go",
+      "to": "api-candidate/internal/httpapi/actions_test.go",
+      "sha256Before": "436fe0dfcdd6865242d16e143e56c693cadd4e67aec22a67e5157f81cb0574d7",
+      "sha256AfterPathRewrite": "436fe0dfcdd6865242d16e143e56c693cadd4e67aec22a67e5157f81cb0574d7"
+    },
+    {
+      "from": "backend-go/internal/httpapi/admin.go",
+      "to": "api-candidate/internal/httpapi/admin.go",
+      "sha256Before": "2762ad7d1fc92eefe4af5ab7e46844f5f7fdf67fc8487a94b277805b45386c2c",
+      "sha256AfterPathRewrite": "2762ad7d1fc92eefe4af5ab7e46844f5f7fdf67fc8487a94b277805b45386c2c"
+    },
+    {
+      "from": "backend-go/internal/httpapi/admin_test.go",
+      "to": "api-candidate/internal/httpapi/admin_test.go",
+      "sha256Before": "86ad7c8429f811f473ca120a7e756d370815b0419565406345aa53b1d8a2ad2c",
+      "sha256AfterPathRewrite": "86ad7c8429f811f473ca120a7e756d370815b0419565406345aa53b1d8a2ad2c"
+    },
+    {
+      "from": "backend-go/internal/httpapi/advanced.go",
+      "to": "api-candidate/internal/httpapi/advanced.go",
+      "sha256Before": "24de23d2bf84fb4bbbac4b80c04efa97c4a88ac9efaf2b852a1b00bc1d3e0e0e",
+      "sha256AfterPathRewrite": "24de23d2bf84fb4bbbac4b80c04efa97c4a88ac9efaf2b852a1b00bc1d3e0e0e"
+    },
+    {
+      "from": "backend-go/internal/httpapi/advanced_test.go",
+      "to": "api-candidate/internal/httpapi/advanced_test.go",
+      "sha256Before": "fe7c4e4574879708c53a3435ef4aa0b1ac9eed49363bde40e41651163d44c190",
+      "sha256AfterPathRewrite": "fe7c4e4574879708c53a3435ef4aa0b1ac9eed49363bde40e41651163d44c190"
+    },
+    {
+      "from": "backend-go/internal/httpapi/assistant.go",
+      "to": "api-candidate/internal/httpapi/assistant.go",
+      "sha256Before": "420aee83b50df57413e47ce84ada8e2d9eaaec0b34fee895d1fb07365d6af9bb",
+      "sha256AfterPathRewrite": "420aee83b50df57413e47ce84ada8e2d9eaaec0b34fee895d1fb07365d6af9bb"
+    },
+    {
+      "from": "backend-go/internal/httpapi/assistant_test.go",
+      "to": "api-candidate/internal/httpapi/assistant_test.go",
+      "sha256Before": "27700980d9a5f741c71864f4ac5e8f2170b6ba7f5b9a4209509a96434d833f9b",
+      "sha256AfterPathRewrite": "27700980d9a5f741c71864f4ac5e8f2170b6ba7f5b9a4209509a96434d833f9b"
+    },
+    {
+      "from": "backend-go/internal/httpapi/client_identity.go",
+      "to": "api-candidate/internal/httpapi/client_identity.go",
+      "sha256Before": "e5147f7441d00d3d99a4688583f14e95929deb8fec68d8460dd303d90aa85f56",
+      "sha256AfterPathRewrite": "e5147f7441d00d3d99a4688583f14e95929deb8fec68d8460dd303d90aa85f56"
+    },
+    {
+      "from": "backend-go/internal/httpapi/close_history.go",
+      "to": "api-candidate/internal/httpapi/close_history.go",
+      "sha256Before": "c2002d6c72d7b7746fc99ce4f7bb804ef4cb00605a4b6210011ffcb538b901be",
+      "sha256AfterPathRewrite": "c2002d6c72d7b7746fc99ce4f7bb804ef4cb00605a4b6210011ffcb538b901be"
+    },
+    {
+      "from": "backend-go/internal/httpapi/indicators.go",
+      "to": "api-candidate/internal/httpapi/indicators.go",
+      "sha256Before": "b4ea7619b3b6d739b51a73cb0a4d57d5fa6cbb4d04ccdf419064da57490783cd",
+      "sha256AfterPathRewrite": "b4ea7619b3b6d739b51a73cb0a4d57d5fa6cbb4d04ccdf419064da57490783cd"
+    },
+    {
+      "from": "backend-go/internal/httpapi/indicators_test.go",
+      "to": "api-candidate/internal/httpapi/indicators_test.go",
+      "sha256Before": "67057be9e5c602725f5c2fb76054d6382d6613d6bfdd8c17547e88819c884be1",
+      "sha256AfterPathRewrite": "67057be9e5c602725f5c2fb76054d6382d6613d6bfdd8c17547e88819c884be1"
+    },
+    {
+      "from": "backend-go/internal/httpapi/institutional.go",
+      "to": "api-candidate/internal/httpapi/institutional.go",
+      "sha256Before": "4c968cd6624de140c51aff7f0d3390252296bef94d0cdc818b362f6eccbd8763",
+      "sha256AfterPathRewrite": "4c968cd6624de140c51aff7f0d3390252296bef94d0cdc818b362f6eccbd8763"
+    },
+    {
+      "from": "backend-go/internal/httpapi/institutional_admin.go",
+      "to": "api-candidate/internal/httpapi/institutional_admin.go",
+      "sha256Before": "6c9cdc90fcb62ba4d858cfd1dd75609184068d3dfc3c93bc607fa9808b7d0f3e",
+      "sha256AfterPathRewrite": "6c9cdc90fcb62ba4d858cfd1dd75609184068d3dfc3c93bc607fa9808b7d0f3e"
+    },
+    {
+      "from": "backend-go/internal/httpapi/institutional_test.go",
+      "to": "api-candidate/internal/httpapi/institutional_test.go",
+      "sha256Before": "ebadd1072cfa3a3efaeffa3efa8880fa1d4e12040478cf98ba3c1ea23572ca63",
+      "sha256AfterPathRewrite": "ebadd1072cfa3a3efaeffa3efa8880fa1d4e12040478cf98ba3c1ea23572ca63"
+    },
+    {
+      "from": "backend-go/internal/httpapi/investment.go",
+      "to": "api-candidate/internal/httpapi/investment.go",
+      "sha256Before": "034c40f55073059c6d6fe2541b88c9f6a898f0e732d3e07396419ad20139816f",
+      "sha256AfterPathRewrite": "034c40f55073059c6d6fe2541b88c9f6a898f0e732d3e07396419ad20139816f"
+    },
+    {
+      "from": "backend-go/internal/httpapi/investment_test.go",
+      "to": "api-candidate/internal/httpapi/investment_test.go",
+      "sha256Before": "86baa7fa2fa47cc990157815347120bfb716868b1a8a34b7a431fada415d4f2c",
+      "sha256AfterPathRewrite": "86baa7fa2fa47cc990157815347120bfb716868b1a8a34b7a431fada415d4f2c"
+    },
+    {
+      "from": "backend-go/internal/httpapi/market_extras.go",
+      "to": "api-candidate/internal/httpapi/market_extras.go",
+      "sha256Before": "87988ea1b4fa735d837accf35449cde6a5a1f19eee48cf3f57ee77696a491544",
+      "sha256AfterPathRewrite": "87988ea1b4fa735d837accf35449cde6a5a1f19eee48cf3f57ee77696a491544"
+    },
+    {
+      "from": "backend-go/internal/httpapi/market_reads.go",
+      "to": "api-candidate/internal/httpapi/market_reads.go",
+      "sha256Before": "7079bbbe0d8cc457d21462b4a7a4008a1f18ab078443bb0ed4ccb9d505c8f189",
+      "sha256AfterPathRewrite": "7079bbbe0d8cc457d21462b4a7a4008a1f18ab078443bb0ed4ccb9d505c8f189"
+    },
+    {
+      "from": "backend-go/internal/httpapi/market_reads_test.go",
+      "to": "api-candidate/internal/httpapi/market_reads_test.go",
+      "sha256Before": "94deec5035d478baba7f84c936b51894a18ef8dc412474d4a7375f89e6eba92e",
+      "sha256AfterPathRewrite": "94deec5035d478baba7f84c936b51894a18ef8dc412474d4a7375f89e6eba92e"
+    },
+    {
+      "from": "backend-go/internal/httpapi/market_research.go",
+      "to": "api-candidate/internal/httpapi/market_research.go",
+      "sha256Before": "f15327bc2e09d16f8b675bd01404afb4839a5aed2d606055ea5400f34d2cc312",
+      "sha256AfterPathRewrite": "f15327bc2e09d16f8b675bd01404afb4839a5aed2d606055ea5400f34d2cc312"
+    },
+    {
+      "from": "backend-go/internal/httpapi/news.go",
+      "to": "api-candidate/internal/httpapi/news.go",
+      "sha256Before": "7324d650160b2db7d215180f13042597f4c46d900b1ac9a05b34ac066e911ad1",
+      "sha256AfterPathRewrite": "7324d650160b2db7d215180f13042597f4c46d900b1ac9a05b34ac066e911ad1"
+    },
+    {
+      "from": "backend-go/internal/httpapi/news_test.go",
+      "to": "api-candidate/internal/httpapi/news_test.go",
+      "sha256Before": "fe0a57d6380efef2a5ed5a35517b31d99829da4f340969e2c16d654e235341be",
+      "sha256AfterPathRewrite": "fe0a57d6380efef2a5ed5a35517b31d99829da4f340969e2c16d654e235341be"
+    },
+    {
+      "from": "backend-go/internal/httpapi/notebook.go",
+      "to": "api-candidate/internal/httpapi/notebook.go",
+      "sha256Before": "08fe66f3d691c5226a952560ac916999b68f167e3d672a9e015e9446585518f1",
+      "sha256AfterPathRewrite": "08fe66f3d691c5226a952560ac916999b68f167e3d672a9e015e9446585518f1"
+    },
+    {
+      "from": "backend-go/internal/httpapi/notebook_test.go",
+      "to": "api-candidate/internal/httpapi/notebook_test.go",
+      "sha256Before": "b1e1296758ed8b3ce83943dc283f5d189ab5560358a315b411cd3ab5c8506026",
+      "sha256AfterPathRewrite": "b1e1296758ed8b3ce83943dc283f5d189ab5560358a315b411cd3ab5c8506026"
+    },
+    {
+      "from": "backend-go/internal/httpapi/peers.go",
+      "to": "api-candidate/internal/httpapi/peers.go",
+      "sha256Before": "ce83fce9ce3bacec7913566d2fe6531bd3558cfe01ab91bfb9641ebbd5658449",
+      "sha256AfterPathRewrite": "ce83fce9ce3bacec7913566d2fe6531bd3558cfe01ab91bfb9641ebbd5658449"
+    },
+    {
+      "from": "backend-go/internal/httpapi/peers_test.go",
+      "to": "api-candidate/internal/httpapi/peers_test.go",
+      "sha256Before": "4329186868b372ee3efc5ab9b9c84e838bf91ace7e6420d5ee09b9e275266072",
+      "sha256AfterPathRewrite": "4329186868b372ee3efc5ab9b9c84e838bf91ace7e6420d5ee09b9e275266072"
+    },
+    {
+      "from": "backend-go/internal/httpapi/pipeline_health.go",
+      "to": "api-candidate/internal/httpapi/pipeline_health.go",
+      "sha256Before": "3b24ce644c78f93a6224cc78f2eff0c08e2e6b3c2a3061f7cb53546488117d8d",
+      "sha256AfterPathRewrite": "3b24ce644c78f93a6224cc78f2eff0c08e2e6b3c2a3061f7cb53546488117d8d"
+    },
+    {
+      "from": "backend-go/internal/httpapi/pipeline_health_test.go",
+      "to": "api-candidate/internal/httpapi/pipeline_health_test.go",
+      "sha256Before": "24dafbc5f4af4871ab311d80822344c24a09643768ae72bb2ccc200e51fef7dd",
+      "sha256AfterPathRewrite": "24dafbc5f4af4871ab311d80822344c24a09643768ae72bb2ccc200e51fef7dd"
+    },
+    {
+      "from": "backend-go/internal/httpapi/portfolio.go",
+      "to": "api-candidate/internal/httpapi/portfolio.go",
+      "sha256Before": "262ca1f367de4bf6b349dfc139c9722aebb88814941b334097a113171cdf546a",
+      "sha256AfterPathRewrite": "262ca1f367de4bf6b349dfc139c9722aebb88814941b334097a113171cdf546a"
+    },
+    {
+      "from": "backend-go/internal/httpapi/portfolio_test.go",
+      "to": "api-candidate/internal/httpapi/portfolio_test.go",
+      "sha256Before": "add62a0be39c6f4536834d0adc8cd8d17dbd8f82bddfeb8e878954f9a9ecaf89",
+      "sha256AfterPathRewrite": "add62a0be39c6f4536834d0adc8cd8d17dbd8f82bddfeb8e878954f9a9ecaf89"
+    },
+    {
+      "from": "backend-go/internal/httpapi/preferences.go",
+      "to": "api-candidate/internal/httpapi/preferences.go",
+      "sha256Before": "dd7702adb387f5a2586ff1863562457f13c0250908a20b2ba42e513aadb96afc",
+      "sha256AfterPathRewrite": "dd7702adb387f5a2586ff1863562457f13c0250908a20b2ba42e513aadb96afc"
+    },
+    {
+      "from": "backend-go/internal/httpapi/preferences_test.go",
+      "to": "api-candidate/internal/httpapi/preferences_test.go",
+      "sha256Before": "5e6794d3ac5ec70915c4673e2760a91f4dc57d23a0deef4f7296caa784d4ea24",
+      "sha256AfterPathRewrite": "5e6794d3ac5ec70915c4673e2760a91f4dc57d23a0deef4f7296caa784d4ea24"
+    },
+    {
+      "from": "backend-go/internal/httpapi/public_transfer.go",
+      "to": "api-candidate/internal/httpapi/public_transfer.go",
+      "sha256Before": "f33d5d4e70167d9e5084cb30639b970b64401f9b61e5bca1b843fe97fd67f5e1",
+      "sha256AfterPathRewrite": "f33d5d4e70167d9e5084cb30639b970b64401f9b61e5bca1b843fe97fd67f5e1"
+    },
+    {
+      "from": "backend-go/internal/httpapi/public_transfer_test.go",
+      "to": "api-candidate/internal/httpapi/public_transfer_test.go",
+      "sha256Before": "2f7ea6a2b7684916ce095129509f9a46b118530678ce62b1b50c3596c3861528",
+      "sha256AfterPathRewrite": "2f7ea6a2b7684916ce095129509f9a46b118530678ce62b1b50c3596c3861528"
+    },
+    {
+      "from": "backend-go/internal/httpapi/publisher_reads.go",
+      "to": "api-candidate/internal/httpapi/publisher_reads.go",
+      "sha256Before": "97e7050a64fb91ae739d9ec2fffb384a96cd89a3713e86f1bf0e134ef8f790af",
+      "sha256AfterPathRewrite": "97e7050a64fb91ae739d9ec2fffb384a96cd89a3713e86f1bf0e134ef8f790af"
+    },
+    {
+      "from": "backend-go/internal/httpapi/publisher_reads_test.go",
+      "to": "api-candidate/internal/httpapi/publisher_reads_test.go",
+      "sha256Before": "5ce8705e57654cc2e9bd3ae0b356619abecf63a853fde7d6e586b3c5744202bd",
+      "sha256AfterPathRewrite": "5ce8705e57654cc2e9bd3ae0b356619abecf63a853fde7d6e586b3c5744202bd"
+    },
+    {
+      "from": "backend-go/internal/httpapi/quote_freshness.go",
+      "to": "api-candidate/internal/httpapi/quote_freshness.go",
+      "sha256Before": "565bc2106d7a80c1a2c02c6a3a9f6d115d4ec326cb95f3d83905722754dd3214",
+      "sha256AfterPathRewrite": "565bc2106d7a80c1a2c02c6a3a9f6d115d4ec326cb95f3d83905722754dd3214"
+    },
+    {
+      "from": "backend-go/internal/httpapi/quote_freshness_test.go",
+      "to": "api-candidate/internal/httpapi/quote_freshness_test.go",
+      "sha256Before": "d4e866f0fcfe06faf51979524cb237b6c85f7de3beb225308796ab14a5391a3f",
+      "sha256AfterPathRewrite": "d4e866f0fcfe06faf51979524cb237b6c85f7de3beb225308796ab14a5391a3f"
+    },
+    {
+      "from": "backend-go/internal/httpapi/rate_config.go",
+      "to": "api-candidate/internal/httpapi/rate_config.go",
+      "sha256Before": "452ae4c083a39984986b7cf50b32dfe7ee4db4d1c6ac1249384589edd380fc36",
+      "sha256AfterPathRewrite": "452ae4c083a39984986b7cf50b32dfe7ee4db4d1c6ac1249384589edd380fc36"
+    },
+    {
+      "from": "backend-go/internal/httpapi/rate_config_test.go",
+      "to": "api-candidate/internal/httpapi/rate_config_test.go",
+      "sha256Before": "20d9df23f5474a2d399606d3478aaaececec0a3a18c8a311d17fc0094d2be437",
+      "sha256AfterPathRewrite": "20d9df23f5474a2d399606d3478aaaececec0a3a18c8a311d17fc0094d2be437"
+    },
+    {
+      "from": "backend-go/internal/httpapi/request_limits.go",
+      "to": "api-candidate/internal/httpapi/request_limits.go",
+      "sha256Before": "0491e4fc2ecdac14a715048e9e887e2b538a4fb17c224fe9eb3ea0c05a824495",
+      "sha256AfterPathRewrite": "0491e4fc2ecdac14a715048e9e887e2b538a4fb17c224fe9eb3ea0c05a824495"
+    },
+    {
+      "from": "backend-go/internal/httpapi/request_limits_test.go",
+      "to": "api-candidate/internal/httpapi/request_limits_test.go",
+      "sha256Before": "d034acf871d7b581cbd702e78edc6f863d8639502888eff9ef2cb7df3128996b",
+      "sha256AfterPathRewrite": "d034acf871d7b581cbd702e78edc6f863d8639502888eff9ef2cb7df3128996b"
+    },
+    {
+      "from": "backend-go/internal/httpapi/request_runtime.go",
+      "to": "api-candidate/internal/httpapi/request_runtime.go",
+      "sha256Before": "0dd83ef2e4368e0165d49734b977414680b8076a026d6b7955aea9a537acb3bb",
+      "sha256AfterPathRewrite": "0dd83ef2e4368e0165d49734b977414680b8076a026d6b7955aea9a537acb3bb"
+    },
+    {
+      "from": "backend-go/internal/httpapi/request_runtime_test.go",
+      "to": "api-candidate/internal/httpapi/request_runtime_test.go",
+      "sha256Before": "ebbc65cebd19a32a45228cd5db9fb9083ac241bd5fc0f3afd4f80c9668065b3a",
+      "sha256AfterPathRewrite": "ebbc65cebd19a32a45228cd5db9fb9083ac241bd5fc0f3afd4f80c9668065b3a"
+    },
+    {
+      "from": "backend-go/internal/httpapi/research.go",
+      "to": "api-candidate/internal/httpapi/research.go",
+      "sha256Before": "618add708243398deb082e9982fed3dbb9e2c9ff772edc52f43373c32b972549",
+      "sha256AfterPathRewrite": "618add708243398deb082e9982fed3dbb9e2c9ff772edc52f43373c32b972549"
+    },
+    {
+      "from": "backend-go/internal/httpapi/research_test.go",
+      "to": "api-candidate/internal/httpapi/research_test.go",
+      "sha256Before": "31cc52bd6fbb61527b575aba6805f8900f4e34f912edf78f68d3faffe888a0f4",
+      "sha256AfterPathRewrite": "31cc52bd6fbb61527b575aba6805f8900f4e34f912edf78f68d3faffe888a0f4"
+    },
+    {
+      "from": "backend-go/internal/httpapi/risk_intelligence_test.go",
+      "to": "api-candidate/internal/httpapi/risk_intelligence_test.go",
+      "sha256Before": "e6e95b5010a6dbb08bc16e1ca527f1a2f07378b6b8dd81d0d98f2b5e0a55f5af",
+      "sha256AfterPathRewrite": "e6e95b5010a6dbb08bc16e1ca527f1a2f07378b6b8dd81d0d98f2b5e0a55f5af"
+    },
+    {
+      "from": "backend-go/internal/httpapi/risk_labs.go",
+      "to": "api-candidate/internal/httpapi/risk_labs.go",
+      "sha256Before": "ddd6fa4f20b0f895f13f76ff59a95bbcd998bbba9d692368308de0740f91cbc0",
+      "sha256AfterPathRewrite": "ddd6fa4f20b0f895f13f76ff59a95bbcd998bbba9d692368308de0740f91cbc0"
+    },
+    {
+      "from": "backend-go/internal/httpapi/server.go",
+      "to": "api-candidate/internal/httpapi/server.go",
+      "sha256Before": "124a87bf009bd35ba678e560de2beb67c5de29b54028a801b256f0e1e59abe17",
+      "sha256AfterPathRewrite": "124a87bf009bd35ba678e560de2beb67c5de29b54028a801b256f0e1e59abe17"
+    },
+    {
+      "from": "backend-go/internal/httpapi/server_test.go",
+      "to": "api-candidate/internal/httpapi/server_test.go",
+      "sha256Before": "aaceed4057e60e05c07a22a0d6b86d2f54589fa12409205af310b520a2d5c921",
+      "sha256AfterPathRewrite": "aaceed4057e60e05c07a22a0d6b86d2f54589fa12409205af310b520a2d5c921"
+    },
+    {
+      "from": "backend-go/internal/httpapi/statistics.go",
+      "to": "api-candidate/internal/httpapi/statistics.go",
+      "sha256Before": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c",
+      "sha256AfterPathRewrite": "2105453889b617f77360fa89a3bf9d47f6008cf50e93bd6afc9ce25a0ff96a2c"
+    },
+    {
+      "from": "backend-go/internal/httpapi/statistics_test.go",
+      "to": "api-candidate/internal/httpapi/statistics_test.go",
+      "sha256Before": "d45dfe3f97038d61417f56679e1063888c1ee9f994a6c31ef59eab8dfa576fb9",
+      "sha256AfterPathRewrite": "d45dfe3f97038d61417f56679e1063888c1ee9f994a6c31ef59eab8dfa576fb9"
+    },
+    {
+      "from": "backend-go/internal/httpapi/stock_risk.go",
+      "to": "api-candidate/internal/httpapi/stock_risk.go",
+      "sha256Before": "cfebcbc98980c50072bfccc97c5593f657ba64cd5c0c43b339020f6d3abbee8b",
+      "sha256AfterPathRewrite": "cfebcbc98980c50072bfccc97c5593f657ba64cd5c0c43b339020f6d3abbee8b"
+    },
+    {
+      "from": "backend-go/internal/httpapi/stored_research.go",
+      "to": "api-candidate/internal/httpapi/stored_research.go",
+      "sha256Before": "f1aaedea24a32f062df7e40af7f749c2154a7c6d2c8ae482d99a8e7099adea04",
+      "sha256AfterPathRewrite": "f1aaedea24a32f062df7e40af7f749c2154a7c6d2c8ae482d99a8e7099adea04"
+    },
+    {
+      "from": "backend-go/internal/httpapi/technical_research.go",
+      "to": "api-candidate/internal/httpapi/technical_research.go",
+      "sha256Before": "2730c35e7d31c2de54f8acceefd33a7d72c448b4e73839587431f504c6fc49b2",
+      "sha256AfterPathRewrite": "2730c35e7d31c2de54f8acceefd33a7d72c448b4e73839587431f504c6fc49b2"
+    },
+    {
+      "from": "backend-go/internal/httpapi/technical_research_test.go",
+      "to": "api-candidate/internal/httpapi/technical_research_test.go",
+      "sha256Before": "bee374b7624dcf9931eebc01ca96ea0c41feebd6f5537e5c73899980b4fcbf52",
+      "sha256AfterPathRewrite": "bee374b7624dcf9931eebc01ca96ea0c41feebd6f5537e5c73899980b4fcbf52"
+    },
+    {
+      "from": "backend-go/internal/httpapi/usage.go",
+      "to": "api-candidate/internal/httpapi/usage.go",
+      "sha256Before": "11a51336916fb0fc8c51ddb9053260c460ebf4bddc168bd4d2782f3dd9da89b3",
+      "sha256AfterPathRewrite": "11a51336916fb0fc8c51ddb9053260c460ebf4bddc168bd4d2782f3dd9da89b3"
+    },
+    {
+      "from": "backend-go/internal/httpapi/usage_config.go",
+      "to": "api-candidate/internal/httpapi/usage_config.go",
+      "sha256Before": "2b0f5ff33df1a6d65f205e0c729bd0d3c0e94b29282ecc227f0ddea2e736af39",
+      "sha256AfterPathRewrite": "2b0f5ff33df1a6d65f205e0c729bd0d3c0e94b29282ecc227f0ddea2e736af39"
+    },
+    {
+      "from": "backend-go/internal/httpapi/usage_test.go",
+      "to": "api-candidate/internal/httpapi/usage_test.go",
+      "sha256Before": "05b095f300bbaed116270226029a6acdb74eb8d3c812246dc12176fc27c72755",
+      "sha256AfterPathRewrite": "05b095f300bbaed116270226029a6acdb74eb8d3c812246dc12176fc27c72755"
+    },
+    {
+      "from": "backend-go/internal/httpapi/valuation.go",
+      "to": "api-candidate/internal/httpapi/valuation.go",
+      "sha256Before": "e605878fdd4e302274b94b984e5e276fa3db301ed9d95724443cc1685da3514d",
+      "sha256AfterPathRewrite": "e605878fdd4e302274b94b984e5e276fa3db301ed9d95724443cc1685da3514d"
+    },
+    {
+      "from": "backend-go/internal/httpapi/valuation_test.go",
+      "to": "api-candidate/internal/httpapi/valuation_test.go",
+      "sha256Before": "b70dc3f3c25776a44081d9610d7b18249df4567376a4f24e22b22b1521670c8d",
+      "sha256AfterPathRewrite": "b70dc3f3c25776a44081d9610d7b18249df4567376a4f24e22b22b1521670c8d"
+    },
+    {
+      "from": "backend-go/internal/httpapi/webhook_test.go",
+      "to": "api-candidate/internal/httpapi/webhook_test.go",
+      "sha256Before": "187511f5f6b798a0dc499837b808643ebb0f483212ccf1c9a427ca31e7d762e8",
+      "sha256AfterPathRewrite": "187511f5f6b798a0dc499837b808643ebb0f483212ccf1c9a427ca31e7d762e8"
+    },
+    {
+      "from": "backend-go/internal/httpapi/workbench_reads.go",
+      "to": "api-candidate/internal/httpapi/workbench_reads.go",
+      "sha256Before": "351239770067c1131e880126e5e396efe056109b67f14577d4b53456fda93301",
+      "sha256AfterPathRewrite": "351239770067c1131e880126e5e396efe056109b67f14577d4b53456fda93301"
+    },
+    {
+      "from": "backend-go/internal/httpapi/workspace.go",
+      "to": "api-candidate/internal/httpapi/workspace.go",
+      "sha256Before": "62797faab1e8e0e8d414600d4058c4b7b097fc6b1735938a25354b05e9b44456",
+      "sha256AfterPathRewrite": "62797faab1e8e0e8d414600d4058c4b7b097fc6b1735938a25354b05e9b44456"
+    },
+    {
+      "from": "backend-go/internal/httpapi/workspace_test.go",
+      "to": "api-candidate/internal/httpapi/workspace_test.go",
+      "sha256Before": "d3a684882d1239a6f4bc64ef2ecc164bc3a1019cda7b8624348bf1ce483a26f8",
+      "sha256AfterPathRewrite": "d3a684882d1239a6f4bc64ef2ecc164bc3a1019cda7b8624348bf1ce483a26f8"
+    },
+    {
+      "from": "backend-go/internal/ingestion/announcements.go",
+      "to": "api-candidate/internal/ingestion/announcements.go",
+      "sha256Before": "f77bf41405bf4b235324eb29c49983fda91c71655c134e35fa75a789574a3f01",
+      "sha256AfterPathRewrite": "f77bf41405bf4b235324eb29c49983fda91c71655c134e35fa75a789574a3f01"
+    },
+    {
+      "from": "backend-go/internal/ingestion/announcements_test.go",
+      "to": "api-candidate/internal/ingestion/announcements_test.go",
+      "sha256Before": "ef2be4d84e39b4a2d7e73aee725bae86288611f10098854629cff55a36767d61",
+      "sha256AfterPathRewrite": "ef2be4d84e39b4a2d7e73aee725bae86288611f10098854629cff55a36767d61"
+    },
+    {
+      "from": "backend-go/internal/ingestion/candle_pipeline.go",
+      "to": "api-candidate/internal/ingestion/candle_pipeline.go",
+      "sha256Before": "4f99a44aefe23dc2d849a1dafd7639630a8f4182526b8c8e042c636ba4bfb01e",
+      "sha256AfterPathRewrite": "4f99a44aefe23dc2d849a1dafd7639630a8f4182526b8c8e042c636ba4bfb01e"
+    },
+    {
+      "from": "backend-go/internal/ingestion/close_publication.go",
+      "to": "api-candidate/internal/ingestion/close_publication.go",
+      "sha256Before": "b478a9f50fa0645c2692d004125b3c157ccae01471e777e4e397c3d25ae0f2d5",
+      "sha256AfterPathRewrite": "b478a9f50fa0645c2692d004125b3c157ccae01471e777e4e397c3d25ae0f2d5"
+    },
+    {
+      "from": "backend-go/internal/ingestion/collector_client.go",
+      "to": "api-candidate/internal/ingestion/collector_client.go",
+      "sha256Before": "aedecf6d1e92ac773586657424428b5d046dd4af7f965e061fafd25f2e37ebef",
+      "sha256AfterPathRewrite": "aedecf6d1e92ac773586657424428b5d046dd4af7f965e061fafd25f2e37ebef"
+    },
+    {
+      "from": "backend-go/internal/ingestion/collector_client_test.go",
+      "to": "api-candidate/internal/ingestion/collector_client_test.go",
+      "sha256Before": "efa28592f49f3dd498141753bd016a720b42dfc6c123eebd6126a294d43ad84f",
+      "sha256AfterPathRewrite": "efa28592f49f3dd498141753bd016a720b42dfc6c123eebd6126a294d43ad84f"
+    },
+    {
+      "from": "backend-go/internal/ingestion/collectors.go",
+      "to": "api-candidate/internal/ingestion/collectors.go",
+      "sha256Before": "e6ccef8992ace90d3c4e2cf917ff2a55df26c526cda95816bb23a014e3b29c7e",
+      "sha256AfterPathRewrite": "e6ccef8992ace90d3c4e2cf917ff2a55df26c526cda95816bb23a014e3b29c7e"
+    },
+    {
+      "from": "backend-go/internal/ingestion/collectors_test.go",
+      "to": "api-candidate/internal/ingestion/collectors_test.go",
+      "sha256Before": "512a26028606e2a7ea75e704db3c3ea1332f8047488c6a13fda0ca03af1eacac",
+      "sha256AfterPathRewrite": "512a26028606e2a7ea75e704db3c3ea1332f8047488c6a13fda0ca03af1eacac"
+    },
+    {
+      "from": "backend-go/internal/ingestion/corporate_pipeline.go",
+      "to": "api-candidate/internal/ingestion/corporate_pipeline.go",
+      "sha256Before": "84dd0a8e366e711d48085699c49375d52146dbb98cd27f28a821ddfb3d0161a0",
+      "sha256AfterPathRewrite": "84dd0a8e366e711d48085699c49375d52146dbb98cd27f28a821ddfb3d0161a0"
+    },
+    {
+      "from": "backend-go/internal/ingestion/fundamentals_pipeline.go",
+      "to": "api-candidate/internal/ingestion/fundamentals_pipeline.go",
+      "sha256Before": "3c18b2283a42f1293d4ee348284905082affd7cf7e0324b6c2a49311756d02e9",
+      "sha256AfterPathRewrite": "3c18b2283a42f1293d4ee348284905082affd7cf7e0324b6c2a49311756d02e9"
+    },
+    {
+      "from": "backend-go/internal/ingestion/index_pipeline.go",
+      "to": "api-candidate/internal/ingestion/index_pipeline.go",
+      "sha256Before": "d50e7c7802cc2081aed210bcade27c6d757edd8ccba7585d704010b1145f6341",
+      "sha256AfterPathRewrite": "d50e7c7802cc2081aed210bcade27c6d757edd8ccba7585d704010b1145f6341"
+    },
+    {
+      "from": "backend-go/internal/ingestion/market_transport.go",
+      "to": "api-candidate/internal/ingestion/market_transport.go",
+      "sha256Before": "ede707b47aa314c529ea6e3713be4b779740296404cfa3b26411e41806af6821",
+      "sha256AfterPathRewrite": "ede707b47aa314c529ea6e3713be4b779740296404cfa3b26411e41806af6821"
+    },
+    {
+      "from": "backend-go/internal/ingestion/market_transport_test.go",
+      "to": "api-candidate/internal/ingestion/market_transport_test.go",
+      "sha256Before": "e7319b74f9e45d2afb5e5de6424cb93edc6f541e74f8af9bcedd61de8700606c",
+      "sha256AfterPathRewrite": "e7319b74f9e45d2afb5e5de6424cb93edc6f541e74f8af9bcedd61de8700606c"
+    },
+    {
+      "from": "backend-go/internal/ingestion/news.go",
+      "to": "api-candidate/internal/ingestion/news.go",
+      "sha256Before": "af2a0ab1bfb6ccb52b476d38607dff9443dba935f5358c567bd6c2afa16a19ae",
+      "sha256AfterPathRewrite": "af2a0ab1bfb6ccb52b476d38607dff9443dba935f5358c567bd6c2afa16a19ae"
+    },
+    {
+      "from": "backend-go/internal/ingestion/news_test.go",
+      "to": "api-candidate/internal/ingestion/news_test.go",
+      "sha256Before": "503f26b6e0954f3b47f883c41a484608b406b5f1019bc32ab3b26e7269c93e3f",
+      "sha256AfterPathRewrite": "503f26b6e0954f3b47f883c41a484608b406b5f1019bc32ab3b26e7269c93e3f"
+    },
+    {
+      "from": "backend-go/internal/ingestion/nse_adapter.go",
+      "to": "api-candidate/internal/ingestion/nse_adapter.go",
+      "sha256Before": "b41fd813a155c74b0510cb5f651075980f5135d92c0d45af7d535654365da8a2",
+      "sha256AfterPathRewrite": "b41fd813a155c74b0510cb5f651075980f5135d92c0d45af7d535654365da8a2"
+    },
+    {
+      "from": "backend-go/internal/ingestion/quote_pipeline.go",
+      "to": "api-candidate/internal/ingestion/quote_pipeline.go",
+      "sha256Before": "9ab75b48100bf16a169cb4dfb4c15e2fc00a2e7d1686bdf3dbe2d409baeeae96",
+      "sha256AfterPathRewrite": "9ab75b48100bf16a169cb4dfb4c15e2fc00a2e7d1686bdf3dbe2d409baeeae96"
+    },
+    {
+      "from": "backend-go/internal/ingestion/quote_pipeline_test.go",
+      "to": "api-candidate/internal/ingestion/quote_pipeline_test.go",
+      "sha256Before": "7151396ffc4a0820af1a0d02739b19b69b61517d2751c8bbe9da2ce4674a6c07",
+      "sha256AfterPathRewrite": "7151396ffc4a0820af1a0d02739b19b69b61517d2751c8bbe9da2ce4674a6c07"
+    },
+    {
+      "from": "backend-go/internal/ingestion/retry.go",
+      "to": "api-candidate/internal/ingestion/retry.go",
+      "sha256Before": "2c6707216d87abdb0dfc57aa70e57daf060ffc74f10d65391b9273a234ba90d4",
+      "sha256AfterPathRewrite": "2c6707216d87abdb0dfc57aa70e57daf060ffc74f10d65391b9273a234ba90d4"
+    },
+    {
+      "from": "backend-go/internal/ingestion/retry_test.go",
+      "to": "api-candidate/internal/ingestion/retry_test.go",
+      "sha256Before": "f317d6ae9344368b2e80434c5622ccd137a0502c7c40cfcfbc9e7adc2241b730",
+      "sha256AfterPathRewrite": "f317d6ae9344368b2e80434c5622ccd137a0502c7c40cfcfbc9e7adc2241b730"
+    },
+    {
+      "from": "backend-go/internal/ingestion/run_audit.go",
+      "to": "api-candidate/internal/ingestion/run_audit.go",
+      "sha256Before": "a028c64cbb643e299887d91ac2d86d7f1c5252fef670368282ec92ba361a826b",
+      "sha256AfterPathRewrite": "a028c64cbb643e299887d91ac2d86d7f1c5252fef670368282ec92ba361a826b"
+    },
+    {
+      "from": "backend-go/internal/ingestion/source_sync.go",
+      "to": "api-candidate/internal/ingestion/source_sync.go",
+      "sha256Before": "ca39e5cec97ab3a45237bc994ca6e3049cf8376ccac381b87c0a15bfd257c092",
+      "sha256AfterPathRewrite": "ca39e5cec97ab3a45237bc994ca6e3049cf8376ccac381b87c0a15bfd257c092"
+    },
+    {
+      "from": "backend-go/internal/ingestion/source_sync_test.go",
+      "to": "api-candidate/internal/ingestion/source_sync_test.go",
+      "sha256Before": "ce4ac9258f91cedb31577d7a25e88cbbf91843d00a2863c9477120f49f415248",
+      "sha256AfterPathRewrite": "ce4ac9258f91cedb31577d7a25e88cbbf91843d00a2863c9477120f49f415248"
+    },
+    {
+      "from": "backend-go/internal/jobs/calendar.go",
+      "to": "api-candidate/internal/jobs/calendar.go",
+      "sha256Before": "0d94510167abe29302bc38f4823e7af48497b5aa373fbc05e308940dc798b862",
+      "sha256AfterPathRewrite": "0d94510167abe29302bc38f4823e7af48497b5aa373fbc05e308940dc798b862"
+    },
+    {
+      "from": "backend-go/internal/jobs/calendar_test.go",
+      "to": "api-candidate/internal/jobs/calendar_test.go",
+      "sha256Before": "fa1f1a4ebdb86e974877eaaf9cfcbe2c6305618e95cf90cd3415020dcb6bf5ae",
+      "sha256AfterPathRewrite": "fa1f1a4ebdb86e974877eaaf9cfcbe2c6305618e95cf90cd3415020dcb6bf5ae"
+    },
+    {
+      "from": "backend-go/internal/jobs/manual_test.go",
+      "to": "api-candidate/internal/jobs/manual_test.go",
+      "sha256Before": "8ec4c334ea09e252b2b10de40b8b352908e528072578fc15990286d9fd3eca7c",
+      "sha256AfterPathRewrite": "8ec4c334ea09e252b2b10de40b8b352908e528072578fc15990286d9fd3eca7c"
+    },
+    {
+      "from": "backend-go/internal/jobs/runner.go",
+      "to": "api-candidate/internal/jobs/runner.go",
+      "sha256Before": "ac547002400f5df5d4f45660f0ffc7f2b8a444f0a0a618b8487868eb32e4a678",
+      "sha256AfterPathRewrite": "ac547002400f5df5d4f45660f0ffc7f2b8a444f0a0a618b8487868eb32e4a678"
+    },
+    {
+      "from": "backend-go/internal/jobs/runner_test.go",
+      "to": "api-candidate/internal/jobs/runner_test.go",
+      "sha256Before": "7f41fcc04fe6c418afe0fc8e9865f3b70620863c46ad8e2d9ba2b3b030340692",
+      "sha256AfterPathRewrite": "7f41fcc04fe6c418afe0fc8e9865f3b70620863c46ad8e2d9ba2b3b030340692"
+    },
+    {
+      "from": "backend-go/internal/maintenance/behavior.go",
+      "to": "api-candidate/internal/maintenance/behavior.go",
+      "sha256Before": "693050aacb13f8dedaf717009118cced9f7dc259b76a67819a03f505f4896bc0",
+      "sha256AfterPathRewrite": "693050aacb13f8dedaf717009118cced9f7dc259b76a67819a03f505f4896bc0"
+    },
+    {
+      "from": "backend-go/internal/maintenance/database_error.go",
+      "to": "api-candidate/internal/maintenance/database_error.go",
+      "sha256Before": "2141c5e291dd5caf6b19621cdbb72b4d5fc1538b4a4138543a4603fba08ceb8e",
+      "sha256AfterPathRewrite": "2141c5e291dd5caf6b19621cdbb72b4d5fc1538b4a4138543a4603fba08ceb8e"
+    },
+    {
+      "from": "backend-go/internal/maintenance/database_error_test.go",
+      "to": "api-candidate/internal/maintenance/database_error_test.go",
+      "sha256Before": "910ee28821bbe1953a2a57ba8dd4c93df3180dd55f19895b6a175135ecc9610b",
+      "sha256AfterPathRewrite": "910ee28821bbe1953a2a57ba8dd4c93df3180dd55f19895b6a175135ecc9610b"
+    },
+    {
+      "from": "backend-go/internal/maintenance/inspection.go",
+      "to": "api-candidate/internal/maintenance/inspection.go",
+      "sha256Before": "b1553c6e8504e897bc024119699a9870bf1590fc71e684b5fe5b4279aaa6aa08",
+      "sha256AfterPathRewrite": "b1553c6e8504e897bc024119699a9870bf1590fc71e684b5fe5b4279aaa6aa08"
+    },
+    {
+      "from": "backend-go/internal/maintenance/keys.go",
+      "to": "api-candidate/internal/maintenance/keys.go",
+      "sha256Before": "1e459d9fbacab53ee642e9f01d32f1b3f0ed7974436021ffc8cba5d3e14bd775",
+      "sha256AfterPathRewrite": "1e459d9fbacab53ee642e9f01d32f1b3f0ed7974436021ffc8cba5d3e14bd775"
+    },
+    {
+      "from": "backend-go/internal/maintenance/keys_test.go",
+      "to": "api-candidate/internal/maintenance/keys_test.go",
+      "sha256Before": "16ce13842b1f3e3527015af742cc276e8436f9c1c8d8f4322fa6df24742af838",
+      "sha256AfterPathRewrite": "16ce13842b1f3e3527015af742cc276e8436f9c1c8d8f4322fa6df24742af838"
+    },
+    {
+      "from": "backend-go/internal/maintenance/migration.go",
+      "to": "api-candidate/internal/maintenance/migration.go",
+      "sha256Before": "20e7abcffa454332707601810338de9e562527add4bb380f6c0d18192e0e2a78",
+      "sha256AfterPathRewrite": "20e7abcffa454332707601810338de9e562527add4bb380f6c0d18192e0e2a78"
+    },
+    {
+      "from": "backend-go/internal/maintenance/migration_test.go",
+      "to": "api-candidate/internal/maintenance/migration_test.go",
+      "sha256Before": "02c4c33aabdd545ee54334dffe566203fa6cd375fe45064292386942c868828a",
+      "sha256AfterPathRewrite": "02c4c33aabdd545ee54334dffe566203fa6cd375fe45064292386942c868828a"
+    },
+    {
+      "from": "backend-go/internal/maintenance/protections.go",
+      "to": "api-candidate/internal/maintenance/protections.go",
+      "sha256Before": "7ceded2a0ac3fd7b9179ae766a86c2d8c21f8376b15fd3e8cfc4e7626fbad327",
+      "sha256AfterPathRewrite": "7ceded2a0ac3fd7b9179ae766a86c2d8c21f8376b15fd3e8cfc4e7626fbad327"
+    },
+    {
+      "from": "backend-go/internal/maintenance/transaction_test.go",
+      "to": "api-candidate/internal/maintenance/transaction_test.go",
+      "sha256Before": "3cbd51d7b057856e983a1cf1fc7475666fdbe7240eb7b30421bd28f47467ebc9",
+      "sha256AfterPathRewrite": "3cbd51d7b057856e983a1cf1fc7475666fdbe7240eb7b30421bd28f47467ebc9"
+    },
+    {
+      "from": "backend-go/internal/maintenance/workflows.go",
+      "to": "api-candidate/internal/maintenance/workflows.go",
+      "sha256Before": "a04a86fcc62bfed372426016d1c0fbe677d061a00be6b8c9c61625a1b89c55a0",
+      "sha256AfterPathRewrite": "a04a86fcc62bfed372426016d1c0fbe677d061a00be6b8c9c61625a1b89c55a0"
+    },
+    {
+      "from": "backend-go/internal/marketdata/actions.go",
+      "to": "api-candidate/internal/marketdata/actions.go",
+      "sha256Before": "880dc348edb35311b7d1d291af0c17d4e8dd24825a246dbdef95ec5aa54ea2ef",
+      "sha256AfterPathRewrite": "880dc348edb35311b7d1d291af0c17d4e8dd24825a246dbdef95ec5aa54ea2ef"
+    },
+    {
+      "from": "backend-go/internal/marketdata/actions_test.go",
+      "to": "api-candidate/internal/marketdata/actions_test.go",
+      "sha256Before": "ef47b2f96bffa1898befd381922e62b110b5768a1b33328f96b6e35052da00e6",
+      "sha256AfterPathRewrite": "ef47b2f96bffa1898befd381922e62b110b5768a1b33328f96b6e35052da00e6"
+    },
+    {
+      "from": "backend-go/internal/marketdata/actions_validate.go",
+      "to": "api-candidate/internal/marketdata/actions_validate.go",
+      "sha256Before": "8faf9a3aafec2ffdb12469477c76d17160f3cc2efb80131af15277583b684d3a",
+      "sha256AfterPathRewrite": "8faf9a3aafec2ffdb12469477c76d17160f3cc2efb80131af15277583b684d3a"
+    },
+    {
+      "from": "backend-go/internal/marketdata/admin.go",
+      "to": "api-candidate/internal/marketdata/admin.go",
+      "sha256Before": "bbce1fa610e2ee19f0ce82db01da793805e0e37dc218cbe20a8bcda5aa24e861",
+      "sha256AfterPathRewrite": "bbce1fa610e2ee19f0ce82db01da793805e0e37dc218cbe20a8bcda5aa24e861"
+    },
+    {
+      "from": "backend-go/internal/marketdata/admin_test.go",
+      "to": "api-candidate/internal/marketdata/admin_test.go",
+      "sha256Before": "0605524c3b5c0f533127a6bfab58a23c63d8fd9c7c305966f79c0c2d7baf7f91",
+      "sha256AfterPathRewrite": "0605524c3b5c0f533127a6bfab58a23c63d8fd9c7c305966f79c0c2d7baf7f91"
+    },
+    {
+      "from": "backend-go/internal/marketdata/ai_usage.go",
+      "to": "api-candidate/internal/marketdata/ai_usage.go",
+      "sha256Before": "4dbdf55ac728a144ab27fcb825489415ee950ad2c45ba1064c45919426b85eda",
+      "sha256AfterPathRewrite": "4dbdf55ac728a144ab27fcb825489415ee950ad2c45ba1064c45919426b85eda"
+    },
+    {
+      "from": "backend-go/internal/marketdata/ai_usage_test.go",
+      "to": "api-candidate/internal/marketdata/ai_usage_test.go",
+      "sha256Before": "04a2d07fba4e0aaa35b0755eb1c085addb24f34ddae73d6c995227667f41bced",
+      "sha256AfterPathRewrite": "04a2d07fba4e0aaa35b0755eb1c085addb24f34ddae73d6c995227667f41bced"
+    },
+    {
+      "from": "backend-go/internal/marketdata/announcement_bridge.go",
+      "to": "api-candidate/internal/marketdata/announcement_bridge.go",
+      "sha256Before": "ddceb3876d7855fd3760492cd77229c2ce62599a096344c57418a496b75c1854",
+      "sha256AfterPathRewrite": "ddceb3876d7855fd3760492cd77229c2ce62599a096344c57418a496b75c1854"
+    },
+    {
+      "from": "backend-go/internal/marketdata/announcements.go",
+      "to": "api-candidate/internal/marketdata/announcements.go",
+      "sha256Before": "d2a85cb251266fe4d7fa5d6cd4dc64b64830e7b8cf2899c9c838d2e41c502524",
+      "sha256AfterPathRewrite": "d2a85cb251266fe4d7fa5d6cd4dc64b64830e7b8cf2899c9c838d2e41c502524"
+    },
+    {
+      "from": "backend-go/internal/marketdata/announcements_test.go",
+      "to": "api-candidate/internal/marketdata/announcements_test.go",
+      "sha256Before": "48f411bb89c242c63fb9ea09a9198f46ba031737ec9bb7aa6d7dbfc937e17c85",
+      "sha256AfterPathRewrite": "48f411bb89c242c63fb9ea09a9198f46ba031737ec9bb7aa6d7dbfc937e17c85"
+    },
+    {
+      "from": "backend-go/internal/marketdata/candles_write.go",
+      "to": "api-candidate/internal/marketdata/candles_write.go",
+      "sha256Before": "b609238c6c92f26e12ab906457a81e68be52252b2288fbd23b9540ae42b02b86",
+      "sha256AfterPathRewrite": "b609238c6c92f26e12ab906457a81e68be52252b2288fbd23b9540ae42b02b86"
+    },
+    {
+      "from": "backend-go/internal/marketdata/collected_research.go",
+      "to": "api-candidate/internal/marketdata/collected_research.go",
+      "sha256Before": "b8ff99d0c7d6bc40c3cddb436b6d89711b178ed90a160f05083ad9a4e4a3a77d",
+      "sha256AfterPathRewrite": "b8ff99d0c7d6bc40c3cddb436b6d89711b178ed90a160f05083ad9a4e4a3a77d"
+    },
+    {
+      "from": "backend-go/internal/marketdata/collected_research_test.go",
+      "to": "api-candidate/internal/marketdata/collected_research_test.go",
+      "sha256Before": "ca3146856cd90420f049ec87e963f6e38231a4a9ffe778b6d85cc8279341d647",
+      "sha256AfterPathRewrite": "ca3146856cd90420f049ec87e963f6e38231a4a9ffe778b6d85cc8279341d647"
+    },
+    {
+      "from": "backend-go/internal/marketdata/connection_test.go",
+      "to": "api-candidate/internal/marketdata/connection_test.go",
+      "sha256Before": "cff44ae631bba98e15ced0457381ed38c5a1823e683a4837b6a6a614d680f2e3",
+      "sha256AfterPathRewrite": "cff44ae631bba98e15ced0457381ed38c5a1823e683a4837b6a6a614d680f2e3"
+    },
+    {
+      "from": "backend-go/internal/marketdata/database_tls.go",
+      "to": "api-candidate/internal/marketdata/database_tls.go",
+      "sha256Before": "4ba338a93bc46664399e400402c02c0f2bed1a49d0b02860af429c683a3e0d17",
+      "sha256AfterPathRewrite": "4ba338a93bc46664399e400402c02c0f2bed1a49d0b02860af429c683a3e0d17"
+    },
+    {
+      "from": "backend-go/internal/marketdata/database_tls_test.go",
+      "to": "api-candidate/internal/marketdata/database_tls_test.go",
+      "sha256Before": "c5a6ca87881725fc474ab102586663aba4ad1b82ba120cb8e93ffdb062f4ea5c",
+      "sha256AfterPathRewrite": "c5a6ca87881725fc474ab102586663aba4ad1b82ba120cb8e93ffdb062f4ea5c"
+    },
+    {
+      "from": "backend-go/internal/marketdata/financials.go",
+      "to": "api-candidate/internal/marketdata/financials.go",
+      "sha256Before": "b8b4da97562eaae0ab79d7e1c88258f7aef05c5b43a9d1664dee82e165d8c7b1",
+      "sha256AfterPathRewrite": "b8b4da97562eaae0ab79d7e1c88258f7aef05c5b43a9d1664dee82e165d8c7b1"
+    },
+    {
+      "from": "backend-go/internal/marketdata/financials_write.go",
+      "to": "api-candidate/internal/marketdata/financials_write.go",
+      "sha256Before": "6c8636f76d461e461b4a4aedb5364a139d157f89824393be1db512ceec14184a",
+      "sha256AfterPathRewrite": "6c8636f76d461e461b4a4aedb5364a139d157f89824393be1db512ceec14184a"
+    },
+    {
+      "from": "backend-go/internal/marketdata/financials_write_test.go",
+      "to": "api-candidate/internal/marketdata/financials_write_test.go",
+      "sha256Before": "960c5faa7def5585cbafcd8fcabfcc9884b1172616bd6e48bdf487a08756cf9e",
+      "sha256AfterPathRewrite": "960c5faa7def5585cbafcd8fcabfcc9884b1172616bd6e48bdf487a08756cf9e"
+    },
+    {
+      "from": "backend-go/internal/marketdata/health.go",
+      "to": "api-candidate/internal/marketdata/health.go",
+      "sha256Before": "c8c53677d49b9caa780a5035989023dfa973ee8ef2364776793053207286e91f",
+      "sha256AfterPathRewrite": "c8c53677d49b9caa780a5035989023dfa973ee8ef2364776793053207286e91f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/history.go",
+      "to": "api-candidate/internal/marketdata/history.go",
+      "sha256Before": "c865f4660a6ee1c319557616ac52d392e26461329ca02935fb7f571b45f6a168",
+      "sha256AfterPathRewrite": "c865f4660a6ee1c319557616ac52d392e26461329ca02935fb7f571b45f6a168"
+    },
+    {
+      "from": "backend-go/internal/marketdata/history_import.go",
+      "to": "api-candidate/internal/marketdata/history_import.go",
+      "sha256Before": "0fc89828ec95c82d00a4f006a383e51cf1dcfdb14fa6fd41d5fba8e821acdaab",
+      "sha256AfterPathRewrite": "0fc89828ec95c82d00a4f006a383e51cf1dcfdb14fa6fd41d5fba8e821acdaab"
+    },
+    {
+      "from": "backend-go/internal/marketdata/history_test.go",
+      "to": "api-candidate/internal/marketdata/history_test.go",
+      "sha256Before": "ff848d1cfa8a945cc3e6da08a18351d8ac1ebc2ec34b4de13d823ad784190e5f",
+      "sha256AfterPathRewrite": "ff848d1cfa8a945cc3e6da08a18351d8ac1ebc2ec34b4de13d823ad784190e5f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/index_collection.go",
+      "to": "api-candidate/internal/marketdata/index_collection.go",
+      "sha256Before": "0434c8b01b4580394f67ff49b8f6a8e776bcedc76cc0a2cbc7133b15fcb504b6",
+      "sha256AfterPathRewrite": "0434c8b01b4580394f67ff49b8f6a8e776bcedc76cc0a2cbc7133b15fcb504b6"
+    },
+    {
+      "from": "backend-go/internal/marketdata/index_history_write.go",
+      "to": "api-candidate/internal/marketdata/index_history_write.go",
+      "sha256Before": "2ec45bd85a3d1ae7171328f83e38978dca60b1d5b2b45e179699f196a9789c0b",
+      "sha256AfterPathRewrite": "2ec45bd85a3d1ae7171328f83e38978dca60b1d5b2b45e179699f196a9789c0b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/indices_write.go",
+      "to": "api-candidate/internal/marketdata/indices_write.go",
+      "sha256Before": "d7f5b0394d4b542845daa8a48c4236555e90cbcd6a459ec1672ee4c84b219fb1",
+      "sha256AfterPathRewrite": "d7f5b0394d4b542845daa8a48c4236555e90cbcd6a459ec1672ee4c84b219fb1"
+    },
+    {
+      "from": "backend-go/internal/marketdata/ingestion_audit.go",
+      "to": "api-candidate/internal/marketdata/ingestion_audit.go",
+      "sha256Before": "bddf6de7df1a6270cb08ff4ea7e76fb9e551f52e6f2e1eaa99ec0410e8563e63",
+      "sha256AfterPathRewrite": "bddf6de7df1a6270cb08ff4ea7e76fb9e551f52e6f2e1eaa99ec0410e8563e63"
+    },
+    {
+      "from": "backend-go/internal/marketdata/ingestion_audit_test.go",
+      "to": "api-candidate/internal/marketdata/ingestion_audit_test.go",
+      "sha256Before": "50d538f8a22efeb0bddc779de5783ca0afba2a9b3c160e76623e1b7d57b84415",
+      "sha256AfterPathRewrite": "50d538f8a22efeb0bddc779de5783ca0afba2a9b3c160e76623e1b7d57b84415"
+    },
+    {
+      "from": "backend-go/internal/marketdata/ingestion_write_test.go",
+      "to": "api-candidate/internal/marketdata/ingestion_write_test.go",
+      "sha256Before": "4f8b690cb4c2a67551cce5c4d0df267b0017912cdb0889be3cc2ac95ed99d3f8",
+      "sha256AfterPathRewrite": "4f8b690cb4c2a67551cce5c4d0df267b0017912cdb0889be3cc2ac95ed99d3f8"
+    },
+    {
+      "from": "backend-go/internal/marketdata/institutional.go",
+      "to": "api-candidate/internal/marketdata/institutional.go",
+      "sha256Before": "5f15abb830d3440354e8bde2da35df58ed7ee22d1a2fef6d4182b04c923823e6",
+      "sha256AfterPathRewrite": "5f15abb830d3440354e8bde2da35df58ed7ee22d1a2fef6d4182b04c923823e6"
+    },
+    {
+      "from": "backend-go/internal/marketdata/investment.go",
+      "to": "api-candidate/internal/marketdata/investment.go",
+      "sha256Before": "678a67772efff63c996dbd1f3c8514e1dac390965d2cfe8152e2f32dfbae0da6",
+      "sha256AfterPathRewrite": "678a67772efff63c996dbd1f3c8514e1dac390965d2cfe8152e2f32dfbae0da6"
+    },
+    {
+      "from": "backend-go/internal/marketdata/market_research.go",
+      "to": "api-candidate/internal/marketdata/market_research.go",
+      "sha256Before": "88ef461159a2cb1359745eef855f9e8561dc3a46a552949ef4a1b27faa7c3e2b",
+      "sha256AfterPathRewrite": "88ef461159a2cb1359745eef855f9e8561dc3a46a552949ef4a1b27faa7c3e2b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/market_research_test.go",
+      "to": "api-candidate/internal/marketdata/market_research_test.go",
+      "sha256Before": "b0bb4c8268bdd8f22d268142b6c69f3478ad44f8feae7387db17d4c11cbe2c53",
+      "sha256AfterPathRewrite": "b0bb4c8268bdd8f22d268142b6c69f3478ad44f8feae7387db17d4c11cbe2c53"
+    },
+    {
+      "from": "backend-go/internal/marketdata/news.go",
+      "to": "api-candidate/internal/marketdata/news.go",
+      "sha256Before": "c567b102598fc0ed03487a4ec7c3eda2787f2db77d2760bc1e797dffba54b405",
+      "sha256AfterPathRewrite": "c567b102598fc0ed03487a4ec7c3eda2787f2db77d2760bc1e797dffba54b405"
+    },
+    {
+      "from": "backend-go/internal/marketdata/news_bridge.go",
+      "to": "api-candidate/internal/marketdata/news_bridge.go",
+      "sha256Before": "d818336bcb68a29eed931711e52de30641eab7f66d7f5f8e3c92a5e4715599d1",
+      "sha256AfterPathRewrite": "d818336bcb68a29eed931711e52de30641eab7f66d7f5f8e3c92a5e4715599d1"
+    },
+    {
+      "from": "backend-go/internal/marketdata/news_test.go",
+      "to": "api-candidate/internal/marketdata/news_test.go",
+      "sha256Before": "1ef527f06802c5dfe7521fbdc7b23a3a5a70a8ddcd12911b5ebaa208574462ef",
+      "sha256AfterPathRewrite": "1ef527f06802c5dfe7521fbdc7b23a3a5a70a8ddcd12911b5ebaa208574462ef"
+    },
+    {
+      "from": "backend-go/internal/marketdata/news_write.go",
+      "to": "api-candidate/internal/marketdata/news_write.go",
+      "sha256Before": "826287b8efd3181a61b545e9a58cb508e13bedc5c6fe1ffda85e1584fadc988b",
+      "sha256AfterPathRewrite": "826287b8efd3181a61b545e9a58cb508e13bedc5c6fe1ffda85e1584fadc988b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/news_write_test.go",
+      "to": "api-candidate/internal/marketdata/news_write_test.go",
+      "sha256Before": "62c2d4893f3670b16d7ced56e1655cc826cd384932c5167a493bc5a9f365fb1b",
+      "sha256AfterPathRewrite": "62c2d4893f3670b16d7ced56e1655cc826cd384932c5167a493bc5a9f365fb1b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/observed_closes.go",
+      "to": "api-candidate/internal/marketdata/observed_closes.go",
+      "sha256Before": "c8e649518840d3583821050c2ffadd9a6b168affae9a0d66c7f469a7b32a2d16",
+      "sha256AfterPathRewrite": "c8e649518840d3583821050c2ffadd9a6b168affae9a0d66c7f469a7b32a2d16"
+    },
+    {
+      "from": "backend-go/internal/marketdata/portfolio.go",
+      "to": "api-candidate/internal/marketdata/portfolio.go",
+      "sha256Before": "a31db4e2524f42d05c6028b0bf3fd7ea63e33577b3b7d9b0c77bae99fb21970a",
+      "sha256AfterPathRewrite": "a31db4e2524f42d05c6028b0bf3fd7ea63e33577b3b7d9b0c77bae99fb21970a"
+    },
+    {
+      "from": "backend-go/internal/marketdata/portfolio_persistence.go",
+      "to": "api-candidate/internal/marketdata/portfolio_persistence.go",
+      "sha256Before": "f00960ee5f292737496ff77ed49e9bd70ebe0d2f500a55a91eb0f24db125e48e",
+      "sha256AfterPathRewrite": "f00960ee5f292737496ff77ed49e9bd70ebe0d2f500a55a91eb0f24db125e48e"
+    },
+    {
+      "from": "backend-go/internal/marketdata/portfolio_persistence_test.go",
+      "to": "api-candidate/internal/marketdata/portfolio_persistence_test.go",
+      "sha256Before": "a09740479448ee53e35b008cd41fd4128b1650de17180812cc4d43173baa2943",
+      "sha256AfterPathRewrite": "a09740479448ee53e35b008cd41fd4128b1650de17180812cc4d43173baa2943"
+    },
+    {
+      "from": "backend-go/internal/marketdata/portfolio_test.go",
+      "to": "api-candidate/internal/marketdata/portfolio_test.go",
+      "sha256Before": "38b821275c1f8ae4497dc7763fe06a4e8e07283875e89dce939b50572764581f",
+      "sha256AfterPathRewrite": "38b821275c1f8ae4497dc7763fe06a4e8e07283875e89dce939b50572764581f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_audit_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_audit_fixture_test.go",
+      "sha256Before": "44805d5cdc4c8cc84e9e7a4d426d4b5a66e9689b9cdd3bd1cc475ad371ca856b",
+      "sha256AfterPathRewrite": "44805d5cdc4c8cc84e9e7a4d426d4b5a66e9689b9cdd3bd1cc475ad371ca856b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_financial_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_financial_fixture_test.go",
+      "sha256Before": "2ce8c4c711897c655a636249c2f90346e2138a44f1ae8da52fbfb55296a9f60e",
+      "sha256AfterPathRewrite": "2ce8c4c711897c655a636249c2f90346e2138a44f1ae8da52fbfb55296a9f60e"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_fixture_test.go",
+      "sha256Before": "be0acb145f3a864f40a32310744dc784ce9ab9607160482ed2373da2074f8767",
+      "sha256AfterPathRewrite": "be0acb145f3a864f40a32310744dc784ce9ab9607160482ed2373da2074f8767"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_import_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_import_fixture_test.go",
+      "sha256Before": "79e83dcd81ccd9f1952e0b98819cfa1a537f4acaa5a76e1a97a35d8004904d3c",
+      "sha256AfterPathRewrite": "79e83dcd81ccd9f1952e0b98819cfa1a537f4acaa5a76e1a97a35d8004904d3c"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_quote_candidate_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_quote_candidate_fixture_test.go",
+      "sha256Before": "199f659527f5c1a062b885b768a4ba124950afcf524c5d7c760b12f18b250831",
+      "sha256AfterPathRewrite": "199f659527f5c1a062b885b768a4ba124950afcf524c5d7c760b12f18b250831"
+    },
+    {
+      "from": "backend-go/internal/marketdata/postgres_research_fixture_test.go",
+      "to": "api-candidate/internal/marketdata/postgres_research_fixture_test.go",
+      "sha256Before": "6c26139f7aebd70df691280862e4ba46f24b28314062a00e53854f1b44063bc4",
+      "sha256AfterPathRewrite": "6c26139f7aebd70df691280862e4ba46f24b28314062a00e53854f1b44063bc4"
+    },
+    {
+      "from": "backend-go/internal/marketdata/profiles.go",
+      "to": "api-candidate/internal/marketdata/profiles.go",
+      "sha256Before": "64f644e5a769ae9f9d0c3074b6d81686f419ba9f1f2210ff5fcc9e971d115c82",
+      "sha256AfterPathRewrite": "64f644e5a769ae9f9d0c3074b6d81686f419ba9f1f2210ff5fcc9e971d115c82"
+    },
+    {
+      "from": "backend-go/internal/marketdata/publisher_candles.go",
+      "to": "api-candidate/internal/marketdata/publisher_candles.go",
+      "sha256Before": "e9582469f822f7711eee637d07d33ebab312f0a6e14f53593fc82e8acd4c0c5d",
+      "sha256AfterPathRewrite": "e9582469f822f7711eee637d07d33ebab312f0a6e14f53593fc82e8acd4c0c5d"
+    },
+    {
+      "from": "backend-go/internal/marketdata/publisher_close_sql.go",
+      "to": "api-candidate/internal/marketdata/publisher_close_sql.go",
+      "sha256Before": "0ca2a218b036d9f496adb51fdb1193fa3b53a26c89ef1754aad244ad99cd604f",
+      "sha256AfterPathRewrite": "0ca2a218b036d9f496adb51fdb1193fa3b53a26c89ef1754aad244ad99cd604f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/quote_collection.go",
+      "to": "api-candidate/internal/marketdata/quote_collection.go",
+      "sha256Before": "32d51f8de14e67960ad4efc09377bbcde72971f8b928b5c5b4eab234d2546e47",
+      "sha256AfterPathRewrite": "32d51f8de14e67960ad4efc09377bbcde72971f8b928b5c5b4eab234d2546e47"
+    },
+    {
+      "from": "backend-go/internal/marketdata/quote_collection_test.go",
+      "to": "api-candidate/internal/marketdata/quote_collection_test.go",
+      "sha256Before": "2b91cf365c6e412a5980e27815d13ec6b6e1da4d8d6b6e3a566cc30feb5c3340",
+      "sha256AfterPathRewrite": "2b91cf365c6e412a5980e27815d13ec6b6e1da4d8d6b6e3a566cc30feb5c3340"
+    },
+    {
+      "from": "backend-go/internal/marketdata/quotes_write.go",
+      "to": "api-candidate/internal/marketdata/quotes_write.go",
+      "sha256Before": "de32cc5504e0cba2a555b6a2ef4efb8036dabc4192ec4236bae59e091c2c4927",
+      "sha256AfterPathRewrite": "de32cc5504e0cba2a555b6a2ef4efb8036dabc4192ec4236bae59e091c2c4927"
+    },
+    {
+      "from": "backend-go/internal/marketdata/quotes_write_test.go",
+      "to": "api-candidate/internal/marketdata/quotes_write_test.go",
+      "sha256Before": "26ed45272254773ca64ad93945c7889aefbfe5aef3c97e495445f0091a608a8b",
+      "sha256AfterPathRewrite": "26ed45272254773ca64ad93945c7889aefbfe5aef3c97e495445f0091a608a8b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/registry_refresh.go",
+      "to": "api-candidate/internal/marketdata/registry_refresh.go",
+      "sha256Before": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f",
+      "sha256AfterPathRewrite": "2bd4b7b2cd29f8efcff154a2faaf60c8a6374add181c2f270078bace8114fd2f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/registry_refresh_test.go",
+      "to": "api-candidate/internal/marketdata/registry_refresh_test.go",
+      "sha256Before": "81653f6ac6c04e895f714e1bb11ee036b67d89093a403962a538b8747e89378f",
+      "sha256AfterPathRewrite": "81653f6ac6c04e895f714e1bb11ee036b67d89093a403962a538b8747e89378f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/research_basis.go",
+      "to": "api-candidate/internal/marketdata/research_basis.go",
+      "sha256Before": "753dbdc46b7c620d23034451eac7dfa2fd218c2019fc22cc239d6175d96ddd6d",
+      "sha256AfterPathRewrite": "753dbdc46b7c620d23034451eac7dfa2fd218c2019fc22cc239d6175d96ddd6d"
+    },
+    {
+      "from": "backend-go/internal/marketdata/research_basis_test.go",
+      "to": "api-candidate/internal/marketdata/research_basis_test.go",
+      "sha256Before": "477bf857b1b2f5bf9f265178506d1fb0c869e70fe0a1baa591e8f3e1b82ac570",
+      "sha256AfterPathRewrite": "477bf857b1b2f5bf9f265178506d1fb0c869e70fe0a1baa591e8f3e1b82ac570"
+    },
+    {
+      "from": "backend-go/internal/marketdata/research_freshness.go",
+      "to": "api-candidate/internal/marketdata/research_freshness.go",
+      "sha256Before": "fb1e621f8d1b8fbcc729f1f37debbe7e978398b751e0bea74dce85a3f105da25",
+      "sha256AfterPathRewrite": "fb1e621f8d1b8fbcc729f1f37debbe7e978398b751e0bea74dce85a3f105da25"
+    },
+    {
+      "from": "backend-go/internal/marketdata/research_freshness_test.go",
+      "to": "api-candidate/internal/marketdata/research_freshness_test.go",
+      "sha256Before": "c507e88c72ea404ae6e01fe05e090f3959b2c103a79ee596a05d010662f79864",
+      "sha256AfterPathRewrite": "c507e88c72ea404ae6e01fe05e090f3959b2c103a79ee596a05d010662f79864"
+    },
+    {
+      "from": "backend-go/internal/marketdata/research_import.go",
+      "to": "api-candidate/internal/marketdata/research_import.go",
+      "sha256Before": "f12e7932d368cc768234ff39fc6b6a6ad59c3f8293d20f01b3cc0b6030148125",
+      "sha256AfterPathRewrite": "f12e7932d368cc768234ff39fc6b6a6ad59c3f8293d20f01b3cc0b6030148125"
+    },
+    {
+      "from": "backend-go/internal/marketdata/reviewed_component.go",
+      "to": "api-candidate/internal/marketdata/reviewed_component.go",
+      "sha256Before": "113d6c52e842649508a94bd0dd0123850200329261a83ee52719f72c500c117f",
+      "sha256AfterPathRewrite": "113d6c52e842649508a94bd0dd0123850200329261a83ee52719f72c500c117f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/reviewed_import_test.go",
+      "to": "api-candidate/internal/marketdata/reviewed_import_test.go",
+      "sha256Before": "1e021eac776e2df829dd6e1826530da4c4d3ad18725b3b392a748201ef94b8b7",
+      "sha256AfterPathRewrite": "1e021eac776e2df829dd6e1826530da4c4d3ad18725b3b392a748201ef94b8b7"
+    },
+    {
+      "from": "backend-go/internal/marketdata/scores.go",
+      "to": "api-candidate/internal/marketdata/scores.go",
+      "sha256Before": "b6e5ed351b3a3dc89684467691093c35a8a5437c20f2d1ba12ea622ce19d9a4f",
+      "sha256AfterPathRewrite": "b6e5ed351b3a3dc89684467691093c35a8a5437c20f2d1ba12ea622ce19d9a4f"
+    },
+    {
+      "from": "backend-go/internal/marketdata/scores_test.go",
+      "to": "api-candidate/internal/marketdata/scores_test.go",
+      "sha256Before": "478d80b9aee947d94715bfc300800fc1fa0ba1c523003f02563d22c840455026",
+      "sha256AfterPathRewrite": "478d80b9aee947d94715bfc300800fc1fa0ba1c523003f02563d22c840455026"
+    },
+    {
+      "from": "backend-go/internal/marketdata/screening.go",
+      "to": "api-candidate/internal/marketdata/screening.go",
+      "sha256Before": "c327976660da8739aa9e2d613439a746e27a0f43b86e9df194de129bd377c7d7",
+      "sha256AfterPathRewrite": "c327976660da8739aa9e2d613439a746e27a0f43b86e9df194de129bd377c7d7"
+    },
+    {
+      "from": "backend-go/internal/marketdata/screening_test.go",
+      "to": "api-candidate/internal/marketdata/screening_test.go",
+      "sha256Before": "220584cb9ed7fc06d646f9a86d07c4613b30f367243d307f35843f9c9dfa5ca0",
+      "sha256AfterPathRewrite": "220584cb9ed7fc06d646f9a86d07c4613b30f367243d307f35843f9c9dfa5ca0"
+    },
+    {
+      "from": "backend-go/internal/marketdata/securities_write.go",
+      "to": "api-candidate/internal/marketdata/securities_write.go",
+      "sha256Before": "849e73cc33622af11f312c4e41b3975823f6a9cd554be420cbdbe7934f6747e4",
+      "sha256AfterPathRewrite": "849e73cc33622af11f312c4e41b3975823f6a9cd554be420cbdbe7934f6747e4"
+    },
+    {
+      "from": "backend-go/internal/marketdata/securities_write_test.go",
+      "to": "api-candidate/internal/marketdata/securities_write_test.go",
+      "sha256Before": "7dfeef3cb1b4b5dbff5d1e9fa99eec8756fdbd3ba044e9ba7f763366946d5f5b",
+      "sha256AfterPathRewrite": "7dfeef3cb1b4b5dbff5d1e9fa99eec8756fdbd3ba044e9ba7f763366946d5f5b"
+    },
+    {
+      "from": "backend-go/internal/marketdata/store.go",
+      "to": "api-candidate/internal/marketdata/store.go",
+      "sha256Before": "99180ef7a827a87fcc5269341b606a8169c958abf549383f0bdf17e141771738",
+      "sha256AfterPathRewrite": "99180ef7a827a87fcc5269341b606a8169c958abf549383f0bdf17e141771738"
+    },
+    {
+      "from": "backend-go/internal/marketdata/supabase-root-2021.crt",
+      "to": "api-candidate/internal/marketdata/supabase-root-2021.crt",
+      "sha256Before": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+      "sha256AfterPathRewrite": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+    },
+    {
+      "from": "backend-go/internal/marketdata/workspace.go",
+      "to": "api-candidate/internal/marketdata/workspace.go",
+      "sha256Before": "925f4d5693a87cbd4639297bef72086b4eb64f2d4d2f193812ece20bbd84a821",
+      "sha256AfterPathRewrite": "925f4d5693a87cbd4639297bef72086b4eb64f2d4d2f193812ece20bbd84a821"
+    },
+    {
+      "from": "backend-go/internal/marketdata/workspace_test.go",
+      "to": "api-candidate/internal/marketdata/workspace_test.go",
+      "sha256Before": "a151d7b723ac633c9356051dd46433e240311eb1f97c1773991fd2ac2dd7173e",
+      "sha256AfterPathRewrite": "a151d7b723ac633c9356051dd46433e240311eb1f97c1773991fd2ac2dd7173e"
+    },
+    {
+      "from": "backend-go/internal/objectstore/owned_read_test.go",
+      "to": "api-candidate/internal/objectstore/owned_read_test.go",
+      "sha256Before": "f1963f94e769611b522c8987f83a924da475e7b10848a031ffdd02ff389cc959",
+      "sha256AfterPathRewrite": "f1963f94e769611b522c8987f83a924da475e7b10848a031ffdd02ff389cc959"
+    },
+    {
+      "from": "backend-go/internal/objectstore/processed.go",
+      "to": "api-candidate/internal/objectstore/processed.go",
+      "sha256Before": "c9585acc19fc899c61c4699251cf1b24fc93d6c650b9f9289c56db240d8f5c23",
+      "sha256AfterPathRewrite": "c9585acc19fc899c61c4699251cf1b24fc93d6c650b9f9289c56db240d8f5c23"
+    },
+    {
+      "from": "backend-go/internal/objectstore/processed_test.go",
+      "to": "api-candidate/internal/objectstore/processed_test.go",
+      "sha256Before": "3681b1177adf92f13862944acf1db3650bd6b9ee2d08faed3c13d47d129478dc",
+      "sha256AfterPathRewrite": "3681b1177adf92f13862944acf1db3650bd6b9ee2d08faed3c13d47d129478dc"
+    },
+    {
+      "from": "backend-go/internal/objectstore/reader_test.go",
+      "to": "api-candidate/internal/objectstore/reader_test.go",
+      "sha256Before": "492e3c1c2a4248dcaa236736763190be5c05b3ea78bc648d15e7c57d68e5e9f0",
+      "sha256AfterPathRewrite": "492e3c1c2a4248dcaa236736763190be5c05b3ea78bc648d15e7c57d68e5e9f0"
+    },
+    {
+      "from": "backend-go/internal/publication/automatic.go",
+      "to": "api-candidate/internal/publication/automatic.go",
+      "sha256Before": "34e2bb34b61661de1eb561dd5c69bf919dbb068d0bbd56c57b437bd14ad358a6",
+      "sha256AfterPathRewrite": "34e2bb34b61661de1eb561dd5c69bf919dbb068d0bbd56c57b437bd14ad358a6"
+    },
+    {
+      "from": "backend-go/internal/publication/automatic_test.go",
+      "to": "api-candidate/internal/publication/automatic_test.go",
+      "sha256Before": "72d09320e0127c7e84a5aef778a041232fea7f334c7e2479aa2db59c3c83b2e7",
+      "sha256AfterPathRewrite": "72d09320e0127c7e84a5aef778a041232fea7f334c7e2479aa2db59c3c83b2e7"
+    },
+    {
+      "from": "backend-go/internal/publication/candidate_race_test.go",
+      "to": "api-candidate/internal/publication/candidate_race_test.go",
+      "sha256Before": "ae414d6ac18f89bb64e79c2310a553877db7ea2485a4ba6bd8c9dbd027c071a1",
+      "sha256AfterPathRewrite": "ae414d6ac18f89bb64e79c2310a553877db7ea2485a4ba6bd8c9dbd027c071a1"
+    },
+    {
+      "from": "backend-go/internal/publication/candidates.go",
+      "to": "api-candidate/internal/publication/candidates.go",
+      "sha256Before": "83ed2616a0e0cc42dcd2713be3a83d9b50c49f28a12d98726d4a3fbf0d39fff2",
+      "sha256AfterPathRewrite": "83ed2616a0e0cc42dcd2713be3a83d9b50c49f28a12d98726d4a3fbf0d39fff2"
+    },
+    {
+      "from": "backend-go/internal/publication/candidates_test.go",
+      "to": "api-candidate/internal/publication/candidates_test.go",
+      "sha256Before": "817861129a1f340e8a071fe001de66ab0ddd43f1a87140a6a5f0c28477841f43",
+      "sha256AfterPathRewrite": "817861129a1f340e8a071fe001de66ab0ddd43f1a87140a6a5f0c28477841f43"
+    },
+    {
+      "from": "backend-go/internal/publication/confirmation.go",
+      "to": "api-candidate/internal/publication/confirmation.go",
+      "sha256Before": "1206e3d1a9b3da30b2dc151895ef06b0423a534f3c6bfe297703bccb9161c034",
+      "sha256AfterPathRewrite": "1206e3d1a9b3da30b2dc151895ef06b0423a534f3c6bfe297703bccb9161c034"
+    },
+    {
+      "from": "backend-go/internal/publication/confirmation_test.go",
+      "to": "api-candidate/internal/publication/confirmation_test.go",
+      "sha256Before": "976886eb4d932f10508d478b828912e2d836e53ff49bdaac9ed1d1bbe04ee49e",
+      "sha256AfterPathRewrite": "3aa950de481a47a597f00be424a079ae52a5a21a1aec6c6341e0070f508522e3"
+    },
+    {
+      "from": "backend-go/internal/publication/refresh.go",
+      "to": "api-candidate/internal/publication/refresh.go",
+      "sha256Before": "396b23822fec6e25ade0423cd61880f3011ffcf6b446b98d2bd56f7cefcf8c59",
+      "sha256AfterPathRewrite": "396b23822fec6e25ade0423cd61880f3011ffcf6b446b98d2bd56f7cefcf8c59"
+    },
+    {
+      "from": "backend-go/internal/publication/refresh_test.go",
+      "to": "api-candidate/internal/publication/refresh_test.go",
+      "sha256Before": "4726a0215eb2c2923baf55fbbe4cd70ce7ff1b80e2687e804fa99b8f5ca6a690",
+      "sha256AfterPathRewrite": "4726a0215eb2c2923baf55fbbe4cd70ce7ff1b80e2687e804fa99b8f5ca6a690"
+    },
+    {
+      "from": "backend-go/internal/publication/repair.go",
+      "to": "api-candidate/internal/publication/repair.go",
+      "sha256Before": "4176963130d7655ca0beefdc5ecf30842306e3c16e582434a8700d5f62f5d197",
+      "sha256AfterPathRewrite": "4176963130d7655ca0beefdc5ecf30842306e3c16e582434a8700d5f62f5d197"
+    },
+    {
+      "from": "backend-go/internal/publication/reviewed.go",
+      "to": "api-candidate/internal/publication/reviewed.go",
+      "sha256Before": "a196dc03d39c85d916e22f339fa33568c6093d64012954a1516673425d7ee870",
+      "sha256AfterPathRewrite": "a196dc03d39c85d916e22f339fa33568c6093d64012954a1516673425d7ee870"
+    },
+    {
+      "from": "backend-go/internal/streaming/hub.go",
+      "to": "api-candidate/internal/streaming/hub.go",
+      "sha256Before": "90ec5a1409972afd5f0a0fe9bee276bc769874f649d049d6ad11c4e7bd9b1cbe",
+      "sha256AfterPathRewrite": "90ec5a1409972afd5f0a0fe9bee276bc769874f649d049d6ad11c4e7bd9b1cbe"
+    },
+    {
+      "from": "backend-go/internal/streaming/hub_test.go",
+      "to": "api-candidate/internal/streaming/hub_test.go",
+      "sha256Before": "1ff55b97035dc3b85e3feac50632cc08038432e5a4b87ac16d208f867ec35d0b",
+      "sha256AfterPathRewrite": "1ff55b97035dc3b85e3feac50632cc08038432e5a4b87ac16d208f867ec35d0b"
+    },
+    {
+      "from": "engine-python/continua_engine/__init__.py",
+      "to": "financial-engine/continua_engine/__init__.py",
+      "sha256Before": "3aad101e359f1e90498345b849269027d7a1488b5cb4fe5f8911dd596b72ca63",
+      "sha256AfterPathRewrite": "3aad101e359f1e90498345b849269027d7a1488b5cb4fe5f8911dd596b72ca63"
+    },
+    {
+      "from": "engine-python/continua_engine/advanced.py",
+      "to": "financial-engine/continua_engine/advanced.py",
+      "sha256Before": "4f89ecd68b6c5483b2de93b5345ac136a91e0a64710e5b66048256fe16e76b1a",
+      "sha256AfterPathRewrite": "4f89ecd68b6c5483b2de93b5345ac136a91e0a64710e5b66048256fe16e76b1a"
+    },
+    {
+      "from": "engine-python/continua_engine/analytics.py",
+      "to": "financial-engine/continua_engine/analytics.py",
+      "sha256Before": "792dc0f67f3c48ec1dae83e39ed4e6f25f37a3eb861ee5b13625f60bd9a8a5a3",
+      "sha256AfterPathRewrite": "792dc0f67f3c48ec1dae83e39ed4e6f25f37a3eb861ee5b13625f60bd9a8a5a3"
+    },
+    {
+      "from": "engine-python/continua_engine/briefing.py",
+      "to": "financial-engine/continua_engine/briefing.py",
+      "sha256Before": "fc5b2f05d102410d1f8a63b1f2563d65cedbc6790921be18e25969ee3fd5c464",
+      "sha256AfterPathRewrite": "fc5b2f05d102410d1f8a63b1f2563d65cedbc6790921be18e25969ee3fd5c464"
+    },
+    {
+      "from": "engine-python/continua_engine/bundle.py",
+      "to": "financial-engine/continua_engine/bundle.py",
+      "sha256Before": "bba8df51d5acb1eba22aa3c0708457cf70b1d8c2f6ca5afe396ecea67c25b0cd",
+      "sha256AfterPathRewrite": "bba8df51d5acb1eba22aa3c0708457cf70b1d8c2f6ca5afe396ecea67c25b0cd"
+    },
+    {
+      "from": "engine-python/continua_engine/calculated_answer.py",
+      "to": "financial-engine/continua_engine/calculated_answer.py",
+      "sha256Before": "4ab896e149a8ef94bfd7e35c8e507e2bb21bb0508f58fab204bae38ab0d79ca0",
+      "sha256AfterPathRewrite": "4ab896e149a8ef94bfd7e35c8e507e2bb21bb0508f58fab204bae38ab0d79ca0"
+    },
+    {
+      "from": "engine-python/continua_engine/candles.py",
+      "to": "financial-engine/continua_engine/candles.py",
+      "sha256Before": "6f915416327a4336f82ffed55b051f9c8038ca4b5cdbd9ee725580413b0c961e",
+      "sha256AfterPathRewrite": "6f915416327a4336f82ffed55b051f9c8038ca4b5cdbd9ee725580413b0c961e"
+    },
+    {
+      "from": "engine-python/continua_engine/cbk.py",
+      "to": "financial-engine/continua_engine/cbk.py",
+      "sha256Before": "b91e167c2a7df4e9aacc8109e61421a343ce60816b8caf4458704e57459128d6",
+      "sha256AfterPathRewrite": "b91e167c2a7df4e9aacc8109e61421a343ce60816b8caf4458704e57459128d6"
+    },
+    {
+      "from": "engine-python/continua_engine/collected.py",
+      "to": "financial-engine/continua_engine/collected.py",
+      "sha256Before": "559c25a6c4bb6a3283fd1e1b4d59a0d1b07c594bdc3cf5e19f45fc9a16dd2f3d",
+      "sha256AfterPathRewrite": "559c25a6c4bb6a3283fd1e1b4d59a0d1b07c594bdc3cf5e19f45fc9a16dd2f3d"
+    },
+    {
+      "from": "engine-python/continua_engine/company_context.py",
+      "to": "financial-engine/continua_engine/company_context.py",
+      "sha256Before": "8ff6702878120817928706824614e05c5c65f9eef6bab4622eb43b0854f2a562",
+      "sha256AfterPathRewrite": "8ff6702878120817928706824614e05c5c65f9eef6bab4622eb43b0854f2a562"
+    },
+    {
+      "from": "engine-python/continua_engine/dates.py",
+      "to": "financial-engine/continua_engine/dates.py",
+      "sha256Before": "6367239f7572193180d21c2ab175cc90e45dc75bae8b60d6d6b40c2cb57d1650",
+      "sha256AfterPathRewrite": "6367239f7572193180d21c2ab175cc90e45dc75bae8b60d6d6b40c2cb57d1650"
+    },
+    {
+      "from": "engine-python/continua_engine/dividends.py",
+      "to": "financial-engine/continua_engine/dividends.py",
+      "sha256Before": "586a7d1cff704cc2cda9a2784bbef75ebb2bbe54368256a3686173239e1e8a81",
+      "sha256AfterPathRewrite": "586a7d1cff704cc2cda9a2784bbef75ebb2bbe54368256a3686173239e1e8a81"
+    },
+    {
+      "from": "engine-python/continua_engine/document_plan.py",
+      "to": "financial-engine/continua_engine/document_plan.py",
+      "sha256Before": "b41b735972a7f51ffa515335925d4479b7b3bd36d00fc510518d491994a27e09",
+      "sha256AfterPathRewrite": "b41b735972a7f51ffa515335925d4479b7b3bd36d00fc510518d491994a27e09"
+    },
+    {
+      "from": "engine-python/continua_engine/evidence_json.py",
+      "to": "financial-engine/continua_engine/evidence_json.py",
+      "sha256Before": "8556560baf96a0d15095ac353e6a1b9aa28bf3fc6e21929fe80da86e5b39e36b",
+      "sha256AfterPathRewrite": "8556560baf96a0d15095ac353e6a1b9aa28bf3fc6e21929fe80da86e5b39e36b"
+    },
+    {
+      "from": "engine-python/continua_engine/execution.py",
+      "to": "financial-engine/continua_engine/execution.py",
+      "sha256Before": "2644a47b57abcb6d675401328659bb50791baaf2354acd846913f3d3e144fe5d",
+      "sha256AfterPathRewrite": "2644a47b57abcb6d675401328659bb50791baaf2354acd846913f3d3e144fe5d"
+    },
+    {
+      "from": "engine-python/continua_engine/factor_research.py",
+      "to": "financial-engine/continua_engine/factor_research.py",
+      "sha256Before": "815cd4744e607d3bdba1b2a9734c0319f0d331d6bb7e331a68436b3ae5055b9e",
+      "sha256AfterPathRewrite": "815cd4744e607d3bdba1b2a9734c0319f0d331d6bb7e331a68436b3ae5055b9e"
+    },
+    {
+      "from": "engine-python/continua_engine/feed_mapping.py",
+      "to": "financial-engine/continua_engine/feed_mapping.py",
+      "sha256Before": "5b06f63b70c7848bfae1ae298a71caf6b0fc2ba83c43fad0cb86990bdf3feb93",
+      "sha256AfterPathRewrite": "5b06f63b70c7848bfae1ae298a71caf6b0fc2ba83c43fad0cb86990bdf3feb93"
+    },
+    {
+      "from": "engine-python/continua_engine/filing_draft.py",
+      "to": "financial-engine/continua_engine/filing_draft.py",
+      "sha256Before": "14a6fe4aa2399467ae56ea411a6ff7d3c733d5e499093f29e04113efe3dcec04",
+      "sha256AfterPathRewrite": "14a6fe4aa2399467ae56ea411a6ff7d3c733d5e499093f29e04113efe3dcec04"
+    },
+    {
+      "from": "engine-python/continua_engine/indicators.py",
+      "to": "financial-engine/continua_engine/indicators.py",
+      "sha256Before": "2ec17e185336c7853c4794342130c45aca4005ad622bd614f294d67f91ad9987",
+      "sha256AfterPathRewrite": "2ec17e185336c7853c4794342130c45aca4005ad622bd614f294d67f91ad9987"
+    },
+    {
+      "from": "engine-python/continua_engine/investment.py",
+      "to": "financial-engine/continua_engine/investment.py",
+      "sha256Before": "547707c26f804ce61d1c83355518bdba97d39cfa9b294490a003f5886569e6d9",
+      "sha256AfterPathRewrite": "547707c26f804ce61d1c83355518bdba97d39cfa9b294490a003f5886569e6d9"
+    },
+    {
+      "from": "engine-python/continua_engine/labs.py",
+      "to": "financial-engine/continua_engine/labs.py",
+      "sha256Before": "4e8bd29c962059e8028172bac5e49b8573f05313a7a17bd4fd34af3a726f9291",
+      "sha256AfterPathRewrite": "4e8bd29c962059e8028172bac5e49b8573f05313a7a17bd4fd34af3a726f9291"
+    },
+    {
+      "from": "engine-python/continua_engine/market_intelligence.py",
+      "to": "financial-engine/continua_engine/market_intelligence.py",
+      "sha256Before": "644b73321333ac00860c36b370423d8f6af06c57768ffb1badf5e4f1e92f73a7",
+      "sha256AfterPathRewrite": "644b73321333ac00860c36b370423d8f6af06c57768ffb1badf5e4f1e92f73a7"
+    },
+    {
+      "from": "engine-python/continua_engine/market_statistics.py",
+      "to": "financial-engine/continua_engine/market_statistics.py",
+      "sha256Before": "3d3cfc7f3cc3a3ae45d0bf383ae3045603012dd7f195f9ff65dc398bfa0e482a",
+      "sha256AfterPathRewrite": "3d3cfc7f3cc3a3ae45d0bf383ae3045603012dd7f195f9ff65dc398bfa0e482a"
+    },
+    {
+      "from": "engine-python/continua_engine/monitoring.py",
+      "to": "financial-engine/continua_engine/monitoring.py",
+      "sha256Before": "81c80515cf69ec976e8666d0fcd957f687c778cf57e771bb8c4bc7be6718a071",
+      "sha256AfterPathRewrite": "81c80515cf69ec976e8666d0fcd957f687c778cf57e771bb8c4bc7be6718a071"
+    },
+    {
+      "from": "engine-python/continua_engine/news.py",
+      "to": "financial-engine/continua_engine/news.py",
+      "sha256Before": "6f91351fee7bb2105b2ca19a63b3a1ebeb27d084ceaa40f0c6a004062eb5114a",
+      "sha256AfterPathRewrite": "6f91351fee7bb2105b2ca19a63b3a1ebeb27d084ceaa40f0c6a004062eb5114a"
+    },
+    {
+      "from": "engine-python/continua_engine/notebook.py",
+      "to": "financial-engine/continua_engine/notebook.py",
+      "sha256Before": "3ffb66dbe0d02ed7d625a45dbed27d7fb38c8c2f89ef484fb68ab43949f9bb6c",
+      "sha256AfterPathRewrite": "3ffb66dbe0d02ed7d625a45dbed27d7fb38c8c2f89ef484fb68ab43949f9bb6c"
+    },
+    {
+      "from": "engine-python/continua_engine/numbers.py",
+      "to": "financial-engine/continua_engine/numbers.py",
+      "sha256Before": "055484136342f4fb0f4618cf712d6c281e7b7756bc2fc14fe9524cb70e79be4d",
+      "sha256AfterPathRewrite": "055484136342f4fb0f4618cf712d6c281e7b7756bc2fc14fe9524cb70e79be4d"
+    },
+    {
+      "from": "engine-python/continua_engine/portfolio.py",
+      "to": "financial-engine/continua_engine/portfolio.py",
+      "sha256Before": "7a53c37bbeed747e86f2d248cc3ffc6ec2371fb18830e7b1947b62a88fa4305b",
+      "sha256AfterPathRewrite": "7a53c37bbeed747e86f2d248cc3ffc6ec2371fb18830e7b1947b62a88fa4305b"
+    },
+    {
+      "from": "engine-python/continua_engine/portfolio_workspace.py",
+      "to": "financial-engine/continua_engine/portfolio_workspace.py",
+      "sha256Before": "a3559061e235ff37ecf7123f525e298344c9b6ba09f9391f781a8c5106968e55",
+      "sha256AfterPathRewrite": "a3559061e235ff37ecf7123f525e298344c9b6ba09f9391f781a8c5106968e55"
+    },
+    {
+      "from": "engine-python/continua_engine/preferences.py",
+      "to": "financial-engine/continua_engine/preferences.py",
+      "sha256Before": "f25bf81aaf0fe74fe8d917ac6d6480fa087dbf7a8be3b24c4196b0a99ecf6562",
+      "sha256AfterPathRewrite": "f25bf81aaf0fe74fe8d917ac6d6480fa087dbf7a8be3b24c4196b0a99ecf6562"
+    },
+    {
+      "from": "engine-python/continua_engine/publication.py",
+      "to": "financial-engine/continua_engine/publication.py",
+      "sha256Before": "f223f91588969454198dc246b67cc78bf4e8abb4fff43703149497058b7dd6aa",
+      "sha256AfterPathRewrite": "f223f91588969454198dc246b67cc78bf4e8abb4fff43703149497058b7dd6aa"
+    },
+    {
+      "from": "engine-python/continua_engine/publisher.py",
+      "to": "financial-engine/continua_engine/publisher.py",
+      "sha256Before": "a4dc2a49ae100e436f8c2d7054339375ff1dc940789d45e0b494ccf7dd3d0833",
+      "sha256AfterPathRewrite": "a4dc2a49ae100e436f8c2d7054339375ff1dc940789d45e0b494ccf7dd3d0833"
+    },
+    {
+      "from": "engine-python/continua_engine/publisher_context.py",
+      "to": "financial-engine/continua_engine/publisher_context.py",
+      "sha256Before": "37e9ee28e41e40e288a87e3801974f39ba28a4a91020a9942aa54b2408eba4d6",
+      "sha256AfterPathRewrite": "37e9ee28e41e40e288a87e3801974f39ba28a4a91020a9942aa54b2408eba4d6"
+    },
+    {
+      "from": "engine-python/continua_engine/ratios.py",
+      "to": "financial-engine/continua_engine/ratios.py",
+      "sha256Before": "cdffb1a1fce05ab964d69f619ee1b22b105629cfcb8a0fe31397be4954a77e21",
+      "sha256AfterPathRewrite": "cdffb1a1fce05ab964d69f619ee1b22b105629cfcb8a0fe31397be4954a77e21"
+    },
+    {
+      "from": "engine-python/continua_engine/readiness.py",
+      "to": "financial-engine/continua_engine/readiness.py",
+      "sha256Before": "d9cd65a6ad7891c56128ef289b67a8122edebcc23172bbed484675defc120cc6",
+      "sha256AfterPathRewrite": "d9cd65a6ad7891c56128ef289b67a8122edebcc23172bbed484675defc120cc6"
+    },
+    {
+      "from": "engine-python/continua_engine/registered_reports.py",
+      "to": "financial-engine/continua_engine/registered_reports.py",
+      "sha256Before": "63136dba9ebfc313d2e8f56509aff850af1259e76a73271c5f0cdf86c4f8c261",
+      "sha256AfterPathRewrite": "63136dba9ebfc313d2e8f56509aff850af1259e76a73271c5f0cdf86c4f8c261"
+    },
+    {
+      "from": "engine-python/continua_engine/reported.py",
+      "to": "financial-engine/continua_engine/reported.py",
+      "sha256Before": "583312d7c782e4d17fb633265ffd086e34a609a685133f849083b2ad865254b5",
+      "sha256AfterPathRewrite": "583312d7c782e4d17fb633265ffd086e34a609a685133f849083b2ad865254b5"
+    },
+    {
+      "from": "engine-python/continua_engine/reports.py",
+      "to": "financial-engine/continua_engine/reports.py",
+      "sha256Before": "2a6ff5d10865452dd1c7f558b86a0d012a34e674eeff0efa26027e0c2b68faeb",
+      "sha256AfterPathRewrite": "2a6ff5d10865452dd1c7f558b86a0d012a34e674eeff0efa26027e0c2b68faeb"
+    },
+    {
+      "from": "engine-python/continua_engine/research_components.py",
+      "to": "financial-engine/continua_engine/research_components.py",
+      "sha256Before": "c0566cdd134baae2d0aa3ea45193772c914b3f9270f0230b018c1ffeaf0849d3",
+      "sha256AfterPathRewrite": "c0566cdd134baae2d0aa3ea45193772c914b3f9270f0230b018c1ffeaf0849d3"
+    },
+    {
+      "from": "engine-python/continua_engine/research_snapshot.py",
+      "to": "financial-engine/continua_engine/research_snapshot.py",
+      "sha256Before": "714a1bccbf98d73308641ad32a3be5c1d4dbf28af8a783613136af6445a277cd",
+      "sha256AfterPathRewrite": "714a1bccbf98d73308641ad32a3be5c1d4dbf28af8a783613136af6445a277cd"
+    },
+    {
+      "from": "engine-python/continua_engine/risk.py",
+      "to": "financial-engine/continua_engine/risk.py",
+      "sha256Before": "6b82a334ee4522f62083bd1d28d054e4a60c7924905b221d84dfe523af2a888a",
+      "sha256AfterPathRewrite": "6b82a334ee4522f62083bd1d28d054e4a60c7924905b221d84dfe523af2a888a"
+    },
+    {
+      "from": "engine-python/continua_engine/risk_intelligence.py",
+      "to": "financial-engine/continua_engine/risk_intelligence.py",
+      "sha256Before": "c35e831123c56bc2dc7d3d3f1a998ede767a5d282684453b23873164655a87c1",
+      "sha256AfterPathRewrite": "c35e831123c56bc2dc7d3d3f1a998ede767a5d282684453b23873164655a87c1"
+    },
+    {
+      "from": "engine-python/continua_engine/safaricom.py",
+      "to": "financial-engine/continua_engine/safaricom.py",
+      "sha256Before": "c1a38a96eae926d4a7175ccf7f55955e335346aa8ab00eebaea98a83f06235da",
+      "sha256AfterPathRewrite": "c1a38a96eae926d4a7175ccf7f55955e335346aa8ab00eebaea98a83f06235da"
+    },
+    {
+      "from": "engine-python/continua_engine/valuation.py",
+      "to": "financial-engine/continua_engine/valuation.py",
+      "sha256Before": "3b43b5524e51f04b8b40b02ab7864fc9853fc966e7bb4bd6edb293fb6c9b674d",
+      "sha256AfterPathRewrite": "3b43b5524e51f04b8b40b02ab7864fc9853fc966e7bb4bd6edb293fb6c9b674d"
+    },
+    {
+      "from": "engine-python/continua_engine/valuation_models.py",
+      "to": "financial-engine/continua_engine/valuation_models.py",
+      "sha256Before": "c302f480b4d56105942f84569146daa766f8c0dc1747e4bd2a434b28c25db836",
+      "sha256AfterPathRewrite": "c302f480b4d56105942f84569146daa766f8c0dc1747e4bd2a434b28c25db836"
+    },
+    {
+      "from": "engine-python/engine_cli.py",
+      "to": "financial-engine/engine_cli.py",
+      "sha256Before": "f6bd36f3dfd49ea818e20609d6fba129be74ab61a9d709a144fb2f15ee340aa3",
+      "sha256AfterPathRewrite": "f6bd36f3dfd49ea818e20609d6fba129be74ab61a9d709a144fb2f15ee340aa3"
+    },
+    {
+      "from": "engine-python/tests/test_advanced.py",
+      "to": "financial-engine/tests/test_advanced.py",
+      "sha256Before": "a30554a9c405daaec65c49d342f25d53e5d99a733bf18d1d79e14973813baedb",
+      "sha256AfterPathRewrite": "a30554a9c405daaec65c49d342f25d53e5d99a733bf18d1d79e14973813baedb"
+    },
+    {
+      "from": "engine-python/tests/test_analytics.py",
+      "to": "financial-engine/tests/test_analytics.py",
+      "sha256Before": "aefbe739760c9c914bb19eadabfc786595a4cb2a6369284402a87e130c6179b5",
+      "sha256AfterPathRewrite": "aefbe739760c9c914bb19eadabfc786595a4cb2a6369284402a87e130c6179b5"
+    },
+    {
+      "from": "engine-python/tests/test_assistant_validation.py",
+      "to": "financial-engine/tests/test_assistant_validation.py",
+      "sha256Before": "246080e47b50d16e625c0c889634a13f707f67a73e110589287b9636ba36fedb",
+      "sha256AfterPathRewrite": "246080e47b50d16e625c0c889634a13f707f67a73e110589287b9636ba36fedb"
+    },
+    {
+      "from": "engine-python/tests/test_briefing.py",
+      "to": "financial-engine/tests/test_briefing.py",
+      "sha256Before": "dca4bfc30278698bc5e215ea7a63e338dbd0cfc64cf6f2beb62197dd62dd643b",
+      "sha256AfterPathRewrite": "dca4bfc30278698bc5e215ea7a63e338dbd0cfc64cf6f2beb62197dd62dd643b"
+    },
+    {
+      "from": "engine-python/tests/test_bundle.py",
+      "to": "financial-engine/tests/test_bundle.py",
+      "sha256Before": "f75ea05f7054773ff8e957045acf1cedec3f7d520a91b886d167602b88b9ea54",
+      "sha256AfterPathRewrite": "f75ea05f7054773ff8e957045acf1cedec3f7d520a91b886d167602b88b9ea54"
+    },
+    {
+      "from": "engine-python/tests/test_calculated_answer.py",
+      "to": "financial-engine/tests/test_calculated_answer.py",
+      "sha256Before": "d141cdbabd1c032c57b704c49af9c1c58a93ecf60d4758cef489d3acf7c6f9cc",
+      "sha256AfterPathRewrite": "d141cdbabd1c032c57b704c49af9c1c58a93ecf60d4758cef489d3acf7c6f9cc"
+    },
+    {
+      "from": "engine-python/tests/test_canonical_evidence.py",
+      "to": "financial-engine/tests/test_canonical_evidence.py",
+      "sha256Before": "566f8e3e47a1bc7ad0ea1a7c9f636e231e527d4f42fda685e5cbb65fdd1d7f70",
+      "sha256AfterPathRewrite": "566f8e3e47a1bc7ad0ea1a7c9f636e231e527d4f42fda685e5cbb65fdd1d7f70"
+    },
+    {
+      "from": "engine-python/tests/test_collected.py",
+      "to": "financial-engine/tests/test_collected.py",
+      "sha256Before": "468e5e5afb4237a50bca6d24019e89c3d52a5a1395311d43e00e68c8f639e914",
+      "sha256AfterPathRewrite": "468e5e5afb4237a50bca6d24019e89c3d52a5a1395311d43e00e68c8f639e914"
+    },
+    {
+      "from": "engine-python/tests/test_company_context.py",
+      "to": "financial-engine/tests/test_company_context.py",
+      "sha256Before": "39260e114ca6738ddb1792e417d23bb4f3582025923192853484b76ab1051538",
+      "sha256AfterPathRewrite": "39260e114ca6738ddb1792e417d23bb4f3582025923192853484b76ab1051538"
+    },
+    {
+      "from": "engine-python/tests/test_currency_basis.py",
+      "to": "financial-engine/tests/test_currency_basis.py",
+      "sha256Before": "afddb9a54277a042ba97b413fb8cb0e62d4a9762eaefa276e0e0bf2785cf294a",
+      "sha256AfterPathRewrite": "afddb9a54277a042ba97b413fb8cb0e62d4a9762eaefa276e0e0bf2785cf294a"
+    },
+    {
+      "from": "engine-python/tests/test_document_plan.py",
+      "to": "financial-engine/tests/test_document_plan.py",
+      "sha256Before": "6b326cf58c2d413f8ce29f11f5a90bbb1ab28d63e89b7b8303c90becfaefadbc",
+      "sha256AfterPathRewrite": "6b326cf58c2d413f8ce29f11f5a90bbb1ab28d63e89b7b8303c90becfaefadbc"
+    },
+    {
+      "from": "engine-python/tests/test_earnings_lab.py",
+      "to": "financial-engine/tests/test_earnings_lab.py",
+      "sha256Before": "faa1bdd33553f7c1768caddf78612fced000f25a53f0bcf65db1e64cd9d469f2",
+      "sha256AfterPathRewrite": "faa1bdd33553f7c1768caddf78612fced000f25a53f0bcf65db1e64cd9d469f2"
+    },
+    {
+      "from": "engine-python/tests/test_engine.py",
+      "to": "financial-engine/tests/test_engine.py",
+      "sha256Before": "d582dc482aa51d50285233001ea792043c1ffe1e9477a9850c3f267e07eeff83",
+      "sha256AfterPathRewrite": "d582dc482aa51d50285233001ea792043c1ffe1e9477a9850c3f267e07eeff83"
+    },
+    {
+      "from": "engine-python/tests/test_execution.py",
+      "to": "financial-engine/tests/test_execution.py",
+      "sha256Before": "7da08d002071ad0553f6a72390c77349d13070a5197a73270af18c5c7bd3d8b9",
+      "sha256AfterPathRewrite": "7da08d002071ad0553f6a72390c77349d13070a5197a73270af18c5c7bd3d8b9"
+    },
+    {
+      "from": "engine-python/tests/test_feed_mapping.py",
+      "to": "financial-engine/tests/test_feed_mapping.py",
+      "sha256Before": "3008791b1eae4743c2f09cb0285432097a88950c3c1af3717e49e45af43f3ea1",
+      "sha256AfterPathRewrite": "3008791b1eae4743c2f09cb0285432097a88950c3c1af3717e49e45af43f3ea1"
+    },
+    {
+      "from": "engine-python/tests/test_filing_draft.py",
+      "to": "financial-engine/tests/test_filing_draft.py",
+      "sha256Before": "1b5e6ae5311044df761bb9fc30395e2b61b0367ba06cb5decca9dc0f5992c61e",
+      "sha256AfterPathRewrite": "1b5e6ae5311044df761bb9fc30395e2b61b0367ba06cb5decca9dc0f5992c61e"
+    },
+    {
+      "from": "engine-python/tests/test_financial_extensions.py",
+      "to": "financial-engine/tests/test_financial_extensions.py",
+      "sha256Before": "2ee2c982564c781dabc953cc37d4b21154bb794cfafa2655267222bf7fbe5228",
+      "sha256AfterPathRewrite": "2ee2c982564c781dabc953cc37d4b21154bb794cfafa2655267222bf7fbe5228"
+    },
+    {
+      "from": "engine-python/tests/test_institutional_intelligence.py",
+      "to": "financial-engine/tests/test_institutional_intelligence.py",
+      "sha256Before": "1623135eb91f750a2d149309d9fc8ca250b9cf4aecc8a40b4a1594683f112bb5",
+      "sha256AfterPathRewrite": "1623135eb91f750a2d149309d9fc8ca250b9cf4aecc8a40b4a1594683f112bb5"
+    },
+    {
+      "from": "engine-python/tests/test_investment_intelligence.py",
+      "to": "financial-engine/tests/test_investment_intelligence.py",
+      "sha256Before": "465b5140ea691a68b58f913150fd6998e63898d5158422200f211e0598a32719",
+      "sha256AfterPathRewrite": "465b5140ea691a68b58f913150fd6998e63898d5158422200f211e0598a32719"
+    },
+    {
+      "from": "engine-python/tests/test_labs.py",
+      "to": "financial-engine/tests/test_labs.py",
+      "sha256Before": "6fdf84725476ff3f01cb2b76636a09e99426ce26fd71fe2023acae6ad95ec764",
+      "sha256AfterPathRewrite": "6fdf84725476ff3f01cb2b76636a09e99426ce26fd71fe2023acae6ad95ec764"
+    },
+    {
+      "from": "engine-python/tests/test_market_observations.py",
+      "to": "financial-engine/tests/test_market_observations.py",
+      "sha256Before": "c1230733df01d7c0ec0634e1d1000029b7993f28d04a6b58d81d074fbd9b5b09",
+      "sha256AfterPathRewrite": "c1230733df01d7c0ec0634e1d1000029b7993f28d04a6b58d81d074fbd9b5b09"
+    },
+    {
+      "from": "engine-python/tests/test_monitor_worker.py",
+      "to": "financial-engine/tests/test_monitor_worker.py",
+      "sha256Before": "028c0342af89fe94580dad768d2b7ff793f68fa51f7ea0fa1a189867a7e03ec3",
+      "sha256AfterPathRewrite": "028c0342af89fe94580dad768d2b7ff793f68fa51f7ea0fa1a189867a7e03ec3"
+    },
+    {
+      "from": "engine-python/tests/test_native_source_pipelines.py",
+      "to": "financial-engine/tests/test_native_source_pipelines.py",
+      "sha256Before": "32d69c263847685a5c1dc45631b14c6733ef199df4555b7bee10c4cbb1cd6583",
+      "sha256AfterPathRewrite": "32d69c263847685a5c1dc45631b14c6733ef199df4555b7bee10c4cbb1cd6583"
+    },
+    {
+      "from": "engine-python/tests/test_news.py",
+      "to": "financial-engine/tests/test_news.py",
+      "sha256Before": "9a4f3bf1500c928438344e706e0fd051aba56f3d89cd9831dee28a18b3968168",
+      "sha256AfterPathRewrite": "9a4f3bf1500c928438344e706e0fd051aba56f3d89cd9831dee28a18b3968168"
+    },
+    {
+      "from": "engine-python/tests/test_news_ingestion.py",
+      "to": "financial-engine/tests/test_news_ingestion.py",
+      "sha256Before": "7432657560758ab5585c555adf56fe601b2a65b0e7de371a765f4e7e9682cbe0",
+      "sha256AfterPathRewrite": "7432657560758ab5585c555adf56fe601b2a65b0e7de371a765f4e7e9682cbe0"
+    },
+    {
+      "from": "engine-python/tests/test_notebook.py",
+      "to": "financial-engine/tests/test_notebook.py",
+      "sha256Before": "a3c7c788f9d978bb3e3ec5c58533ba6e5f4ae77b70124338d5fc4fb8d30cd92b",
+      "sha256AfterPathRewrite": "a3c7c788f9d978bb3e3ec5c58533ba6e5f4ae77b70124338d5fc4fb8d30cd92b"
+    },
+    {
+      "from": "engine-python/tests/test_portfolio_workspace.py",
+      "to": "financial-engine/tests/test_portfolio_workspace.py",
+      "sha256Before": "8232e51ccc7105986f17216ae40c227173ac5f09d5cd833dae0b1b998d239674",
+      "sha256AfterPathRewrite": "8232e51ccc7105986f17216ae40c227173ac5f09d5cd833dae0b1b998d239674"
+    },
+    {
+      "from": "engine-python/tests/test_preferences_schema.py",
+      "to": "financial-engine/tests/test_preferences_schema.py",
+      "sha256Before": "94a46bcfa26f1ad1a21519ad0efda6c8f32689626392b69d6a9ac122fc670cd8",
+      "sha256AfterPathRewrite": "94a46bcfa26f1ad1a21519ad0efda6c8f32689626392b69d6a9ac122fc670cd8"
+    },
+    {
+      "from": "engine-python/tests/test_publication.py",
+      "to": "financial-engine/tests/test_publication.py",
+      "sha256Before": "c71e180f9d11790883d0f32507e18fe4f67c8a87836e40599cf7ad62fca46d7b",
+      "sha256AfterPathRewrite": "c71e180f9d11790883d0f32507e18fe4f67c8a87836e40599cf7ad62fca46d7b"
+    },
+    {
+      "from": "engine-python/tests/test_publisher_context.py",
+      "to": "financial-engine/tests/test_publisher_context.py",
+      "sha256Before": "e3aaa75948d0771a58f2c35bbc4892c9063eec7161a0126b0a04a2224a588d54",
+      "sha256AfterPathRewrite": "e3aaa75948d0771a58f2c35bbc4892c9063eec7161a0126b0a04a2224a588d54"
+    },
+    {
+      "from": "engine-python/tests/test_readiness.py",
+      "to": "financial-engine/tests/test_readiness.py",
+      "sha256Before": "669451d9f65280c8d3b80d413fea97a5916fe87c473a9c235e9caefcfb394135",
+      "sha256AfterPathRewrite": "669451d9f65280c8d3b80d413fea97a5916fe87c473a9c235e9caefcfb394135"
+    },
+    {
+      "from": "engine-python/tests/test_research_snapshot.py",
+      "to": "financial-engine/tests/test_research_snapshot.py",
+      "sha256Before": "8b9a2f5a3e2e8a47fa5df70261044922e9b611ccb31ac47e44df49c418c15d82",
+      "sha256AfterPathRewrite": "8b9a2f5a3e2e8a47fa5df70261044922e9b611ccb31ac47e44df49c418c15d82"
+    },
+    {
+      "from": "engine-python/tests/test_risk.py",
+      "to": "financial-engine/tests/test_risk.py",
+      "sha256Before": "aa0453efccf8456bd597ef592d8ebad8c22ba51174d7851475d91781c757efee",
+      "sha256AfterPathRewrite": "aa0453efccf8456bd597ef592d8ebad8c22ba51174d7851475d91781c757efee"
+    },
+    {
+      "from": "engine-python/tests/test_risk_intelligence.py",
+      "to": "financial-engine/tests/test_risk_intelligence.py",
+      "sha256Before": "013cc3ce4f9d46f5af24bd3eb4b4b6dd3d6b167269ee5390e2c61d45d3c00d6c",
+      "sha256AfterPathRewrite": "013cc3ce4f9d46f5af24bd3eb4b4b6dd3d6b167269ee5390e2c61d45d3c00d6c"
+    },
+    {
+      "from": "engine-python/tests/test_stress_workspace.py",
+      "to": "financial-engine/tests/test_stress_workspace.py",
+      "sha256Before": "03ae7e87f0053f654cc22479f3b6279a7fe7b77b1a0fa6b8577b15f95d57e88b",
+      "sha256AfterPathRewrite": "03ae7e87f0053f654cc22479f3b6279a7fe7b77b1a0fa6b8577b15f95d57e88b"
+    },
+    {
+      "from": "engine-python/tests/test_valuation_models.py",
+      "to": "financial-engine/tests/test_valuation_models.py",
+      "sha256Before": "a09d345151c71b314990657d8ff05cf24e3cd3f768a7f1f8cb68c4c516ee4991",
+      "sha256AfterPathRewrite": "a09d345151c71b314990657d8ff05cf24e3cd3f768a7f1f8cb68c4c516ee4991"
+    },
+    {
+      "from": "engine-python/worker.py",
+      "to": "financial-engine/worker.py",
+      "sha256Before": "67f669d70008795220c654d40bc6f69cf27b26c815e8410ca1fa778312c3fe58",
+      "sha256AfterPathRewrite": "67f669d70008795220c654d40bc6f69cf27b26c815e8410ca1fa778312c3fe58"
+    },
+    {
+      "from": "scraper-python/Dockerfile",
+      "to": "financial-data-collector/Dockerfile",
+      "sha256Before": "0d11c235605962d65e9c258cbdc48f1735ce1b6d01465d27f7b0b5b6869948cc",
+      "sha256AfterPathRewrite": "93d0b1ba6659098193cf50d1ea023d55d7ec78ddb774ce816d86c3bf091ba5d3"
+    },
+    {
+      "from": "scraper-python/Dockerfile.dockerignore",
+      "to": "financial-data-collector/Dockerfile.dockerignore",
+      "sha256Before": "4c0190ce43e90a5331e6db9fb1d34ab3fb86db457562f3e723611b4f0c9a2d09",
+      "sha256AfterPathRewrite": "9b701aa6c7edd0d062052e346f84c364fe0367f6065da62a8c2098af0e0419df",
+      "sha256AfterReviewedFix": "1f563386eb24042b55bef180a392109d99220a97b098012cc8c004544cb8b1a2",
+      "reviewedFix": "Include existing Dockerfile COPY dependencies financial-engine/continua_engine and backend/python/engine_calculations.py in the root build context. The previous Docker ignore omitted these required inputs; no runtime logic changes."
+    },
+    {
+      "from": "scraper-python/browser_worker.py",
+      "to": "financial-data-collector/browser_worker.py",
+      "sha256Before": "f0bd50bf140bf8ee5ecb459f16883ed38c0949c9b926968308ad87cfb4612f2c",
+      "sha256AfterPathRewrite": "f0bd50bf140bf8ee5ecb459f16883ed38c0949c9b926968308ad87cfb4612f2c"
+    },
+    {
+      "from": "scraper-python/continua_scraper/__init__.py",
+      "to": "financial-data-collector/continua_scraper/__init__.py",
+      "sha256Before": "a2d21c12041110796f594410ab8458ec1e0b2d240ffcf3cf0a7a755bd8367864",
+      "sha256AfterPathRewrite": "a2d21c12041110796f594410ab8458ec1e0b2d240ffcf3cf0a7a755bd8367864"
+    },
+    {
+      "from": "scraper-python/continua_scraper/adapter_io.py",
+      "to": "financial-data-collector/continua_scraper/adapter_io.py",
+      "sha256Before": "dbab7ed3802e74d5378395c288f112604195a481e7d1839bf7ec4d45885af814",
+      "sha256AfterPathRewrite": "dbab7ed3802e74d5378395c288f112604195a481e7d1839bf7ec4d45885af814"
+    },
+    {
+      "from": "scraper-python/continua_scraper/afx.py",
+      "to": "financial-data-collector/continua_scraper/afx.py",
+      "sha256Before": "b692733103abd74c93194665e3b67e05162d4571a4432ac3ad1257c3bf2bffc4",
+      "sha256AfterPathRewrite": "b692733103abd74c93194665e3b67e05162d4571a4432ac3ad1257c3bf2bffc4"
+    },
+    {
+      "from": "scraper-python/continua_scraper/afx_quote.py",
+      "to": "financial-data-collector/continua_scraper/afx_quote.py",
+      "sha256Before": "908ba4c30d636b5c9fbe9f4f3c77ff4398e98dfe344f32a7c76ea79e24cb5ae7",
+      "sha256AfterPathRewrite": "908ba4c30d636b5c9fbe9f4f3c77ff4398e98dfe344f32a7c76ea79e24cb5ae7"
+    },
+    {
+      "from": "scraper-python/continua_scraper/api.py",
+      "to": "financial-data-collector/continua_scraper/api.py",
+      "sha256Before": "45e7ee7ff254d8ded2fbc998ad87289fd69086c07ec6fa2841b2f313417a5a4d",
+      "sha256AfterPathRewrite": "45e7ee7ff254d8ded2fbc998ad87289fd69086c07ec6fa2841b2f313417a5a4d"
+    },
+    {
+      "from": "scraper-python/continua_scraper/archive.py",
+      "to": "financial-data-collector/continua_scraper/archive.py",
+      "sha256Before": "b8d2e7cdccbae7c110cd9998a62a4816426bf2d76a2725c0cf1770bad1cec436",
+      "sha256AfterPathRewrite": "b8d2e7cdccbae7c110cd9998a62a4816426bf2d76a2725c0cf1770bad1cec436"
+    },
+    {
+      "from": "scraper-python/continua_scraper/archive_checkpoints.py",
+      "to": "financial-data-collector/continua_scraper/archive_checkpoints.py",
+      "sha256Before": "09de89a1a78c8b88acf337721cb6aebf8e4a4cabcc04c23f17a07d8dc40fbbe0",
+      "sha256AfterPathRewrite": "09de89a1a78c8b88acf337721cb6aebf8e4a4cabcc04c23f17a07d8dc40fbbe0"
+    },
+    {
+      "from": "scraper-python/continua_scraper/artifacts.py",
+      "to": "financial-data-collector/continua_scraper/artifacts.py",
+      "sha256Before": "6acf18ea516cad3fe3567d7345470bd3f3e10ded114bb2f1e470267ec981d501",
+      "sha256AfterPathRewrite": "6acf18ea516cad3fe3567d7345470bd3f3e10ded114bb2f1e470267ec981d501"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser.py",
+      "to": "financial-data-collector/continua_scraper/browser.py",
+      "sha256Before": "5f6a57acc76f853f75308b666eb2850cbdfc3951a7978873faa58f1eb46c07c0",
+      "sha256AfterPathRewrite": "5f6a57acc76f853f75308b666eb2850cbdfc3951a7978873faa58f1eb46c07c0"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser_controls.py",
+      "to": "financial-data-collector/continua_scraper/browser_controls.py",
+      "sha256Before": "41f0c6c7375c9d8d2a8cffea27b509bf709b2a4ad29ac10159e3be241249228f",
+      "sha256AfterPathRewrite": "41f0c6c7375c9d8d2a8cffea27b509bf709b2a4ad29ac10159e3be241249228f"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser_proxy.py",
+      "to": "financial-data-collector/continua_scraper/browser_proxy.py",
+      "sha256Before": "c3d4cd66f6f082edf0c87028e6ccd9d3774b26e7a4819e03b87e92e8bf7ede37",
+      "sha256AfterPathRewrite": "c3d4cd66f6f082edf0c87028e6ccd9d3774b26e7a4819e03b87e92e8bf7ede37"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser_settle.py",
+      "to": "financial-data-collector/continua_scraper/browser_settle.py",
+      "sha256Before": "f642f16b0bbffbb40dde108160fef506f40a6d35ccec12019ddcd117d716eebc",
+      "sha256AfterPathRewrite": "f642f16b0bbffbb40dde108160fef506f40a6d35ccec12019ddcd117d716eebc"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser_tabs.py",
+      "to": "financial-data-collector/continua_scraper/browser_tabs.py",
+      "sha256Before": "967cb285810ab5b4c410ef65bbfb17f0511537829b2e9fccfe1ffa770a2a85cc",
+      "sha256AfterPathRewrite": "967cb285810ab5b4c410ef65bbfb17f0511537829b2e9fccfe1ffa770a2a85cc"
+    },
+    {
+      "from": "scraper-python/continua_scraper/browser_worker.py",
+      "to": "financial-data-collector/continua_scraper/browser_worker.py",
+      "sha256Before": "c08bcc6363186ae0495d50a4b1d25bb5514faad54110d20f813e7963c354fb32",
+      "sha256AfterPathRewrite": "c08bcc6363186ae0495d50a4b1d25bb5514faad54110d20f813e7963c354fb32"
+    },
+    {
+      "from": "scraper-python/continua_scraper/cbk_macro.py",
+      "to": "financial-data-collector/continua_scraper/cbk_macro.py",
+      "sha256Before": "19a013ea287477e0daba944bb5f0110764443039876cf98869b43aa0db224539",
+      "sha256AfterPathRewrite": "19a013ea287477e0daba944bb5f0110764443039876cf98869b43aa0db224539"
+    },
+    {
+      "from": "scraper-python/continua_scraper/config.py",
+      "to": "financial-data-collector/continua_scraper/config.py",
+      "sha256Before": "83fda95f37dd0324ba7c46b31c308786a2df6acb6046e176441bbf206bc0c646",
+      "sha256AfterPathRewrite": "83fda95f37dd0324ba7c46b31c308786a2df6acb6046e176441bbf206bc0c646"
+    },
+    {
+      "from": "scraper-python/continua_scraper/crawl_state.py",
+      "to": "financial-data-collector/continua_scraper/crawl_state.py",
+      "sha256Before": "88e6175e180e1375f09b5841440ef3c8e48bca18b6143b7fb2771350fd431228",
+      "sha256AfterPathRewrite": "88e6175e180e1375f09b5841440ef3c8e48bca18b6143b7fb2771350fd431228"
+    },
+    {
+      "from": "scraper-python/continua_scraper/crawler.py",
+      "to": "financial-data-collector/continua_scraper/crawler.py",
+      "sha256Before": "8f3bb3ccc5b09a9f954bdd400c518772ca564c21c4a7b8561be15d68a9019493",
+      "sha256AfterPathRewrite": "8f3bb3ccc5b09a9f954bdd400c518772ca564c21c4a7b8561be15d68a9019493"
+    },
+    {
+      "from": "scraper-python/continua_scraper/database.py",
+      "to": "financial-data-collector/continua_scraper/database.py",
+      "sha256Before": "287bb4f1f967b6cdae1870a9139aeb16fa34f7cba036b60dc9dfad01a82b5cde",
+      "sha256AfterPathRewrite": "287bb4f1f967b6cdae1870a9139aeb16fa34f7cba036b60dc9dfad01a82b5cde"
+    },
+    {
+      "from": "scraper-python/continua_scraper/database_tls.py",
+      "to": "financial-data-collector/continua_scraper/database_tls.py",
+      "sha256Before": "33bb10d5750fb0a45c8c8b561ff210660ff89c299522142558e90219715a8fd0",
+      "sha256AfterPathRewrite": "33bb10d5750fb0a45c8c8b561ff210660ff89c299522142558e90219715a8fd0"
+    },
+    {
+      "from": "scraper-python/continua_scraper/dead_letters.py",
+      "to": "financial-data-collector/continua_scraper/dead_letters.py",
+      "sha256Before": "f002703ab10540290a2ea2775e8a8b4daf788a1b9a2535327186a9b7f3368c66",
+      "sha256AfterPathRewrite": "f002703ab10540290a2ea2775e8a8b4daf788a1b9a2535327186a9b7f3368c66"
+    },
+    {
+      "from": "scraper-python/continua_scraper/default_sources.json",
+      "to": "financial-data-collector/continua_scraper/default_sources.json",
+      "sha256Before": "5c24345149a7f3700e02b6c0244422b6ad1887b29f6abe546084b3917355a761",
+      "sha256AfterPathRewrite": "5c24345149a7f3700e02b6c0244422b6ad1887b29f6abe546084b3917355a761"
+    },
+    {
+      "from": "scraper-python/continua_scraper/diagnostics.py",
+      "to": "financial-data-collector/continua_scraper/diagnostics.py",
+      "sha256Before": "c306c2f988afd944d0d4bdedd90c18f9a405d2bad95a1e444b9e8899ca3cd510",
+      "sha256AfterPathRewrite": "c306c2f988afd944d0d4bdedd90c18f9a405d2bad95a1e444b9e8899ca3cd510"
+    },
+    {
+      "from": "scraper-python/continua_scraper/documents.py",
+      "to": "financial-data-collector/continua_scraper/documents.py",
+      "sha256Before": "9abc2ecfdb4546be0935d7cbeeb0392eaab56e4947770da40a08c18d712e1542",
+      "sha256AfterPathRewrite": "9abc2ecfdb4546be0935d7cbeeb0392eaab56e4947770da40a08c18d712e1542"
+    },
+    {
+      "from": "scraper-python/continua_scraper/download.py",
+      "to": "financial-data-collector/continua_scraper/download.py",
+      "sha256Before": "0fd41054b15d3716cd4d8950328377ed868994feb1248736db3dac1465c3c6de",
+      "sha256AfterPathRewrite": "0fd41054b15d3716cd4d8950328377ed868994feb1248736db3dac1465c3c6de"
+    },
+    {
+      "from": "scraper-python/continua_scraper/event_loop.py",
+      "to": "financial-data-collector/continua_scraper/event_loop.py",
+      "sha256Before": "8abe5d4864c9660e244671cb424297f3e99747d4a7bc812f81d9634ff51e670b",
+      "sha256AfterPathRewrite": "8abe5d4864c9660e244671cb424297f3e99747d4a7bc812f81d9634ff51e670b"
+    },
+    {
+      "from": "scraper-python/continua_scraper/extraction.py",
+      "to": "financial-data-collector/continua_scraper/extraction.py",
+      "sha256Before": "f9c929047bbc635c3d9d5340207d203598885ad15c853b798785f42a4900a08f",
+      "sha256AfterPathRewrite": "f9c929047bbc635c3d9d5340207d203598885ad15c853b798785f42a4900a08f"
+    },
+    {
+      "from": "scraper-python/continua_scraper/hashing.py",
+      "to": "financial-data-collector/continua_scraper/hashing.py",
+      "sha256Before": "5f69aae9473a4500adfed1d4f1c5b17ae099a504441920cf731323c2f23d9d10",
+      "sha256AfterPathRewrite": "5f69aae9473a4500adfed1d4f1c5b17ae099a504441920cf731323c2f23d9d10"
+    },
+    {
+      "from": "scraper-python/continua_scraper/html.py",
+      "to": "financial-data-collector/continua_scraper/html.py",
+      "sha256Before": "073d9e52d54e9591610b2f7338694936c66f9a7e2814b50d441add59772ddacd",
+      "sha256AfterPathRewrite": "073d9e52d54e9591610b2f7338694936c66f9a7e2814b50d441add59772ddacd"
+    },
+    {
+      "from": "scraper-python/continua_scraper/inspection.py",
+      "to": "financial-data-collector/continua_scraper/inspection.py",
+      "sha256Before": "ca0b7ff49ccf911d35d7330f39e24db697f8d4a539c6d50c9faa55a112c93e4e",
+      "sha256AfterPathRewrite": "ca0b7ff49ccf911d35d7330f39e24db697f8d4a539c6d50c9faa55a112c93e4e"
+    },
+    {
+      "from": "scraper-python/continua_scraper/investment.py",
+      "to": "financial-data-collector/continua_scraper/investment.py",
+      "sha256Before": "20a3e5aa3cea4ae47972e913230497ebde5c803ddc5ddf7e7ed8102f58ab6816",
+      "sha256AfterPathRewrite": "20a3e5aa3cea4ae47972e913230497ebde5c803ddc5ddf7e7ed8102f58ab6816"
+    },
+    {
+      "from": "scraper-python/continua_scraper/kenyanstocks.py",
+      "to": "financial-data-collector/continua_scraper/kenyanstocks.py",
+      "sha256Before": "47f39f6fbcf308014fa5da08c0bafe281547f6855a347f496b814c58dc58bfb3",
+      "sha256AfterPathRewrite": "47f39f6fbcf308014fa5da08c0bafe281547f6855a347f496b814c58dc58bfb3"
+    },
+    {
+      "from": "scraper-python/continua_scraper/legacy_cleanup.py",
+      "to": "financial-data-collector/continua_scraper/legacy_cleanup.py",
+      "sha256Before": "1ceda2f17f3d53e0712df09cf657639c96674d5d28e5d4a029a4ada4bcb6ef37",
+      "sha256AfterPathRewrite": "1ceda2f17f3d53e0712df09cf657639c96674d5d28e5d4a029a4ada4bcb6ef37"
+    },
+    {
+      "from": "scraper-python/continua_scraper/market_source.py",
+      "to": "financial-data-collector/continua_scraper/market_source.py",
+      "sha256Before": "a604c75a44fb8832714540013cb2c3b0dbe20d0e2a6ea31dbe65a01bf3396fec",
+      "sha256AfterPathRewrite": "a604c75a44fb8832714540013cb2c3b0dbe20d0e2a6ea31dbe65a01bf3396fec"
+    },
+    {
+      "from": "scraper-python/continua_scraper/mystocks.py",
+      "to": "financial-data-collector/continua_scraper/mystocks.py",
+      "sha256Before": "20cffd6cba35b86cb5fa8c7b841c522a723e759c934ce0b75de0434c1760ad53",
+      "sha256AfterPathRewrite": "20cffd6cba35b86cb5fa8c7b841c522a723e759c934ce0b75de0434c1760ad53"
+    },
+    {
+      "from": "scraper-python/continua_scraper/nse.py",
+      "to": "financial-data-collector/continua_scraper/nse.py",
+      "sha256Before": "529340323e1b57b589b96f5a8ead25d10373a8fa218c2a9ce58d5ab9f7bac6c5",
+      "sha256AfterPathRewrite": "529340323e1b57b589b96f5a8ead25d10373a8fa218c2a9ce58d5ab9f7bac6c5"
+    },
+    {
+      "from": "scraper-python/continua_scraper/pdf.py",
+      "to": "financial-data-collector/continua_scraper/pdf.py",
+      "sha256Before": "a1a9b6cdca4721b9b37f2bf3c968c67a71b9f1e1042f5c49aba1918f1987c30c",
+      "sha256AfterPathRewrite": "a1a9b6cdca4721b9b37f2bf3c968c67a71b9f1e1042f5c49aba1918f1987c30c"
+    },
+    {
+      "from": "scraper-python/continua_scraper/policy.py",
+      "to": "financial-data-collector/continua_scraper/policy.py",
+      "sha256Before": "1b243d74dd45ddf63fb8d16e8f957c0e545c1576327c984ade5a28fa89862c8e",
+      "sha256AfterPathRewrite": "1b243d74dd45ddf63fb8d16e8f957c0e545c1576327c984ade5a28fa89862c8e"
+    },
+    {
+      "from": "scraper-python/continua_scraper/process.py",
+      "to": "financial-data-collector/continua_scraper/process.py",
+      "sha256Before": "38d7a4eddb00112f2ea716a8061e59bc4173513ac09c1ad6bcb6484b3ccdcba0",
+      "sha256AfterPathRewrite": "38d7a4eddb00112f2ea716a8061e59bc4173513ac09c1ad6bcb6484b3ccdcba0"
+    },
+    {
+      "from": "scraper-python/continua_scraper/processed_archive.py",
+      "to": "financial-data-collector/continua_scraper/processed_archive.py",
+      "sha256Before": "398fe4a9d3af340e5c48279ea6322db3d79d0a177bad588b4ce78fa932486966",
+      "sha256AfterPathRewrite": "398fe4a9d3af340e5c48279ea6322db3d79d0a177bad588b4ce78fa932486966"
+    },
+    {
+      "from": "scraper-python/continua_scraper/query_volume.py",
+      "to": "financial-data-collector/continua_scraper/query_volume.py",
+      "sha256Before": "a9c540248594f226ea990d6ef7803b5bf7720f139e287a56629267ed97cf1960",
+      "sha256AfterPathRewrite": "a9c540248594f226ea990d6ef7803b5bf7720f139e287a56629267ed97cf1960"
+    },
+    {
+      "from": "scraper-python/continua_scraper/r2.py",
+      "to": "financial-data-collector/continua_scraper/r2.py",
+      "sha256Before": "09e90f45ea1565406caad724cb6f60a599ed398a6fef1838ba9a4ed9f3d3a609",
+      "sha256AfterPathRewrite": "09e90f45ea1565406caad724cb6f60a599ed398a6fef1838ba9a4ed9f3d3a609"
+    },
+    {
+      "from": "scraper-python/continua_scraper/registry.py",
+      "to": "financial-data-collector/continua_scraper/registry.py",
+      "sha256Before": "4468f71956f67eb58c57f288a2f831a5901a0bf9da1b35f8095eb5cc5abdb4f0",
+      "sha256AfterPathRewrite": "4468f71956f67eb58c57f288a2f831a5901a0bf9da1b35f8095eb5cc5abdb4f0"
+    },
+    {
+      "from": "scraper-python/continua_scraper/relationships.py",
+      "to": "financial-data-collector/continua_scraper/relationships.py",
+      "sha256Before": "c696d14d0a55776cefa78641ab6254d0a42dbc00951fb9edb033de55b8c3d635",
+      "sha256AfterPathRewrite": "c696d14d0a55776cefa78641ab6254d0a42dbc00951fb9edb033de55b8c3d635"
+    },
+    {
+      "from": "scraper-python/continua_scraper/render_light.py",
+      "to": "financial-data-collector/continua_scraper/render_light.py",
+      "sha256Before": "0edb9bda33d6881c05808d6255e3edcf6b1e983d7660318d2d4e9c54b63e0b54",
+      "sha256AfterPathRewrite": "0edb9bda33d6881c05808d6255e3edcf6b1e983d7660318d2d4e9c54b63e0b54"
+    },
+    {
+      "from": "scraper-python/continua_scraper/research_processing.py",
+      "to": "financial-data-collector/continua_scraper/research_processing.py",
+      "sha256Before": "c071e7e6b15ad8aa4fd7f5de07b0ae9db199d2d4d100018ebdb09ff3c588946a",
+      "sha256AfterPathRewrite": "c071e7e6b15ad8aa4fd7f5de07b0ae9db199d2d4d100018ebdb09ff3c588946a"
+    },
+    {
+      "from": "scraper-python/continua_scraper/retry.py",
+      "to": "financial-data-collector/continua_scraper/retry.py",
+      "sha256Before": "d00d1ba6ee6eb49729a40d65d08a4164ba4ad83cc191ca67b6efb1b782422737",
+      "sha256AfterPathRewrite": "d00d1ba6ee6eb49729a40d65d08a4164ba4ad83cc191ca67b6efb1b782422737"
+    },
+    {
+      "from": "scraper-python/continua_scraper/rss.py",
+      "to": "financial-data-collector/continua_scraper/rss.py",
+      "sha256Before": "cd1a49b93f4d01bf0459ebb86b50bbe8f4d5e37aeecf3aedc33eb73b0af5bd25",
+      "sha256AfterPathRewrite": "cd1a49b93f4d01bf0459ebb86b50bbe8f4d5e37aeecf3aedc33eb73b0af5bd25"
+    },
+    {
+      "from": "scraper-python/continua_scraper/runner.py",
+      "to": "financial-data-collector/continua_scraper/runner.py",
+      "sha256Before": "5da627a5c7fb106e6bfe7ae4c061cb9013cafa14be489411afe323dab6a6e0da",
+      "sha256AfterPathRewrite": "5da627a5c7fb106e6bfe7ae4c061cb9013cafa14be489411afe323dab6a6e0da"
+    },
+    {
+      "from": "scraper-python/continua_scraper/runtime.py",
+      "to": "financial-data-collector/continua_scraper/runtime.py",
+      "sha256Before": "696c49fad8f918cb94c0762de06acf3c3093756a81d96d033e816b3c60935230",
+      "sha256AfterPathRewrite": "696c49fad8f918cb94c0762de06acf3c3093756a81d96d033e816b3c60935230"
+    },
+    {
+      "from": "scraper-python/continua_scraper/scheduler.py",
+      "to": "financial-data-collector/continua_scraper/scheduler.py",
+      "sha256Before": "0ac837272c79c24fbbcb6e8410da988964c20faf7035912285ae6b9cb4e7d7cc",
+      "sha256AfterPathRewrite": "0ac837272c79c24fbbcb6e8410da988964c20faf7035912285ae6b9cb4e7d7cc"
+    },
+    {
+      "from": "scraper-python/continua_scraper/serial.py",
+      "to": "financial-data-collector/continua_scraper/serial.py",
+      "sha256Before": "b5148a4aab66e72746da0e68d85c84245ccc47b090143afa632fa67cd83967aa",
+      "sha256AfterPathRewrite": "b5148a4aab66e72746da0e68d85c84245ccc47b090143afa632fa67cd83967aa"
+    },
+    {
+      "from": "scraper-python/continua_scraper/source_operations.py",
+      "to": "financial-data-collector/continua_scraper/source_operations.py",
+      "sha256Before": "c6054737f5c24993d6e24ab6838b66ca3def5397c6a002d3987f890617831cbb",
+      "sha256AfterPathRewrite": "c6054737f5c24993d6e24ab6838b66ca3def5397c6a002d3987f890617831cbb"
+    },
+    {
+      "from": "scraper-python/continua_scraper/sources.py",
+      "to": "financial-data-collector/continua_scraper/sources.py",
+      "sha256Before": "719358c5c6ca2252b2d38927666ee467561696b82eeeca5744f5a04761cee46c",
+      "sha256AfterPathRewrite": "719358c5c6ca2252b2d38927666ee467561696b82eeeca5744f5a04761cee46c"
+    },
+    {
+      "from": "scraper-python/continua_scraper/storage.py",
+      "to": "financial-data-collector/continua_scraper/storage.py",
+      "sha256Before": "dbf766cf5939fbf9431b401c2cf4c8fd30073f7517a785df793c90a2bfaf7121",
+      "sha256AfterPathRewrite": "dbf766cf5939fbf9431b401c2cf4c8fd30073f7517a785df793c90a2bfaf7121"
+    },
+    {
+      "from": "scraper-python/continua_scraper/supabase-root-2021.crt",
+      "to": "financial-data-collector/continua_scraper/supabase-root-2021.crt",
+      "sha256Before": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+      "sha256AfterPathRewrite": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+    },
+    {
+      "from": "scraper-python/continua_scraper/tables.py",
+      "to": "financial-data-collector/continua_scraper/tables.py",
+      "sha256Before": "bd92d333af33edfdb3aa6414357ebc580a81f1a8ff28689c118c81fe3910bf80",
+      "sha256AfterPathRewrite": "bd92d333af33edfdb3aa6414357ebc580a81f1a8ff28689c118c81fe3910bf80"
+    },
+    {
+      "from": "scraper-python/continua_scraper/tabs.py",
+      "to": "financial-data-collector/continua_scraper/tabs.py",
+      "sha256Before": "5cc6cb6a8d1a3cb2f1ebab2b2a9788d4790b6e7c90f99ecf3ee3824e7886110b",
+      "sha256AfterPathRewrite": "5cc6cb6a8d1a3cb2f1ebab2b2a9788d4790b6e7c90f99ecf3ee3824e7886110b"
+    },
+    {
+      "from": "scraper-python/continua_scraper/tabular.py",
+      "to": "financial-data-collector/continua_scraper/tabular.py",
+      "sha256Before": "459b537addaf77ea522d2b5898a2bb8dc3cf08abc528e6f871088359e82bb999",
+      "sha256AfterPathRewrite": "459b537addaf77ea522d2b5898a2bb8dc3cf08abc528e6f871088359e82bb999"
+    },
+    {
+      "from": "scraper-python/continua_scraper/transfer_budget.py",
+      "to": "financial-data-collector/continua_scraper/transfer_budget.py",
+      "sha256Before": "8714b18d60b4064704ae7540679ccff24ee8fa3c7547e253ad0ac37d2e20ef5a",
+      "sha256AfterPathRewrite": "8714b18d60b4064704ae7540679ccff24ee8fa3c7547e253ad0ac37d2e20ef5a"
+    },
+    {
+      "from": "scraper-python/continua_scraper/transfers.py",
+      "to": "financial-data-collector/continua_scraper/transfers.py",
+      "sha256Before": "f7273356565c7d961b857bfb0815fdc2db8a783f3afc54b9cabc6568401cc7a1",
+      "sha256AfterPathRewrite": "f7273356565c7d961b857bfb0815fdc2db8a783f3afc54b9cabc6568401cc7a1"
+    },
+    {
+      "from": "scraper-python/continua_scraper/uncatalogued_archive.py",
+      "to": "financial-data-collector/continua_scraper/uncatalogued_archive.py",
+      "sha256Before": "68fbbf12eb83d36f9da0e92c6c2735669611fc9ef8dbfde14ecc9b90d39196c1",
+      "sha256AfterPathRewrite": "68fbbf12eb83d36f9da0e92c6c2735669611fc9ef8dbfde14ecc9b90d39196c1"
+    },
+    {
+      "from": "scraper-python/main.py",
+      "to": "financial-data-collector/main.py",
+      "sha256Before": "1bbb2dd8e92ea4742ddbb5bcbca6b870617d254d4dafde8a06493151ccbde2a3",
+      "sha256AfterPathRewrite": "1bbb2dd8e92ea4742ddbb5bcbca6b870617d254d4dafde8a06493151ccbde2a3"
+    },
+    {
+      "from": "scraper-python/migrate_media.py",
+      "to": "financial-data-collector/migrate_media.py",
+      "sha256Before": "f0179a4ece5732f3747156e3eb2e0e5de2aa1547cb72fef2c35e4e44c99e2bed",
+      "sha256AfterPathRewrite": "f0179a4ece5732f3747156e3eb2e0e5de2aa1547cb72fef2c35e4e44c99e2bed"
+    },
+    {
+      "from": "scraper-python/reconcile_cloud.py",
+      "to": "financial-data-collector/reconcile_cloud.py",
+      "sha256Before": "097113e794ae0c90ad5bda18ecb417ebd6c1b9bc7cf5ab4fe6706ed2fbd3fafb",
+      "sha256AfterPathRewrite": "097113e794ae0c90ad5bda18ecb417ebd6c1b9bc7cf5ab4fe6706ed2fbd3fafb"
+    },
+    {
+      "from": "scraper-python/requirements-lock.txt",
+      "to": "financial-data-collector/requirements-lock.txt",
+      "sha256Before": "19613004bf387cb0fc7737208da1d9abdf26448fa3672363d674cdd14783e027",
+      "sha256AfterPathRewrite": "19613004bf387cb0fc7737208da1d9abdf26448fa3672363d674cdd14783e027"
+    },
+    {
+      "from": "scraper-python/requirements.txt",
+      "to": "financial-data-collector/requirements.txt",
+      "sha256Before": "701538626c3f318be69813cac61ad34caf3f7ee360dc1f98d23a0c0e3f2f7b7f",
+      "sha256AfterPathRewrite": "701538626c3f318be69813cac61ad34caf3f7ee360dc1f98d23a0c0e3f2f7b7f"
+    },
+    {
+      "from": "scraper-python/research_status.py",
+      "to": "financial-data-collector/research_status.py",
+      "sha256Before": "e718980afd319ebddee878473f164cc352949a7ef00cc7172b63365ffff62d10",
+      "sha256AfterPathRewrite": "aaa3a01c78a3ab91b597baec9ce94d594abdaa195c8439efc6ae682bd8f6cdbb"
+    },
+    {
+      "from": "scraper-python/scheduled_collect.py",
+      "to": "financial-data-collector/scheduled_collect.py",
+      "sha256Before": "6ce92f33ef4da888b500c43ffc968ebaf9ee1f884aaef0c948679e2fbd538987",
+      "sha256AfterPathRewrite": "6ce92f33ef4da888b500c43ffc968ebaf9ee1f884aaef0c948679e2fbd538987"
+    },
+    {
+      "from": "scraper-python/scraper_cli.py",
+      "to": "financial-data-collector/scraper_cli.py",
+      "sha256Before": "c93c91b91580b618cc08f8750d9c7a118000aaebcab8433d5c8e7e55120d7d9d",
+      "sha256AfterPathRewrite": "c93c91b91580b618cc08f8750d9c7a118000aaebcab8433d5c8e7e55120d7d9d"
+    },
+    {
+      "from": "scraper-python/tests/test_afx_quote.py",
+      "to": "financial-data-collector/tests/test_afx_quote.py",
+      "sha256Before": "0e9febf677adcaf41d11233b99ede75d110ac11d31af704f0a58c51bc158ba0d",
+      "sha256AfterPathRewrite": "0e9febf677adcaf41d11233b99ede75d110ac11d31af704f0a58c51bc158ba0d"
+    },
+    {
+      "from": "scraper-python/tests/test_archive.py",
+      "to": "financial-data-collector/tests/test_archive.py",
+      "sha256Before": "d56ed52f39873baa49c7227d46a09137557e3d9a477eadfd61943fb55d2bfa6d",
+      "sha256AfterPathRewrite": "d56ed52f39873baa49c7227d46a09137557e3d9a477eadfd61943fb55d2bfa6d"
+    },
+    {
+      "from": "scraper-python/tests/test_artifact_scope.py",
+      "to": "financial-data-collector/tests/test_artifact_scope.py",
+      "sha256Before": "dff58cf54c0b0019fd280261dc8cf0d88a48956d57734b1c47b22f2cd3e66aa0",
+      "sha256AfterPathRewrite": "dff58cf54c0b0019fd280261dc8cf0d88a48956d57734b1c47b22f2cd3e66aa0"
+    },
+    {
+      "from": "scraper-python/tests/test_browser_budget.py",
+      "to": "financial-data-collector/tests/test_browser_budget.py",
+      "sha256Before": "01473fb73128b62cabb6ffd08b285e34e81dcc1f7de1aac0b014ba81968c500a",
+      "sha256AfterPathRewrite": "01473fb73128b62cabb6ffd08b285e34e81dcc1f7de1aac0b014ba81968c500a"
+    },
+    {
+      "from": "scraper-python/tests/test_browser_profile.py",
+      "to": "financial-data-collector/tests/test_browser_profile.py",
+      "sha256Before": "b8723702ef1c07dc58a6d499209af5ee7cb2de77acf5e2d26491a44f1c490e12",
+      "sha256AfterPathRewrite": "b8723702ef1c07dc58a6d499209af5ee7cb2de77acf5e2d26491a44f1c490e12"
+    },
+    {
+      "from": "scraper-python/tests/test_browser_settle.py",
+      "to": "financial-data-collector/tests/test_browser_settle.py",
+      "sha256Before": "dfa61c18a113a39faecb16097e0af237c6977f6dbca55f2b64d2b87022b6536d",
+      "sha256AfterPathRewrite": "dfa61c18a113a39faecb16097e0af237c6977f6dbca55f2b64d2b87022b6536d"
+    },
+    {
+      "from": "scraper-python/tests/test_browser_tabs.py",
+      "to": "financial-data-collector/tests/test_browser_tabs.py",
+      "sha256Before": "adf4da733a0e8048c9f82c71d96ef96407e745acbb72ccad4484be78cc6e5499",
+      "sha256AfterPathRewrite": "adf4da733a0e8048c9f82c71d96ef96407e745acbb72ccad4484be78cc6e5499"
+    },
+    {
+      "from": "scraper-python/tests/test_category_scope.py",
+      "to": "financial-data-collector/tests/test_category_scope.py",
+      "sha256Before": "4299380ef2612d65becd3577153ad5ca5a7c10d6db83d40ecce820b760540d92",
+      "sha256AfterPathRewrite": "4299380ef2612d65becd3577153ad5ca5a7c10d6db83d40ecce820b760540d92"
+    },
+    {
+      "from": "scraper-python/tests/test_cbk_macro.py",
+      "to": "financial-data-collector/tests/test_cbk_macro.py",
+      "sha256Before": "93257946a1e8c74a0f72737679f7189248ccd9646876c386466bec49019ed597",
+      "sha256AfterPathRewrite": "93257946a1e8c74a0f72737679f7189248ccd9646876c386466bec49019ed597"
+    },
+    {
+      "from": "scraper-python/tests/test_cloud_reconciliation.py",
+      "to": "financial-data-collector/tests/test_cloud_reconciliation.py",
+      "sha256Before": "49c5c2736001ccf6e52048118904d097228577395888f7b2dab7b23f3c41e2b9",
+      "sha256AfterPathRewrite": "49c5c2736001ccf6e52048118904d097228577395888f7b2dab7b23f3c41e2b9"
+    },
+    {
+      "from": "scraper-python/tests/test_collector_api.py",
+      "to": "financial-data-collector/tests/test_collector_api.py",
+      "sha256Before": "684bffa15fcc7ded932e43d4b7d8bdabc54751eeeaab8100136d11ccfd268820",
+      "sha256AfterPathRewrite": "684bffa15fcc7ded932e43d4b7d8bdabc54751eeeaab8100136d11ccfd268820"
+    },
+    {
+      "from": "scraper-python/tests/test_configuration.py",
+      "to": "financial-data-collector/tests/test_configuration.py",
+      "sha256Before": "24a1ddee3dcbd5cb36fc00a1b92fd3454dc8adfe16dd9a52c077ae84ca9e1a24",
+      "sha256AfterPathRewrite": "24a1ddee3dcbd5cb36fc00a1b92fd3454dc8adfe16dd9a52c077ae84ca9e1a24"
+    },
+    {
+      "from": "scraper-python/tests/test_crawler_availability.py",
+      "to": "financial-data-collector/tests/test_crawler_availability.py",
+      "sha256Before": "eb2c09280bc609234e3652361bbb5cd063583b5dc7497dffa65aaeb4787bb6d0",
+      "sha256AfterPathRewrite": "eb2c09280bc609234e3652361bbb5cd063583b5dc7497dffa65aaeb4787bb6d0"
+    },
+    {
+      "from": "scraper-python/tests/test_database_startup.py",
+      "to": "financial-data-collector/tests/test_database_startup.py",
+      "sha256Before": "82ee4132a6b0d2714b4438f178ecdee11a15c84d6213f2e8f6bd558bab7ba8be",
+      "sha256AfterPathRewrite": "82ee4132a6b0d2714b4438f178ecdee11a15c84d6213f2e8f6bd558bab7ba8be"
+    },
+    {
+      "from": "scraper-python/tests/test_database_tls.py",
+      "to": "financial-data-collector/tests/test_database_tls.py",
+      "sha256Before": "b40dc74dbc1185b999689ca35f869c33693ffcda5f1aa5b347548178debf175f",
+      "sha256AfterPathRewrite": "b40dc74dbc1185b999689ca35f869c33693ffcda5f1aa5b347548178debf175f"
+    },
+    {
+      "from": "scraper-python/tests/test_dependencies.py",
+      "to": "financial-data-collector/tests/test_dependencies.py",
+      "sha256Before": "5904158e0fe7e22cd58c3e7cb2863e03deb91f73a17d9f98763d092513b44181",
+      "sha256AfterPathRewrite": "5904158e0fe7e22cd58c3e7cb2863e03deb91f73a17d9f98763d092513b44181"
+    },
+    {
+      "from": "scraper-python/tests/test_evidence_repository.py",
+      "to": "financial-data-collector/tests/test_evidence_repository.py",
+      "sha256Before": "60a1c7bda5dd221f7593e0c6d0d453a8f79cc0e730bd80fcb8c3408bca713ca6",
+      "sha256AfterPathRewrite": "60a1c7bda5dd221f7593e0c6d0d453a8f79cc0e730bd80fcb8c3408bca713ca6"
+    },
+    {
+      "from": "scraper-python/tests/test_fresh_financials.py",
+      "to": "financial-data-collector/tests/test_fresh_financials.py",
+      "sha256Before": "1316a9a7a45e443f25e04c0e5bb75df5515767bc70ef57edfd8b5223c0a6f1be",
+      "sha256AfterPathRewrite": "1316a9a7a45e443f25e04c0e5bb75df5515767bc70ef57edfd8b5223c0a6f1be"
+    },
+    {
+      "from": "scraper-python/tests/test_investment_evidence.py",
+      "to": "financial-data-collector/tests/test_investment_evidence.py",
+      "sha256Before": "d154b16c4cc298174c25a45c52da764c898327e329b93885d5fba6f95750e42b",
+      "sha256AfterPathRewrite": "d154b16c4cc298174c25a45c52da764c898327e329b93885d5fba6f95750e42b"
+    },
+    {
+      "from": "scraper-python/tests/test_jobs_and_tabs.py",
+      "to": "financial-data-collector/tests/test_jobs_and_tabs.py",
+      "sha256Before": "817bc3cd2162063ccc1595398b05ceee5aded6b7bb6d84da5b5391bbc7388cba",
+      "sha256AfterPathRewrite": "817bc3cd2162063ccc1595398b05ceee5aded6b7bb6d84da5b5391bbc7388cba"
+    },
+    {
+      "from": "scraper-python/tests/test_kenyanstocks_coverage.py",
+      "to": "financial-data-collector/tests/test_kenyanstocks_coverage.py",
+      "sha256Before": "a9b394d4429da596136c8266066403d02599778ec3b8216e241a3fa4aeff44eb",
+      "sha256AfterPathRewrite": "a9b394d4429da596136c8266066403d02599778ec3b8216e241a3fa4aeff44eb"
+    },
+    {
+      "from": "scraper-python/tests/test_legacy_cleanup.py",
+      "to": "financial-data-collector/tests/test_legacy_cleanup.py",
+      "sha256Before": "f8871fe88b025039f32ebec8556c0b43b5b23ecca5ccacc3530265e91ae6a708",
+      "sha256AfterPathRewrite": "f8871fe88b025039f32ebec8556c0b43b5b23ecca5ccacc3530265e91ae6a708"
+    },
+    {
+      "from": "scraper-python/tests/test_market_source_api.py",
+      "to": "financial-data-collector/tests/test_market_source_api.py",
+      "sha256Before": "0bffeda2ea8ce4c58636ea7fe612c6e876c6651d9a4fa8a4b648ac88a541439e",
+      "sha256AfterPathRewrite": "0bffeda2ea8ce4c58636ea7fe612c6e876c6651d9a4fa8a4b648ac88a541439e"
+    },
+    {
+      "from": "scraper-python/tests/test_media_migration.py",
+      "to": "financial-data-collector/tests/test_media_migration.py",
+      "sha256Before": "e03be680ea842388939a5408d26a306ea07cbc37084be33312ae73fa031f77b7",
+      "sha256AfterPathRewrite": "e03be680ea842388939a5408d26a306ea07cbc37084be33312ae73fa031f77b7"
+    },
+    {
+      "from": "scraper-python/tests/test_mystocks.py",
+      "to": "financial-data-collector/tests/test_mystocks.py",
+      "sha256Before": "ee1020367b0b6b00779ff9b0eb0454ef9dad9b264b46ce67c15d5d7d929b4b69",
+      "sha256AfterPathRewrite": "ee1020367b0b6b00779ff9b0eb0454ef9dad9b264b46ce67c15d5d7d929b4b69"
+    },
+    {
+      "from": "scraper-python/tests/test_native_adapters.py",
+      "to": "financial-data-collector/tests/test_native_adapters.py",
+      "sha256Before": "aa8b1200cf3c9612ecd0b4395e3c8a755d41bd807f5682e8a94c7d7df2c5d70c",
+      "sha256AfterPathRewrite": "aa8b1200cf3c9612ecd0b4395e3c8a755d41bd807f5682e8a94c7d7df2c5d70c"
+    },
+    {
+      "from": "scraper-python/tests/test_native_scraper.py",
+      "to": "financial-data-collector/tests/test_native_scraper.py",
+      "sha256Before": "39eb6230fe06bf938e90fd7be2f1cbdc26f11d5b880f13e4b23437948957e8db",
+      "sha256AfterPathRewrite": "39eb6230fe06bf938e90fd7be2f1cbdc26f11d5b880f13e4b23437948957e8db"
+    },
+    {
+      "from": "scraper-python/tests/test_news_priority.py",
+      "to": "financial-data-collector/tests/test_news_priority.py",
+      "sha256Before": "a4a698e7fccd2b5a0dba61d16552535c63c5a35d6fa44713950eeda4f1b0ed3d",
+      "sha256AfterPathRewrite": "a4a698e7fccd2b5a0dba61d16552535c63c5a35d6fa44713950eeda4f1b0ed3d"
+    },
+    {
+      "from": "scraper-python/tests/test_pdf_process.py",
+      "to": "financial-data-collector/tests/test_pdf_process.py",
+      "sha256Before": "d9e9e427e325a43e5374e57d04100f57ebba2e11db8b4f1871d3cdae0007df3c",
+      "sha256AfterPathRewrite": "d9e9e427e325a43e5374e57d04100f57ebba2e11db8b4f1871d3cdae0007df3c"
+    },
+    {
+      "from": "scraper-python/tests/test_phase3_recovery.py",
+      "to": "financial-data-collector/tests/test_phase3_recovery.py",
+      "sha256Before": "deee4cbf751ab2f6247dad1a68031561bbdfe19ccdeaf5ae459cbc61ff82f8d6",
+      "sha256AfterPathRewrite": "deee4cbf751ab2f6247dad1a68031561bbdfe19ccdeaf5ae459cbc61ff82f8d6"
+    },
+    {
+      "from": "scraper-python/tests/test_postgres_collector.py",
+      "to": "financial-data-collector/tests/test_postgres_collector.py",
+      "sha256Before": "5aabc2605a2e8bb7e8d0e3bf6770a9a5be0cdb1f48a98b2fcc8b0d8b6f3cc513",
+      "sha256AfterPathRewrite": "5aabc2605a2e8bb7e8d0e3bf6770a9a5be0cdb1f48a98b2fcc8b0d8b6f3cc513"
+    },
+    {
+      "from": "scraper-python/tests/test_processed_archive.py",
+      "to": "financial-data-collector/tests/test_processed_archive.py",
+      "sha256Before": "f6a1bc9d3995204140c987ccbdf1dac8f511b46f9b869d906c93c49c5eea6669",
+      "sha256AfterPathRewrite": "f6a1bc9d3995204140c987ccbdf1dac8f511b46f9b869d906c93c49c5eea6669"
+    },
+    {
+      "from": "scraper-python/tests/test_query_volume.py",
+      "to": "financial-data-collector/tests/test_query_volume.py",
+      "sha256Before": "b2e4ff8f0e771d1f0e54badf39112d5bbfc413ca98d6debd12a3c7d4f10170f7",
+      "sha256AfterPathRewrite": "b2e4ff8f0e771d1f0e54badf39112d5bbfc413ca98d6debd12a3c7d4f10170f7"
+    },
+    {
+      "from": "scraper-python/tests/test_quote_refresh.py",
+      "to": "financial-data-collector/tests/test_quote_refresh.py",
+      "sha256Before": "973ac3cad9c3f2b981a1bafb6987b82ff2bde2e43d05bdb9d2d173288cae1edc",
+      "sha256AfterPathRewrite": "973ac3cad9c3f2b981a1bafb6987b82ff2bde2e43d05bdb9d2d173288cae1edc"
+    },
+    {
+      "from": "scraper-python/tests/test_r2_reads.py",
+      "to": "financial-data-collector/tests/test_r2_reads.py",
+      "sha256Before": "8871a3dc2f3d281a9612cc6192c90d5981e04a5dd99ed84a65f8114790bd19f2",
+      "sha256AfterPathRewrite": "8871a3dc2f3d281a9612cc6192c90d5981e04a5dd99ed84a65f8114790bd19f2"
+    },
+    {
+      "from": "scraper-python/tests/test_relationships.py",
+      "to": "financial-data-collector/tests/test_relationships.py",
+      "sha256Before": "30a03163ab04deb60dfc3e3ab526d6899b6712241599ceb92d58ea211107c6a7",
+      "sha256AfterPathRewrite": "30a03163ab04deb60dfc3e3ab526d6899b6712241599ceb92d58ea211107c6a7"
+    },
+    {
+      "from": "scraper-python/tests/test_render_light.py",
+      "to": "financial-data-collector/tests/test_render_light.py",
+      "sha256Before": "2ad732675c269905fff17f9a304731e0deda641b03f5b375bbaa2f72081fcab4",
+      "sha256AfterPathRewrite": "2ad732675c269905fff17f9a304731e0deda641b03f5b375bbaa2f72081fcab4"
+    },
+    {
+      "from": "scraper-python/tests/test_research_processing.py",
+      "to": "financial-data-collector/tests/test_research_processing.py",
+      "sha256Before": "2ebb13aea5cdddc1f69421f4b2a9c9c15b92ba72163d9ab78cb51e1558849db4",
+      "sha256AfterPathRewrite": "3e46436d3aa1ff3291b0ccfc913348ad42f1dc1cf7b0b64d94705cd6e848d800"
+    },
+    {
+      "from": "scraper-python/tests/test_rss_availability.py",
+      "to": "financial-data-collector/tests/test_rss_availability.py",
+      "sha256Before": "6c01ce636adb1381c9614ec299c2f536964ead3f91e2828e6d55189cde9498c0",
+      "sha256AfterPathRewrite": "6c01ce636adb1381c9614ec299c2f536964ead3f91e2828e6d55189cde9498c0"
+    },
+    {
+      "from": "scraper-python/tests/test_runner.py",
+      "to": "financial-data-collector/tests/test_runner.py",
+      "sha256Before": "f34d20e96a3600949faa1480c5d5599e2a752f8a5cc776946ca8295f9f85378d",
+      "sha256AfterPathRewrite": "f34d20e96a3600949faa1480c5d5599e2a752f8a5cc776946ca8295f9f85378d"
+    },
+    {
+      "from": "scraper-python/tests/test_scheduled_collection.py",
+      "to": "financial-data-collector/tests/test_scheduled_collection.py",
+      "sha256Before": "e136942e4041db95771aad59b475d97787a40ac095a795b7d4ddbaaa22a74a86",
+      "sha256AfterPathRewrite": "e136942e4041db95771aad59b475d97787a40ac095a795b7d4ddbaaa22a74a86"
+    },
+    {
+      "from": "scraper-python/tests/test_source_checkpoints.py",
+      "to": "financial-data-collector/tests/test_source_checkpoints.py",
+      "sha256Before": "c2d8adb82e9341562e55a90d4dacb0d07b238edf413175041ace9188b5594eee",
+      "sha256AfterPathRewrite": "c2d8adb82e9341562e55a90d4dacb0d07b238edf413175041ace9188b5594eee"
+    },
+    {
+      "from": "scraper-python/tests/test_source_compression.py",
+      "to": "financial-data-collector/tests/test_source_compression.py",
+      "sha256Before": "ddcd793abb98684869f0af3eecba2e9561e0cb7adaa0ec2d65812564004d7a11",
+      "sha256AfterPathRewrite": "ddcd793abb98684869f0af3eecba2e9561e0cb7adaa0ec2d65812564004d7a11"
+    },
+    {
+      "from": "scraper-python/tests/test_source_operations.py",
+      "to": "financial-data-collector/tests/test_source_operations.py",
+      "sha256Before": "7cf549a51d3cf9dc372f7bc8c24d7168bb60c396eba00a8d28fed068ddf72f8e",
+      "sha256AfterPathRewrite": "7cf549a51d3cf9dc372f7bc8c24d7168bb60c396eba00a8d28fed068ddf72f8e"
+    },
+    {
+      "from": "scraper-python/tests/test_storage_driver.py",
+      "to": "financial-data-collector/tests/test_storage_driver.py",
+      "sha256Before": "372d37fe84bb962ba8c6951ef9331c90781adc1983ada4341205d9950436a844",
+      "sha256AfterPathRewrite": "372d37fe84bb962ba8c6951ef9331c90781adc1983ada4341205d9950436a844"
+    },
+    {
+      "from": "scraper-python/tests/test_storage_policy.py",
+      "to": "financial-data-collector/tests/test_storage_policy.py",
+      "sha256Before": "32d68f7b42071a48185d89ee167d28bf25a5e6545b770d93ddfb76c312e1bd45",
+      "sha256AfterPathRewrite": "32d68f7b42071a48185d89ee167d28bf25a5e6545b770d93ddfb76c312e1bd45"
+    },
+    {
+      "from": "scraper-python/tests/test_tabular_and_conditional.py",
+      "to": "financial-data-collector/tests/test_tabular_and_conditional.py",
+      "sha256Before": "87d705bd8fd3ebb2d845df6801178303392026b222bb0fc7921c78fabdbad1db",
+      "sha256AfterPathRewrite": "87d705bd8fd3ebb2d845df6801178303392026b222bb0fc7921c78fabdbad1db"
+    },
+    {
+      "from": "scraper-python/tests/test_transfer_budget.py",
+      "to": "financial-data-collector/tests/test_transfer_budget.py",
+      "sha256Before": "1136a505d30e3e344e0991ea27257780c7c711175ff7fc06d2f16daa9a82f7b0",
+      "sha256AfterPathRewrite": "1136a505d30e3e344e0991ea27257780c7c711175ff7fc06d2f16daa9a82f7b0"
+    },
+    {
+      "from": "scraper-python/tests/test_uncatalogued_archive.py",
+      "to": "financial-data-collector/tests/test_uncatalogued_archive.py",
+      "sha256Before": "8cb95c13c95d74f77f578d3dfc1710da64bb3d7e69e19e58c464d17d7dd991bc",
+      "sha256AfterPathRewrite": "8cb95c13c95d74f77f578d3dfc1710da64bb3d7e69e19e58c464d17d7dd991bc"
+    },
+    {
+      "from": "scraper-python/tests/test_windows_process_loop.py",
+      "to": "financial-data-collector/tests/test_windows_process_loop.py",
+      "sha256Before": "97ea45150f760d83c9e9235414063fc0482e7a02f88105b5e8ce34bf9445eede",
+      "sha256AfterPathRewrite": "97ea45150f760d83c9e9235414063fc0482e7a02f88105b5e8ce34bf9445eede"
+    }
+  ],
+  "contentHashNormalization": "Git source blobs; UTF-8 text LF; binary unchanged",
+  "files": [
+    {
+      "from": "CONTINUA_ENGINE_IMPLEMENTATION.md",
+      "to": "docs/architecture/CONTINUA_ENGINE_IMPLEMENTATION.md",
+      "role": "architecture/status documentation",
+      "sha256Before": "f629d9e32b865738e60601080030ab41ae067acd05bcd0c1d567e74d5f046e82",
+      "contentChanges": [
+        "source path prefixes",
+        "present-tense provider description corrected to Neon PostgreSQL"
+      ],
+      "consumers": [
+        "docs/neon-migration/DEPENDENCY_AUDIT.md",
+        "docs/neon-migration/dependencies.json"
+      ]
+    }
+  ]
+}

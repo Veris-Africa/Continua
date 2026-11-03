@@ -181,13 +181,13 @@ or the CI Python with pinned dependencies installed:
 ```powershell
 $env:ENGINE_PYTHON_BIN = '<local Python with backend/python/requirements.txt>'
 $env:NATIVE_PYTHON_BIN = $env:ENGINE_PYTHON_BIN
-$env:PYTHONPATH = 'engine-python'
+$env:PYTHONPATH = 'financial-engine'
 npm --prefix backend test -- --reporter=dot
 npm --prefix backend run typecheck
 npm --prefix app test
 node app/node_modules/typescript/bin/tsc --noEmit -p app/tsconfig.app.json
-& $env:ENGINE_PYTHON_BIN -m unittest discover -s scraper-python/tests
-& $env:ENGINE_PYTHON_BIN -m unittest discover -s engine-python/tests
+& $env:ENGINE_PYTHON_BIN -m unittest discover -s financial-data-collector/tests
+& $env:ENGINE_PYTHON_BIN -m unittest discover -s financial-engine/tests
 node --test infra/security/health-probe.test.mjs
 node infra/migration/canonical-financial-fixture.mjs
 ```

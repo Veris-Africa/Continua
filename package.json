@@ -13,7 +13,6 @@
     "security:check": "node --test infra/cloudflare/*.test.mjs && node node_modules/typescript/bin/tsc --noEmit -p app/tsconfig.app.json"
   },
   "dependencies": {
-    "@vercel/analytics": "^2.0.1",
     "buffer": "^6.0.3",
     "express": "^5.3.0",
     "html-to-image": "^1.11.13",

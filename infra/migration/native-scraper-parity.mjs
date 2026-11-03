@@ -1,8 +1,8 @@
 /** Pure publisher discovery contracts; no browser/network/database writes. */
 import {spawnSync} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
+import {componentPath} from '../repository/component-paths.mjs';
 import {stockTabDocuments} from '../../scraper/src/adapters/kenyanstocks/tabPlan.js';
-const root=fileURLToPath(new URL('../../scraper-python',import.meta.url));
+const root=componentPath('collector');
 const python=process.env.NATIVE_PYTHON_BIN??'python3';
 const program='import json,sys;sys.path.insert(0,sys.argv[1]);from continua_scraper.tabs import stock_tab_documents;print(json.dumps(stock_tab_documents(*json.load(sys.stdin))))';
 const cases=[['https://kenyanstocks.com/stock/nse/COOP'],['https://kenyanstocks.com/stock/nse/COOP?tab=Files#section'],['https://kenyanstocks.com/stock/nse/DTK',['Summary','Financials','New Information'],['Profit/Loss','Assets']],['https://kenyanstocks.com/stock/nse/KPC',['Summary','Summary','New Information','Invalid<script>']],['https://evil.test/stock/nse/COOP'],['https://kenyanstocks.com/stock/nse/coop']];

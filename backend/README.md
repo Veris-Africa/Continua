@@ -1,5 +1,12 @@
 # Continua Data
 
+This directory is the existing production Node/Express API and its shipped
+Python numerical worker, and remains the compatibility/rollback reference.
+The separate `../api-candidate/` directory is not deployed in its place. The
+frontend uses Cloudflare and Neon Managed Auth. Repository-wide architecture,
+API and deployment documents live in `../docs/`; source paths below are relative
+to repository root unless a command explicitly changes directory.
+
 The core market data infrastructure layer for Continua. NSE-first,
 architected so every other African exchange can be added as a new adapter
 without touching the rest of the system. See `docs/` for full documentation:

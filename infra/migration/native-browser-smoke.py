@@ -12,7 +12,7 @@ import sys
 import time
 
 ROOT=pathlib.Path(__file__).resolve().parents[2]
-sys.path.insert(0,str(ROOT/'scraper-python'))
+sys.path.insert(0,str(ROOT/'financial-data-collector'))
 from continua_scraper.browser import BrowserRenderer
 from continua_scraper.download import Downloader
 from continua_scraper.policy import SourcePolicy

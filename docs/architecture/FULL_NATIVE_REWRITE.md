@@ -30,7 +30,7 @@ do not constitute production Node forwarding.
 
 ## First native implementations
 
-`backend-go/` contains native Go API-key scrypt lookup, bounded fingerprint cache,
+`api-candidate/` contains native Go API-key scrypt lookup, bounded fingerprint cache,
 usage touch, origin policy, bounded rate-limit identities, database quote reads,
 quote routes, sectors and liveness. Native readiness remains 503; production
 startup is blocked while other routes/worker/billing capabilities are missing.
@@ -50,7 +50,7 @@ HTTP/provider mocks only. Actual provider sandbox, concurrent-host/restart and
 complete differential/hosted integration tests remain release blockers. Direct
 card collection remains prohibited by the existing PCI gate.
 
-`engine-python/` contains native SMA, EMA, Wilder RSI, MACD, crossover, financial
+`financial-engine/` contains native SMA, EMA, Wilder RSI, MACD, crossover, financial
 ratios, YoY, point-in-time annual ratios, reported ratios, portfolio composition,
 dated performance/correlation, dividend windows, monitoring and opt-in learning
 calculation ports. Existing four Python numerical
@@ -76,7 +76,7 @@ instruments, without relying on a hardcoded ticker list. The candidate was
 stopped afterward. No provider request, account mutation,
 native production deploy or frontend migration occurred.
 
-`scraper-python/` contains source-permission/domain/robots policy, pinned public
+`financial-data-collector/` contains source-permission/domain/robots policy, pinned public
 DNS and TLS, response framing/size limits, streaming artifact download, native
 private R2 file upload and streaming checksum verification. Original rollback
 copy is mandatory when configured. Publisher adapters, Playwright tab traversal,
@@ -174,7 +174,7 @@ been activated on Render.
 
 Pinned Psycopg 3.3.6, psycopg-pool 3.3.3 and boto3 1.43.97 dependencies are
 installed in an ignored isolated workspace environment, with a resolved
-`scraper-python/requirements-lock.txt`. The actual SDK supports conditional
+`financial-data-collector/requirements-lock.txt`. The actual SDK supports conditional
 streaming R2 upload/checksum verification in an intercepted test; no real R2
 upload occurred. Native PostgreSQL connected to the owned database inside a
 read-only transaction (36 enabled sources, 13,408 artifacts, 11,566 extraction
@@ -249,9 +249,9 @@ Continuation validation: 250 pure reference comparisons, 23 Python Engine tests,
 passed. No billing charges or real user-data writes were made. These are not a
 full release pass; production readiness/cutover and old-code removal stay blocked.
 
-Go: `go -C backend-go test ./...` with `NATIVE_PYTHON_BIN` set for real
-Go/Python integration. Python: `python -m unittest discover -s engine-python/tests`
-and `python -m unittest discover -s scraper-python/tests`.
+Go: `go -C api-candidate test ./...` with `NATIVE_PYTHON_BIN` set for real
+Go/Python integration. Python: `python -m unittest discover -s financial-engine/tests`
+and `python -m unittest discover -s financial-data-collector/tests`.
 `node infra/migration/native-engine-parity.mjs` uses `NATIVE_PYTHON_BIN`.
 Regenerate the ledger with `node infra/migration/build-native-ledger.mjs`.
 `node infra/migration/check-native-cutover.mjs` is expected to fail until the full
