@@ -1059,7 +1059,7 @@ export default function Markets() {
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
-            <div className="market-tool-rail">
+            <div className="market-tool-rail" data-surface="soft">
               <Button variant="outline" onClick={() => navigate("/screener")}>
                 <Filter className="h-4 w-4 mr-2" />
                 Screener

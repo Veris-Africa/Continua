@@ -1,3 +1,4 @@
+import {SingleObservation} from '@/components/shared/SingleObservation';
 import {PriceHistoryStatus} from '@/components/stock/PriceHistoryStatus';
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { RollingNumber } from "@/components/shared/RollingNumber";
@@ -44,7 +45,7 @@ import { useExchange } from "@/hooks/useExchange";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ContinuaScores } from "@/components/stock/ContinuaScore";
 import {CHART_TIMEFRAMES, loadChartPreferences, saveChartPreferences, type ChartTimeframe} from '@/lib/chartPreferences';
-import {chartCoverage} from '@/lib/priceHistory';
+import {chartCoverage,priceWindowDescription} from '@/lib/priceHistory';
 import {useMarketStatistics} from '@/hooks/useMarketStatistics';
 
 
@@ -246,14 +247,15 @@ export default function StockDetail() {
   // Gain/loss for the whole selected timeframe — first vs. last point of that period's
   // series. This is the same series the chart itself renders, so the header numbers and
   // the chart's red/green always agree, and both update when the timeframe pill changes.
-  // Real daily candles from the Data Layer when available (every timeframe except "1D" —
-  // see useHistoricalCandles for why). We deliberately do not draw a generated
+  // Real daily observations, including a point-only current-day close.
+  // We deliberately do not draw a generated
   // price path when the provider has no history; synthetic lines can be mistaken
   // for market data and produce false returns or technical signals.
   const { points: liveCandlePoints,isLoading:historyLoading,isError:historyError,refetch:historyRefetch } = useHistoricalCandles(upperSymbol || undefined, selectedTimeframe);
   const periodData = liveCandlePoints;
   const priceCoverage = chartCoverage(periodData, selectedTimeframe, chartType);
   const hasHistoricalData = priceCoverage.available;
+  const hasPeriodReturn=hasHistoricalData&&periodData.length>=2;
   const periodFirstPrice = periodData[0]?.price || stock.price;
   const periodLastPrice = periodData[periodData.length - 1]?.price || stock.price;
   // "1D" uses the verified session open and latest quote rather than inventing
@@ -264,7 +266,7 @@ export default function StockDetail() {
   // change from that timeframe's own (real) first/last price.
   const periodChangePercent = selectedTimeframe === "1D"
     ? Number(stock.changePercent)
-    : (hasHistoricalData && periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : null);
+    : (hasPeriodReturn && periodFirstPrice ? ((periodLastPrice - periodFirstPrice) / periodFirstPrice) * 100 : null);
   const periodIsUp = selectedTimeframe === "1D" ? stock.isUp : periodLastPrice >= periodFirstPrice;
 
   const exportHistoricalCsv = useCallback(() => {
@@ -296,7 +298,7 @@ export default function StockDetail() {
   const isScrubbing = hoverPrice !== null && hoverChangePercent !== null;
   const activeChangePercent = isScrubbing ? hoverChangePercent! : periodChangePercent;
   const activeIsUp = isScrubbing && hoverIsUp !== null ? hoverIsUp : periodIsUp;
-  const priceChange = isScrubbing ? hoverPrice! - periodFirstPrice : selectedTimeframe === '1D' ? stock.change : hasHistoricalData ? periodLastPrice - periodFirstPrice : null;
+  const priceChange = isScrubbing ? hoverPrice! - periodFirstPrice : selectedTimeframe === '1D' ? stock.change : hasPeriodReturn ? periodLastPrice - periodFirstPrice : null;
   const priceChangePercent = activeChangePercent?.toFixed(2) ?? '—';
   const displayIsUp = activeIsUp;
   // The big hero number is always the CURRENT market price — switching the timeframe
@@ -549,7 +551,7 @@ export default function StockDetail() {
       <div className="relative">
         <div className="px-1">
           {hasHistoricalData ? (
-            fullscreen ? <div className="h-[280px]" aria-hidden="true" /> : <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
+            priceCoverage.pointOnly?<div className="h-[280px]"><SingleObservation date={periodData[0].date} valueLabel={'KES '+periodData[0].price.toFixed(2)}/></div>:fullscreen ? <div className="h-[280px]" aria-hidden="true" /> : <StockPriceChart symbol={symbol} timeframe={selectedTimeframe} chartType={chartType} onHoverPrice={handleChartHover} data={periodData} indicators={indicatorSettings} mainHeight={280} />
           ) : (
             <div className="h-[280px] flex flex-col items-center justify-center px-8 text-center">
               <LineChartIcon className="h-7 w-7 text-muted-foreground/35 mb-2" />
@@ -631,8 +633,7 @@ export default function StockDetail() {
               is handled inside StockPriceChart itself, anchored to real
               price/time so it survives axis zoom and resizing. */}
           <div className="relative flex-1 min-h-0 px-1 py-2">
-            {hasHistoricalData ? (
-              <StockPriceChart
+            {hasHistoricalData ? (priceCoverage.pointOnly?<SingleObservation date={periodData[0].date} valueLabel={'KES '+periodData[0].price.toFixed(2)}/>:<StockPriceChart
                 symbol={symbol}
                 timeframe={selectedTimeframe}
                 chartType={chartType}
@@ -651,8 +652,7 @@ export default function StockDetail() {
             ) : (
               <div className="h-full flex flex-col items-center justify-center px-8 text-center">
                 <LineChartIcon className="h-8 w-8 text-muted-foreground/35 mb-2" />
-                <p className="text-sm font-semibold">No verified history available</p>
-                <p className="text-xs text-muted-foreground mt-1">{priceCoverage.reason}</p>
+                <PriceHistoryStatus loading={historyLoading} error={historyError} reason={priceCoverage.reason} onRetry={historyRefetch}/><p className="px-4 text-[0.625rem] text-muted-foreground">{priceWindowDescription}</p>
               </div>
             )}
           </div>
@@ -730,8 +730,9 @@ export default function StockDetail() {
         onClearAll={fsClearDrawings}
       />
 
-      {hasHistoricalData&&<p className="px-4 pb-3 text-xs text-muted-foreground" role="note">{priceCoverage.reason}</p>}
+      <details data-surface="soft" className="mx-4 mb-4 text-xs text-muted-foreground"><summary className="cursor-pointer">{hasHistoricalData?priceCoverage.reason:'Chart coverage and timeframes'}</summary><p className="mt-2 leading-relaxed">{priceWindowDescription}</p></details>
 
+      {historyError&&hasHistoricalData&&<p role="status" className="px-4 pb-3 text-xs text-muted-foreground">Refresh failed; showing the previous dated observations. <button type="button" className="underline" onClick={()=>void historyRefetch()}>Retry price history</button></p>}
       {/* STICKY SUB-NAV */}
       <div data-sticky-nav className="sticky top-[var(--sticky-header-height)] z-30 bg-background/92 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-1 px-3 py-2 overflow-x-auto scrollbar-hide">

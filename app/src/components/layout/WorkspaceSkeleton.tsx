@@ -1,15 +1,14 @@
 import {workspaceRoute} from '@/lib/workspaceRoute.js';
-// Public geometry only: never render cached account data before session/lock checks.
-export function WorkspaceSkeleton({path='/',label='Opening Continua'}:{path?:string;label?:string}) {
- const {kind,label:page}=workspaceRoute(path);
- const social=kind==='feed',profile=kind==='profile',chart=['home','stock','portfolio'].includes(kind);
- return <main role="status" aria-label={label} aria-busy="true" className="min-h-dvh bg-background px-4 py-6 pb-24">
+// Public layout geometry only. Labels are for assistive technology, not titles.
+export function WorkspaceSkeleton({path='/',label='Content is updating'}:{path?:string;label?:string}) {
+ const {kind}=workspaceRoute(path),chart=['home','stock','portfolio'].includes(kind);
+ return <main role="status" aria-label={label} aria-busy="true" className="workspace-skeleton" data-skeleton-kind={kind}>
   <span className="sr-only">{label}</span>
-  <div aria-hidden="true" className="mx-auto max-w-2xl space-y-6 motion-safe:animate-pulse">
-   <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-full bg-muted"/><h1 className="text-xl font-semibold">{page}</h1></div>
-   {profile?<><div className="h-28 rounded-2xl bg-muted"/><div className="h-20 w-20 rounded-full bg-muted"/><div className="flex gap-3">{[0,1].map(i=><div key={i} className="h-7 w-28 rounded bg-muted"/>)}</div></>:chart?<div className="h-52 rounded-2xl border bg-muted/50"/>:<div className={social?'h-12 rounded-full bg-muted':'h-12 rounded-xl bg-muted'}/>}
-   {['stock','portfolio','engine'].includes(kind)&&<div className="grid grid-cols-3 gap-3">{[0,1,2].map(i=><div key={i} className="h-20 rounded-xl bg-muted"/>)}</div>}
-   {[0,1,2].map(i=><div key={i} className="space-y-3 border-b pb-6"><div className="h-5 w-2/3 rounded bg-muted"/><div className="h-4 w-full rounded bg-muted"/><div className="h-4 w-4/5 rounded bg-muted"/></div>)}
-  </div>
+  <div aria-hidden="true" className="skeleton-content">
+   <header className="skeleton-header"><i className="skeleton-avatar"/><div><i className="skeleton-bar title"/><i className="skeleton-bar short"/></div><i className="skeleton-control"/></header>
+   <div className="skeleton-session"><i className="skeleton-bar short"/><i className="skeleton-bar tiny"/></div>
+   {chart?<section className="skeleton-portfolio"><div className="skeleton-toolbar"><i className="skeleton-bar short"/><div>{[0,1,2,3].map(i=><i key={i} className="skeleton-control"/>)}</div></div><i className="skeleton-value"/><i className="skeleton-bar short"/><div className="skeleton-plot"/><div className="skeleton-metrics">{[0,1,2].map(i=><div key={i}><i className="skeleton-bar short"/><i className="skeleton-bar title"/></div>)}</div></section>:kind==='profile'?<section className="skeleton-profile"><div/><i className="skeleton-avatar"/><i className="skeleton-bar title"/></section>:<div className="skeleton-search"/>}
+   {kind==='home'?<div className="skeleton-modules"><section><i className="skeleton-bar title"/><div className="skeleton-index-row">{[0,1,2].map(i=><div key={i}><i className="skeleton-bar short"/><i className="skeleton-bar title"/><i className="skeleton-bar tiny"/></div>)}</div></section><section><i className="skeleton-bar title"/><div className="skeleton-watch-row">{[0,1,2].map(i=><div key={i}><i className="skeleton-bar short"/><i className="skeleton-bar title"/></div>)}</div></section></div>:<div className="skeleton-route-rows">{[0,1,2].map(i=><div key={i} className={kind==='feed'||kind==='profile'?'skeleton-post':'skeleton-instrument'}><i className="skeleton-avatar"/><div><i className="skeleton-bar title"/><i className="skeleton-bar short"/></div><i className="skeleton-bar tiny"/></div>)}</div>}
+  </div><div className="skeleton-bottom" aria-hidden="true">{[0,1,2,3,4].map(i=><i key={i}/>)}</div>
  </main>;
 }

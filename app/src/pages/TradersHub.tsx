@@ -1,3 +1,4 @@
+import {EditorialIllustration} from '@/components/shared/EditorialIllustration';
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -504,7 +505,7 @@ export default function TradersHub() {
             </>
           ) : (
             <>
-              <MessageSquare className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+              {!searching&&<EditorialIllustration scene="community"/>}
               <p className="text-sm font-bold">{searching ? "No matching posts" : "Start the conversation"}</p>
               <p className="text-[0.75rem] text-muted-foreground mt-1">{searching ? "People, company and topic results appear above, independently of posts." : "Share your first idea with the community."}</p>
             </>

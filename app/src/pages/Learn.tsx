@@ -1,3 +1,4 @@
+import {EditorialIllustration} from '@/components/shared/EditorialIllustration';
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { ArrowLeft, BookOpen, Play, Coffee, Award, Clock, GraduationCap, Trophy, Target, CheckCircle2, Lock, Star, Video, FileText, Headphones, ChevronRight, Flame, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -214,6 +215,7 @@ export default function Learn() {
           Back
         </Button>
 
+        <section data-surface="soft" className="editorial-learning"><EditorialIllustration scene="research"/><div><h2 className="font-semibold text-lg">A little understanding goes a long way.</h2><p className="text-sm text-muted-foreground mt-2">Explore one idea at a time, then bring what you learn to your own research.</p></div></section>
         {/* Daily Challenge & Streak */}
         <Card className="bg-gradient-to-r from-accent/20 to-primary/20 border-accent/30">
           <CardContent className="p-4">

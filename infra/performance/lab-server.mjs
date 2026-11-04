@@ -34,7 +34,7 @@ const server=http.createServer(async(req,res)=>{
  try{
   const file=extname(path)?path:resolve(root,'index.html');
   let bytes=await readFile(file);
-  if(process.env.LAB_TIMING==='true'&&extname(file)==='.html')bytes=Buffer.from(bytes.toString('utf8').replace('</head>','<script defer src="/__lab/timing.js"></script></head>'));
+  if(process.env.LAB_TIMING==='true'&&extname(file)==='.html')bytes=Buffer.from(bytes.toString('utf8').replace('</head>','<script defer src="/__lab/timing.js" data-populated="' + (process.env.LAB_POPULATED==='true'?'true':'false') + '"></script></head>'));
   // Only populated QA responses rewrite the configured market origin. The
   // ordinary production build and comparable empty-account lab stay untouched.
   if(process.env.LAB_POPULATED==='true'&&extname(file)==='.js')bytes=Buffer.from(bytes.toString('utf8').replaceAll('https://continua-backend.onrender.com/api/v1',`http://127.0.0.1:${port}/api/v1`));

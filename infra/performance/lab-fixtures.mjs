@@ -4,6 +4,7 @@ export const peer='22222222-2222-4222-8222-222222222222';
 const stamp='2026-01-01T00:00:00Z';
 export const profiles=[owner,peer].map((id,i)=>({id,user_id:id,full_name:i?'Synthetic Peer':'Synthetic Investor',handle:i?'lab_peer':'lab_investor',avatar_url:null,banner_url:null,bio:'Offline acceptance fixture',subscription_plan:'free',tradershub_onboarded:true,interests:[],portfolio_public:false,followers_count:0,following_count:0,created_at:stamp,updated_at:stamp}));
 if(['premium','premium_plus'].includes(process.env.LAB_PLAN))profiles[0].subscription_plan=process.env.LAB_PLAN;
+let historyReads=0;
 const follows=[{follower_id:owner,following_id:peer}];
 const post={id:'33333333-3333-4333-8333-333333333333',user_id:peer,content:'Synthetic community post. $KCB',image_url:null,image_urls:[],stock_mentions:['KCB'],created_at:stamp,updated_at:stamp,author:profiles[1],likes_count:0,reposts_count:0,comments_count:0,is_liked:false,is_reposted:false,is_bookmarked:false,reaction_counts:{},my_reaction:null};
 export async function populatedFixture(req,url,json){
@@ -35,6 +36,10 @@ export async function populatedFixture(req,url,json){
    const rows=selection(profiles);return json(200,req.headers.accept?.includes('vnd.pgrst')?rows[0]??null:rows);
   }
   if(table==='portfolio_history'){
+   historyReads++;
+   if(process.env.LAB_HISTORY_MODE==='error'||process.env.LAB_HISTORY_MODE==='retry'&&historyReads<=4)return json(503,{message:'Synthetic history outage',code:'HISTORY_UNAVAILABLE'});
+   if(process.env.LAB_HISTORY_MODE==='empty')return json(200,[]);
+   if(process.env.LAB_HISTORY_MODE==='single')return json(200,[{date:url.searchParams.get('to'),value:314,cost:300,basis:'recorded_portfolio_snapshot'}]);
    const today=new Date(),rows=Array.from({length:8},(_,index)=>({date:new Date(today.getTime()-(7-index)*86400000).toISOString().slice(0,10),value:300+index*2,cost:300,basis:'recorded_portfolio_snapshot'}));
    return json(200,rows);
   }

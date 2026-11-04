@@ -2,6 +2,7 @@ import {afterEach,expect,it,vi} from 'vitest';
 import express from 'express';
 import {rateLimit} from 'express-rate-limit';
 import {createBrowserDataRouter} from '../src/data/browserDataRoutes.js';
+import {portfolioHistoryQuery} from '../src/data/portfolioHistory.js';
 const servers=[];
 afterEach(async()=>{await Promise.all(servers.splice(0).map(server=>new Promise(resolve=>server.close(resolve))));});
 async function fixture(verifier=async()=>({claims:{sub:'viewer-a',role:'authenticated'}})){
@@ -42,4 +43,22 @@ it('history writes remain unavailable and oversized reads fail rather than silen
  const f=await fixture();expect((await fetch(f.url+'/portfolio_history',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:'{}'})).status).toBe(404);
  f.client.query.mockImplementation(async sql=>({rows:sql.includes('row_to_json')?Array.from({length:1001},()=>({payload:'{}'})):[]}));
  expect((await fetch(f.url+'/portfolio_history',{headers})).status).toBe(413);
+});
+it('empty recorded history stays a successful empty read while permission and database failures stay errors',async()=>{
+ const f=await fixture();
+ f.client.query.mockResolvedValue({rows:[]});
+ let response=await fetch(f.url+'/portfolio_history',{headers});
+ expect(response.status).toBe(200);expect(await response.json()).toEqual([]);
+ f.client.query.mockImplementation(async sql=>{if(sql.includes('row_to_json'))throw Object.assign(new Error('Private SQL detail'),{code:'42501'});return {rows:[]};});
+ response=await fetch(f.url+'/portfolio_history',{headers});expect(response.status).toBe(403);
+ expect(await response.text()).not.toContain('Private SQL detail');
+ f.client.query.mockImplementation(async sql=>{if(sql.includes('row_to_json'))throw Object.assign(new Error('Private timeout detail'),{code:'57014'});return {rows:[]};});
+ response=await fetch(f.url+'/portfolio_history',{headers});expect(response.status).toBe(503);
+ expect(await response.text()).not.toContain('Private timeout detail');
+});
+it('history date validation uses Nairobi midnight consistently with the browser, not UTC midnight',()=>{
+ const query=portfolioHistoryQuery('viewer-a',new URLSearchParams({from:'2026-11-04',to:'2026-11-04'}),new Date('2026-11-03T21:01:00Z'));
+ expect(query.params).toEqual(['viewer-a','2026-11-04','2026-11-04']);
+ expect(query.sql).toContain("AT TIME ZONE 'Africa/Nairobi'");
+ expect(()=>portfolioHistoryQuery('viewer-a',new URLSearchParams({to:'2026-11-05'}),new Date('2026-11-03T21:01:00Z'))).toThrow();
 });

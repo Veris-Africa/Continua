@@ -1,3 +1,4 @@
+import {SingleObservation} from '@/components/shared/SingleObservation';
 import { chartScrubIndex } from "@/lib/chartScrub";
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useId, useState, useMemo, useCallback, useRef } from "react";
@@ -88,37 +89,18 @@ export function RobinhoodPerformanceChart({
   const [hoverFraction, setHoverFraction] = useState<number | null>(null);
   const plotRef = useRef<HTMLDivElement | null>(null);
 
-  // Real closes for the selected window — "1D" is deliberately excluded
-  // (see usePortfolioHistory's own note: no intraday candle source yet).
+  // Recorded snapshots only; a current-day snapshot is a single daily point.
   const {
     points: realPoints,
     isLoading: realLoading,
-    hasRealData,error:historyError,refetch:retryHistory,
+    state:historyState,hasRealData,error:historyError,refetch:retryHistory,
   } = usePortfolioHistory(holdings ?? [], activeTimeframe);
   const useRealData =
-    activeTimeframe !== "1D" && !!holdings && hasRealData && !realLoading;
+    (historyState.kind==='point'||historyState.kind==='series') && hasRealData;
 
-  const formatDateLabel = (date: Date, days: number): string => {
-    if (days <= 1)
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    if (days <= 7)
-      return date.toLocaleDateString("en-US", {
-        weekday: "short",
-        hour: "numeric",
-      });
-    if (days <= 30)
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      year: "2-digit",
-    });
-  };
+  const formatDateLabel=(date:Date,days:number):string=>date.toLocaleDateString('en-KE',{
+    timeZone:'Africa/Nairobi',month:'short',day:'numeric',...(days>365?{year:'numeric' as const}:{})
+  });
 
   // Preserve recorded dates and cost basis; never append a current quote.
   const realData = useMemo((): PerformancePoint[] => {
@@ -141,7 +123,7 @@ export function RobinhoodPerformanceChart({
   // shape reflects genuine cumulative return at each point in the chosen window,
   // rather than a value disconnected from what's actually being plotted.
   const chartData = useMemo(() => {
-    if (mode !== "performance" || totalCost <= 0) return rawData;
+    if (mode !== "performance") return rawData;
     return rawData.map((p) => ({
       ...p,
       value: p.cost && p.cost>0 ? ((p.value - p.cost) / p.cost) * 100 : NaN,
@@ -207,7 +189,7 @@ export function RobinhoodPerformanceChart({
       {/* Hero */}
       <div className="mb-3">
         <div className="text-xl font-bold tracking-tight tabular-nums">
-          <RollingNumber value={formatHero(displayValue)} />
+          <RollingNumber value={mode==='performance'&&!chartData.length?'—':formatHero(displayValue)} />
         </div>
         {chartData.length>=2&&<div
           className={`flex items-center gap-1 mt-0.5 text-[0.6875rem] ${isPositive ? "text-bull" : "text-bear"}`}
@@ -250,14 +232,14 @@ export function RobinhoodPerformanceChart({
       <div
         ref={plotRef}
         className="relative h-[210px] -mx-4 touch-none select-none"
-        onPointerDown={event => {event.currentTarget.setPointerCapture(event.pointerId); handlePointer(event);}}
+        onPointerDown={event => {if(chartData.length<2||(event.target as Element).closest('button,a,input,select,textarea,[role="button"]'))return;event.currentTarget.setPointerCapture(event.pointerId); handlePointer(event);}}
         onPointerMove={handlePointer}
         onPointerUp={event => {if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);handleLeave();}}
         onPointerCancel={handleLeave}
         onPointerLeave={event => {if(!event.currentTarget.hasPointerCapture(event.pointerId))handleLeave();}}
       >
         {hoverFraction !== null && <div aria-hidden="true" className="pointer-events-none absolute top-1 bottom-8 z-10 w-px bg-muted-foreground/50" style={{left: (hideValue ? 0 : 48) + (Math.max(0,(plotRef.current?.clientWidth ?? 0)-(hideValue ? 0 : 48))*hoverFraction)}}/>}
-        {chartData.length >= 2 ? (
+        {chartData.length===1?<SingleObservation date={new Date(chartData[0].timestamp).toISOString().slice(0,10)} valueLabel={formatHero(chartData[0].value)}/>: chartData.length >= 2 ? (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={chartData}
@@ -313,7 +295,7 @@ export function RobinhoodPerformanceChart({
                 fill={`url(#${fillId})`}
                 stroke={`url(#${crosshairGradId})`}
                 strokeWidth={1.5}
-                dot={false}
+                dot={chartData.length===1?{r:4,fill:lineColor}:false}
                 isAnimationActive={false}
                 activeDot={false}
               />
@@ -331,16 +313,15 @@ export function RobinhoodPerformanceChart({
           </ResponsiveContainer>
         ) : (
           <div className="flex h-full items-center justify-center px-8 text-center text-xs text-muted-foreground">
-{realLoading?"Opening recorded valuations…":historyError?<>Recorded history could not load. <button type="button" className="underline ml-1" onClick={()=>void retryHistory()}>Retry history</button></>:"At least two recorded portfolio valuations are needed. Holdings alone do not establish past ownership."}
+{realLoading?"Opening recorded valuations…":historyError?<>Recorded history could not load. <button type="button" className="underline ml-1" onClick={()=>void retryHistory()}>Retry history</button></>:mode==='performance'&&rawData.length?'Percentage returns need a positive recorded cost basis.':historyState.message}
           </div>
         )}
       </div>
 
       <p className="mt-2 text-[0.625rem] leading-4 text-muted-foreground">
-        {activeTimeframe === "1D"
-          ? "Previous close to latest quote only; not an intraday price path."
-          : "Recorded daily portfolio snapshots only. Gain percentages use each snapshot’s recorded cost; they are not cash-flow-adjusted investment returns."}
+        {historyState.message} Recorded daily snapshots only, not intraday prices. Gain percentages use each snapshot’s recorded cost, not cash-flow-adjusted returns.
       </p>
+      {historyState.refreshError&&<p role="status" className="text-xs text-muted-foreground mt-2">Refresh failed; showing the previous recorded valuations. <button type="button" className="underline" onClick={()=>void retryHistory()}>Retry history</button></p>}
       {/* Timeframe */}
       <div className="flex justify-between mt-3 border-t border-border pt-3">
         {timeframes.map((tf) => (

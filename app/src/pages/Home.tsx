@@ -115,7 +115,7 @@ export default function Home() {
         showNotifications
       />
 
-      <div className="desk-content home-flow px-4 pt-3 space-y-4">
+      <div className="desk-content home-flow px-4 pt-3 space-y-7">
         {/* Auth CTA — non-users */}
         {!user && (
           <div className="flat-section border border-primary/25 bg-primary/5 rounded-2xl p-5 text-center">
@@ -140,8 +140,8 @@ export default function Home() {
 
         {user && <HomePortfolioOverview portfolio={portfolio} quotes={homeQuotes} visible={showBalance} onToggle={() => setShowBalance(value => !value)} />}
 
-        {/* MARKET SNAPSHOT — inline stat row */}
-        <div>
+        {/* One softly grouped market module; index values remain an open row. */}
+        <div data-surface="soft" className="home-market-module">
           <Eyebrow action="Markets" onAction={() => navigate('/markets')}>Market Snapshot</Eyebrow>
           {!nseIndices.length && <p className="py-2 text-xs text-muted-foreground">Published NSE index observations are not available yet.</p>}
           <MarketIndexStrip indices={nseIndices} onSelect={()=>navigate('/markets')}/>
@@ -171,7 +171,7 @@ export default function Home() {
                 type="button"
                 data-small-target
                 onClick={() => navigate(tool.route)}
-                className="editorial-section min-h-[88px] px-1 text-left hover:text-primary transition-colors"
+                className="home-research-tool min-h-[88px] px-1 text-left hover:text-primary transition-colors"
               >
                 <tool.icon className="h-4 w-4 text-primary mb-3" />
                 <p className="text-xs font-bold">{tool.label}</p>

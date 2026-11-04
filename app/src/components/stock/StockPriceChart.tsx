@@ -969,8 +969,8 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
               tickFormatter={(v: number) => v.toFixed(2)}
             />
             <Tooltip content={() => null} cursor={false} />
-            <ReferenceLine y={firstPrice} stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="2 4" strokeOpacity={0.35} />
-            {showPriceAxis && (
+            {data.length>1&&<ReferenceLine y={firstPrice} stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="2 4" strokeOpacity={0.35} />}
+            {showPriceAxis && data.length>1 && (
               <ReferenceLine y={lastPrice} stroke={lineColor} strokeDasharray="3 3" strokeOpacity={0.6} label={renderCurrentPriceTag} />
             )}
             <Area
@@ -979,7 +979,7 @@ export const StockPriceChart = ({ symbol = "STK", timeframe, chartType = "line",
               stroke={`url(#${crosshairGradId})`}
               strokeWidth={2}
               fill={chartType === "area" ? `url(#${gradientId})` : "transparent"}
-              dot={false}
+              dot={data.length===1?{r:4,fill:lineColor}:false}
               activeDot={false}
               isAnimationActive={false}
             />

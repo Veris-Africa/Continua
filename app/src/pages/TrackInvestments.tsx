@@ -1,3 +1,4 @@
+import {EditorialIllustration} from '@/components/shared/EditorialIllustration';
 import { useStickyHeights } from "@/hooks/useStickyHeights";
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useState, useMemo } from "react";
@@ -533,7 +534,7 @@ export default function TrackInvestments() {
           <TabsContent value="updates" className="mt-4 space-y-4">
             {holdings.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-sm font-semibold">No positions yet</p>
+                <p className="text-sm font-semibold">{engine.error?'Holdings could not load':portfolio.length?'Awaiting verified prices':'No positions yet'}</p>{!engine.error&&!portfolio.length&&<EditorialIllustration scene="watchlist"/>}
                 <p className="text-xs text-muted-foreground mt-1">
                   Add an investment to see earnings, dividends, and filings.
                 </p>
@@ -946,9 +947,9 @@ export default function TrackInvestments() {
                 <div className="py-12 text-center">
                   <p className="text-sm font-semibold">No positions yet</p>
                   <p className="text-xs text-muted-foreground mt-1 mb-4">
-                    Add your first investment to start tracking.
+                    {engine.error?'Please retry the holdings request.':portfolio.length?'Your positions remain recorded. Values appear when their price requests complete.':'Add your first investment to start tracking.'}
                   </p>
-                  <AddInvestmentDialog />
+                  {engine.error?<button type="button" className="underline text-primary" onClick={()=>void refetch()}>Retry holdings</button>:!portfolio.length?<AddInvestmentDialog />:null}
                 </div>
               ) : (
                 <>

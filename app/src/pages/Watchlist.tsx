@@ -1,3 +1,4 @@
+import {EditorialIllustration} from '@/components/shared/EditorialIllustration';
 import { RollingNumber } from "@/components/shared/RollingNumber";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Plus, Search, X, Heart, TrendingUp, TrendingDown, Trash2, MoreHorizontal, Pencil, Lock } from "lucide-react";
@@ -25,7 +26,7 @@ export default function Watchlist() {
   const navigate = useNavigate();
   const {
     watchlist,
-    loading,
+    loading, isError:watchlistError,
     removeFromWatchlist,
     addToWatchlist,
     isInFolder,
@@ -222,9 +223,9 @@ export default function Watchlist() {
         )}
       </header>
 
-      {rows.length === 0 ? (
+      {watchlistError&&rows.length===0?<div role="alert" className="px-6 py-12 text-center text-sm">Your watchlist could not load. <button type="button" className="underline text-primary" onClick={()=>window.location.reload()}>Retry watchlist</button></div>:rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center px-8 py-24">
-          <Heart className="h-11 w-11 mb-4 text-muted-foreground/40" />
+          <EditorialIllustration scene="watchlist"/>
           <h3 className="font-semibold text-[0.9375rem] mb-1">
             {currentFolder?.name ? `"${currentFolder.name}" is empty` : "Your watchlist is empty"}
           </h3>

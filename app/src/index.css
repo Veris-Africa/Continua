@@ -270,7 +270,7 @@ button:not(:disabled):active, [role="button"]:not([aria-disabled="true"]):active
   /* Content belongs to the page canvas. These semantic classes deliberately
      override legacy rounded/background utilities without touching controls,
      data visualizations, media, dialogs or popovers. */
-  .content-surface,
+  .content-surface:not([data-surface="soft"]),
   .flat-section,
   .card-gradient,
   .soft-card,
@@ -596,10 +596,9 @@ body { overflow-x: clip; }
    clip (unlike hidden) does not turn the shell into a new sticky scroll owner. */
 .app-shell { width: 100%; max-width: 100%; overflow-x: clip; }
 .home-desk, .market-desk, .desk-content { width: 100%; min-width: 0; }
-/* Home's reference layout is deliberately unboxed: typography and rules,
-   never elevated or bordered cards. Lower-page tools retain their styling. */
+/* Home keeps valuations on the canvas; selected overview modules use soft surfaces. */
 .home-flow { --home-rule: hsl(var(--border) / .55); }
-.home-portfolio { padding: .1rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
+.home-portfolio { padding: .3rem 0 1rem; }
 .home-portfolio-heading { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .home-periods { display: flex; gap: .1rem; }
 .home-periods button { min-height: 36px; min-width: 34px; padding: 0 .45rem; font-size: .6875rem; font-weight: 600; color: hsl(var(--muted-foreground)); border-bottom: 2px solid transparent; }
@@ -609,12 +608,12 @@ body { overflow-x: clip; }
 .home-portfolio-chart { height: 180px; min-width: 0; margin-top: .25rem; }
 .home-portfolio-chart > p { height: 100%; display: grid; place-items: center; color: hsl(var(--muted-foreground)); font-size: .75rem; text-align: center; padding: 1.5rem; }
 .home-chart-note { font-size: .625rem; color: hsl(var(--muted-foreground)); margin: .25rem 0 .75rem; }
-.home-portfolio-metrics { display: grid; grid-template-columns: 1fr 1fr .7fr; gap: .75rem; padding-top: 1rem; border-top: 1px solid var(--home-rule); }
+.home-portfolio-metrics { display: grid; grid-template-columns: 1fr 1fr .7fr; gap: .75rem; padding-top: 1rem; }
 .home-portfolio-metrics > * + * { border-left: 1px solid var(--home-rule); padding-left: .75rem; }
 .home-portfolio-metrics > * > span { display: block; font-size: .6875rem; color: hsl(var(--muted-foreground)); margin-bottom: .35rem; }
 .home-portfolio-metrics strong { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; font-size: .8125rem; font-variant-numeric: tabular-nums; }
 .home-portfolio-metrics small { display: block; flex-basis: 100%; font-size: .6875rem; }
-.home-flow [aria-label="NSE indices, scroll horizontally"] { display: flex; overflow-x: auto; touch-action: pan-x pan-y; gap: .8rem; border-top: 0; padding: .4rem 0 1rem; border-bottom: 1px solid var(--home-rule); }
+.home-flow [aria-label="NSE indices, scroll horizontally"] { display: flex; overflow-x: auto; touch-action: pan-x pan-y; gap: .8rem; border-top: 0; padding: .4rem 0 .2rem; }
 .home-flow [aria-label="NSE indices, scroll horizontally"] button { min-width: 110px; flex: 1 0 110px; padding: 0 .2rem; }
 .home-flow [aria-label="NSE indices, scroll horizontally"] button + button { border-left: 1px solid var(--home-rule); padding-left: .8rem; }
 .home-quick-watch { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); padding: .5rem 0 1rem; border-bottom: 1px solid var(--home-rule); gap: .75rem; }
@@ -630,7 +629,7 @@ body { overflow-x: clip; }
 .home-watch-strip:hover .home-watch-track, .home-watch-strip:focus-within .home-watch-track, .home-watch-strip[data-paused="true"] .home-watch-track { animation-play-state: paused; }
 @keyframes home-watch-scroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .home-watch-track { animation: none; } .home-watch-duplicate { display: none; } .home-watch-viewport { overflow-x: auto; } }
-.home-engine-intro { border-bottom: 1px solid var(--home-rule); padding: .15rem 0 1.25rem; }
+.home-engine-intro { padding: .15rem 0 1.25rem; }
 .home-engine-intro h3 { font-size: clamp(1.4rem, 5.3vw, 1.85rem); font-weight: 700; letter-spacing: -.04em; margin: .5rem 0 .25rem; }
 .home-engine-intro > p { font-size: .8125rem; color: hsl(var(--muted-foreground)); line-height: 1.6; }
 .home-engine-intro nav { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .75rem; margin-top: 1rem; }

@@ -5354,6 +5354,18 @@
         "https://tanstack.com/query/latest/docs/framework/react/guides/query-cancellation",
         "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
       ]
+    },
+    {
+      "file": "app/src/components/layout/WorkspaceSkeleton.tsx",
+      "category": "Phase 7 chart reliability and visual addendum",
+      "language": "Existing React TypeScript/JavaScript, CSS and original static SVG; Node JavaScript/SQL read contracts",
+      "runtime": "Existing Vite/Node services; no new service or animation dependency",
+      "reason": "Shared Nairobi date-only windows and owner-scoped recorded-history states address verified chart contracts. CSS geometry and opt-in existing surface tokens reduce visual clutter; static SVG is responsive, small and does not require bitmap generation or a rendering runtime. Preserve session/RLS and licensed-source rules.",
+      "references": [
+        "https://react.dev/reference/react/Suspense",
+        "https://www.postgresql.org/docs/current/sql-set-transaction.html",
+        "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat"
+      ]
     }
   ],
   "nativeRewrite": {
