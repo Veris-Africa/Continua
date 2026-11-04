@@ -9,6 +9,14 @@ from continua_scraper.run_health import describe_run, write_action_summary
 
 
 class RunHealthTests(unittest.TestCase):
+    def test_source_failures_surface_without_urls_or_untrusted_error_messages(self):
+        summary,warning=describe_run({'status':'completed','sources':[{'failed':2,'errorClasses':{'fetch: SourceHTTPError:403':2,'parse:pdf_invalid_header':1,'https://secret.invalid/token':99}}]})
+        self.assertIn('SourceHTTPError:403',summary)
+        self.assertIn('pdf_invalid_header',summary)
+        self.assertIn('| Source failures | 2 |',summary)
+        self.assertNotIn('secret.invalid',summary)
+        self.assertIn('failed',warning)
+
     def test_budget_pause_is_explicit_and_never_claims_publication(self):
         summary, warning = describe_run({'status': 'budget-paused', 'pauseReason': 'daily-reservation-limit'})
         self.assertIn('budget-paused', summary)

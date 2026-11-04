@@ -8,6 +8,9 @@ import tempfile
 from .process import run_process
 from .tables import text_tables
 
+class InvalidPdfEvidence(ValueError):
+    safe_code='pdf_invalid_header'
+
 class PdfExtractor:
     parser_version='pdfplumber-layout-text-0.1.0'
     def __init__(self,queue,*,native='python',python=None,ocr=True):
@@ -19,7 +22,7 @@ class PdfExtractor:
         path=pathlib.Path(path)
         if path.stat().st_size>50*1024*1024:raise ValueError('PDF input exceeds limit')
         with path.open('rb') as file:
-            if file.read(5)!=b'%PDF-':raise ValueError('Invalid PDF evidence')
+            if file.read(5)!=b'%PDF-':raise InvalidPdfEvidence('Invalid PDF evidence')
         return await self.queue.run(lambda:self._extract(path))
 
     async def _native(self,path):

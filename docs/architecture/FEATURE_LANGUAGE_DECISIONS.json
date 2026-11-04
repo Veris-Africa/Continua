@@ -5,6 +5,17 @@
   "runtimeImplementationsUseTypeScript": false,
   "features": [
     {
+      "file": "financial-data-collector/scheduled_collect.py",
+      "category": "Scheduled collector budget recovery and safe failure diagnostics",
+      "language": "Existing Python 3.13 asyncio runtime",
+      "runtime": "Existing finite GitHub Actions collector; no new service or dependency",
+      "reason": "Retain the existing source-policy, durable checkpoint and bounded transfer implementations. Typed budget exhaustion must preserve leases and completed evidence rather than become a provider failure. asyncio cancellation and ordinary provider errors remain distinct; no concurrency, resource ceiling or publication-rights expansion.",
+      "references": [
+        "https://docs.python.org/3.13/library/asyncio-task.html#timeouts",
+        "https://www.rfc-editor.org/rfc/rfc9110.html#name-403-forbidden"
+      ]
+    },
+    {
       "file": "backend/src/monitoring/observability.js",
       "category": "Phase 4 observability and isolated recovery",
       "language": "Existing Node JavaScript, Cloudflare JavaScript, React integration and SQL fixtures",

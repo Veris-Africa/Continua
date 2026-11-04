@@ -1,6 +1,7 @@
 """Generic source-scoped native crawl; storage completes before lease commit."""
 import asyncio
 from .download import SourceNotModified,SourceHTTPError
+from .transfer_budget import TransferLimitReached
 from .html import extract_from_html,canonicalize_url,matches_discovery_paths
 
 class GenericCrawler:
@@ -56,6 +57,9 @@ class GenericCrawler:
             except SourceNotModified:
                 await self.state.crawled(item['id'],item['lastSeen'],304,item.get('mimeType'),item.get('contentHash'),False)
                 summary['notModified']=summary.get('notModified',0)+1
+            except TransferLimitReached as error:
+                error.collector_summary=summary
+                raise
             except SourceHTTPError as error:
                 # A removed publisher link is a completed availability check,
                 # never a new financial artifact or an endlessly retried crash.

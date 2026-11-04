@@ -4,6 +4,19 @@ from continua_scraper.crawler import GenericCrawler
 from continua_scraper.download import SourceHTTPError
 
 class Availability(unittest.IsolatedAsyncioTestCase):
+    async def test_shared_budget_never_becomes_provider_failure_or_dead_letter(self):
+        from continua_scraper.transfer_budget import TransferLimitReached
+        async def noop(*args,**kwargs):pass
+        async def claim(*args):return [{'id':'fixture','lastSeen':1,'url':'https://publisher.invalid/report.pdf','depth':0}]
+        async def allowed(url):return True
+        async def fetch(*args):raise TransferLimitReached('fixture')
+        failed=__import__('unittest.mock',fromlist=['AsyncMock']).AsyncMock()
+        io=SimpleNamespace(source={'id':'fixture','enabled':True,'adapter':'web','config':{}},downloader=SimpleNamespace(robots_allowed=allowed),fetch_document=fetch)
+        with self.assertRaises(TransferLimitReached) as raised:
+            await GenericCrawler(io,SimpleNamespace(claim=claim,crawling=noop,failed=failed),SimpleNamespace(record=failed)).run(1)
+        self.assertEqual(raised.exception.collector_summary['failed'],0)
+        self.assertEqual(failed.await_count,0)
+
     async def collect(self,status):
         audit=[]
         async def noop(*args,**kwargs):pass

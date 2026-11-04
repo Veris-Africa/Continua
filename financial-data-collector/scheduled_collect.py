@@ -205,7 +205,7 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
                                                 for key in result:result[key]+=part.get(key,0)
                                         else:
                                             result=await runtime.runner.run(adapter,drain_only=kind=='drain',batch_size=batch,issuer=issuer,fresh=fresh)
-                                    entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','unavailable','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified')})
+                                    entry.update({k:v for k,v in result.items() if k in ('discovered','fetched','newArtifacts','extracted','needsReview','failed','skipped','unavailable','errorClasses','discoveryCoverage','targetCoverage','visited','stored','notModified','paused','pauseReason')})
                             except asyncio.CancelledError as error:
                                 copy_partial_receipt(entry,error)
                                 raise
@@ -213,7 +213,8 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
                                 copy_partial_receipt(entry,error)
                                 entry['paused']=True
                                 entry['pauseReason']='source-time-budget'
-                            except transfer_budget.TransferLimitReached:
+                            except transfer_budget.TransferLimitReached as error:
+                                copy_partial_receipt(entry,error)
                                 receipt['status']='budget-paused';break
                             except Exception:
                                 entry['failed']=1
@@ -250,6 +251,13 @@ async def run(kind,source_id=None,issuer=None,fresh=False,history_issuers=None):
                                 if graph_ready and graph_ready[0]['ready']:
                                     from continua_scraper.relationships import store_relationship_drafts
                                     receipt['relationshipDrafts']=await store_relationship_drafts(database)
+                        except transfer_budget.TransferLimitReached:
+                            # Research already committed remains valid. An R2
+                            # budget pause must not overwrite that receipt as a
+                            # processor failure or retire an unverified payload.
+                            receipt['processedCloudExport']={'status':'budget-paused','retryable':True}
+                            receipt['pauseReason']='transfer-budget'
+                            receipt['status']='failed' if any(s.get('failed',0) for s in receipt['sources']) else 'budget-paused'
                         except Exception:
                             receipt['processingAfter']={'status':'failed','retryable':True}
                             receipt['status']='failed'

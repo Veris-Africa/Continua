@@ -6,6 +6,7 @@ File-backed fetch results are disposed in finally, including skipped reprocessin
 import asyncio
 import re
 from .download import SourceNotModified
+from .transfer_budget import TransferLimitReached
 
 def _pdf(fetched,document):
     return 'application/pdf' in (fetched.get('contentType') or '') or bool(re.search(r'\.pdf(?:[?#]|$)',document['url'],re.I))
@@ -104,6 +105,11 @@ class AdapterRunner:
                 except SourceNotModified:
                     summary['skipped']+=1
                     if job:await self.jobs.finish(job['id'],job['attempts'])
+                except TransferLimitReached:
+                    # No provider failure or completed document: leave its
+                    # lease recoverable and retain already checkpointed work.
+                    summary.update(paused=True,pauseReason='transfer-budget')
+                    return
                 except Exception as error:
                     summary['failed']+=1
                     errors=summary.setdefault('errorClasses',{})
@@ -112,7 +118,7 @@ class AdapterRunner:
                     if isinstance(error,SourceHTTPError) and type(error.status) is int:
                         category=f'{category}:{error.status}'
                     safe_code=getattr(error,'safe_code',None)
-                    if safe_code in {*(f'browser_exit_{i}' for i in range(1,20)),'browser_exit_other'}:
+                    if safe_code in {*(f'browser_exit_{i}' for i in range(1,20)),'browser_exit_other','pdf_invalid_header'}:
                         category=f'{stage}:{safe_code}'
                     errors[category]=errors.get(category,0)+1
                     # Classification is safe even when SDK exceptions include
@@ -136,5 +142,5 @@ class AdapterRunner:
         if issuer:
             complete=summary['failed']==0 and summary['fetched']==len(documents)
             summary['targetCoverage']={'issuer':issuer,'tab':issuer_view,'plannedViews':len(documents),'complete':complete}
-            if not complete and summary['failed']==0:summary['failed']=1
+            if not complete and summary['failed']==0 and not summary.get('paused'):summary['failed']=1
         return summary

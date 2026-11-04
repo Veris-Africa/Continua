@@ -32,6 +32,30 @@ class Adapter:
     async def parse(self,fetched):return {'method':'native_pdf_text','text':self.text,'confidence':.8,'tables':[],'entity':{},'needsReview':True}
 
 class RunnerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_transfer_limit_leaves_document_retryable_without_dead_letter(self):
+        from continua_scraper.transfer_budget import TransferLimitReached
+        jobs,evidence,dead=Jobs(),Evidence(),Dead();adapter=Adapter();adapter.document_concurrency=1
+        async def parse(fetched):raise TransferLimitReached('bounded fixture')
+        adapter.parse=parse
+        result=await AdapterRunner(jobs,evidence,dead).run(adapter)
+        self.assertEqual(result['failed'],0)
+        self.assertEqual(result['pauseReason'],'transfer-budget')
+        self.assertEqual(jobs.finished,[])
+        self.assertEqual(dead.rows,[])
+        self.assertEqual(evidence.rows,[])
+        self.assertEqual(len(adapter.disposed),1)
+
+    async def test_invalid_pdf_header_remains_a_classified_real_failure(self):
+        from continua_scraper.pdf import InvalidPdfEvidence
+        jobs,evidence,dead=Jobs(),Evidence(),Dead();adapter=Adapter()
+        async def parse(fetched):raise InvalidPdfEvidence('private-provider-text')
+        adapter.parse=parse
+        result=await AdapterRunner(jobs,evidence,dead).run(adapter)
+        self.assertEqual(result['failed'],4)
+        self.assertEqual(result['errorClasses'],{'parse:pdf_invalid_header':4})
+        self.assertEqual(evidence.rows,[])
+        self.assertNotIn('private-provider-text',str(dead.rows))
+
     async def test_deadline_keeps_errors_already_recorded_in_unfinished_source(self):
         adapter=Adapter();adapter.document_concurrency=1
         reached=asyncio.Event()

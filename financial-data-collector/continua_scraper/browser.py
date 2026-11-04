@@ -5,6 +5,7 @@ import pathlib
 import sys
 from .browser_proxy import BrowserProxy
 from .process import run_process,NativeWorkerError
+from . import transfer_budget
 
 class PublisherRenderError(ValueError):
     def __init__(self,code):
@@ -32,6 +33,8 @@ class BrowserRenderer:
             # a bounded command argument; it never contains document bodies.
             try:raw=await run_process([self.python,worker,json.dumps(config)],timeout=150,max_output=12*1024*1024)
             except NativeWorkerError as error:
+                if transfer_budget.active is not None and transfer_budget.active.exhausted:
+                    raise transfer_budget.TransferLimitReached('Logical transfer budget reached') from None
                 raise PublisherRenderError(error.returncode) from None
         result=json.loads(raw)
         if not isinstance(result,dict) or not isinstance(result.get('html'),str) or len(result['html'].encode())>8*1024*1024:raise ValueError('Invalid rendered publisher document')
