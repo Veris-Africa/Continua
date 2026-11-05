@@ -69,7 +69,7 @@ jobs:
     # - name: Setup runtime (example)
     #   uses: actions/setup-example@v1
 
-    - uses: actions/setup-go@v5
+    - uses: actions/setup-go@v7
       if: matrix.language == 'go'
       with:
         go-version-file: api-candidate/go.mod
